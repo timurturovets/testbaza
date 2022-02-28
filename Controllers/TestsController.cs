@@ -1,12 +1,12 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Authentication.Cookies;
+
 using TestsBaza.Repositories;
 
-using System.Security.Claims;
 namespace TestBaza.Controllers
 {   
+    [Authorize]
     [ApiController]
     [Route("api/test")]
     public class TestsController : ControllerBase
@@ -36,15 +36,14 @@ namespace TestBaza.Controllers
                 AuthorName=t.Creator!.UserName,
                 Questions = t.Questions.Select(q=>new QuestionJsonModel
                 {
-                    Question = q.Value,
-                    Answer = q.Answer
+                    Question = q.Value!,
+                    Answer = q.Answer!
                 })
             });
             return Ok(allTests);
         }
         
 
-        [Authorize]
         [HttpGet("get-test/{testId?}")]
         public IActionResult GetTest([FromQuery][FromRoute]int testId)
         {
@@ -53,7 +52,6 @@ namespace TestBaza.Controllers
             return Ok(test);
         }
 
-        [Authorize]
         [HttpPost("get-test")]
         public IActionResult GetTest([FromBody][FromForm]string testName)
         {
@@ -65,14 +63,14 @@ namespace TestBaza.Controllers
                 TestName = test.TestName,
                 Questions = test.Questions.Select(q => new QuestionJsonModel
                 {
-                    Question = q.Value,
-                    Answer = q.Answer
+                    Question = q.Value!,
+                    Answer = q.Answer!
                 })
             };
             return Ok(new { test = model });
         }
 
-        [Authorize]
+        
         [HttpPost("add-test")]
         public async Task<IActionResult> CreateTest([FromForm] CreateTestRequestModel model)
         {
@@ -114,7 +112,6 @@ namespace TestBaza.Controllers
             }
         }
 
-        [Authorize]
         [HttpPost("get-users-tests")]
         public async Task<IActionResult> GetUsersTests([FromForm] string stuff)
         {
