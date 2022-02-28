@@ -19,7 +19,7 @@ namespace TestBaza.Controllers
         {
             if (_signInManager.IsSignedIn(HttpContext.User)) 
                 return RedirectToAction(actionName: "index", controllerName: "home");
-            return View();
+            return View(viewName:"register");
         }
 
         [HttpPost]
@@ -29,7 +29,7 @@ namespace TestBaza.Controllers
         {
             if (ModelState.IsValid)
             {
-                if (_userManager.FindByNameAsync(model.UserName) is not null)
+                if ((await _userManager.FindByNameAsync(model.UserName)) is not null)
                 {
                     ModelState.AddModelError(string.Empty, "Этот никнейм уже занят. Попробуйте другой");
                 }
@@ -50,7 +50,7 @@ namespace TestBaza.Controllers
                     ModelState.AddModelError(string.Empty, "Произоша ошибка при попытке зарегистрироваться. Попробуйте снова");
                 }
             }
-            return View(model);
+            return View(viewName: "register",model: model);
         }
 
         [HttpGet]
@@ -67,7 +67,11 @@ namespace TestBaza.Controllers
         {
             if (ModelState.IsValid)
             {
-                User? user = await _userManager.FindByNameAsync(model.UserName);
+                //В поле Login пользователь может ввести как свой никнейм, так и эл. почту
+                //Соответственно, проверяем оба варианта
+                User? user = await _userManager.FindByNameAsync(model.Login);
+                if (user is null) user = await _userManager.FindByEmailAsync(model.Login);
+
                 if(user is not null)
                 {
                     var result = await _signInManager.PasswordSignInAsync(user, model.Password, true, false);

@@ -6,9 +6,6 @@ using TestsBaza.Repositories;
 
 namespace TestBaza.Controllers
 {   
-    [Authorize]
-    [ApiController]
-    [Route("api/test")]
     public class TestsController : ControllerBase
     {
         private readonly ITestsRepository _testsRepo;
@@ -26,7 +23,6 @@ namespace TestBaza.Controllers
             _logger = logger;
         }
 
-        [HttpGet("get-all-tests")]
         public IActionResult Get()
         {
             if (!_testsRepo.GetAllTests().Any()) return NotFound();
@@ -44,7 +40,6 @@ namespace TestBaza.Controllers
         }
         
 
-        [HttpGet("get-test/{testId?}")]
         public IActionResult GetTest([FromQuery][FromRoute]int testId)
         {
             Test? test = _testsRepo.GetTest(testId);
@@ -52,7 +47,6 @@ namespace TestBaza.Controllers
             return Ok(test);
         }
 
-        [HttpPost("get-test")]
         public IActionResult GetTest([FromBody][FromForm]string testName)
         {
             Test? test = _testsRepo.GetTest(testName);
