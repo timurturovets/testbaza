@@ -1,8 +1,8 @@
-﻿namespace TestsBaza.Repositories
+﻿namespace TestBaza.Repositories
 {
     public interface ITestsRepository
     {
-        IEnumerable<Test> GetAllTests();
+        IEnumerable<Test> GetReadyTests();
         Test? GetTest(string testName);
         Test? GetTest(int testId);
         void AddTest(Test test);

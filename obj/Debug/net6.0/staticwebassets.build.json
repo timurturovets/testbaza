@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "vSf+1EpulREdmqV/4J5LcVj4HmeZLYDaaB9YPYbHPaI=",
+  "Hash": "2faxkPlBvoRkvJ3CZ7dUOPC6A6cV2/2JOSp6qlc6+lg=",
   "Source": "TestBaza",
   "BasePath": "_content/TestBaza",
   "Mode": "Default",
@@ -1105,12 +1105,12 @@
       "OriginalItemSpec": "wwwroot\\favicon.ico"
     },
     {
-      "Identity": "C:\\Users\\timur\\source\\repos\\TestBaza\\TestBaza\\wwwroot\\js\\site.js",
+      "Identity": "C:\\Users\\timur\\source\\repos\\TestBaza\\TestBaza\\wwwroot\\js\\tests-index.jsx",
       "SourceId": "TestBaza",
       "SourceType": "Discovered",
       "ContentRoot": "C:\\Users\\timur\\source\\repos\\TestBaza\\TestBaza\\wwwroot\\",
       "BasePath": "_content/TestBaza",
-      "RelativePath": "js/site.js",
+      "RelativePath": "js/tests-index.jsx",
       "AssetKind": "All",
       "AssetMode": "All",
       "AssetRole": "Primary",
@@ -1119,7 +1119,7 @@
       "AssetTraitValue": "",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "wwwroot\\js\\site.js"
+      "OriginalItemSpec": "wwwroot\\js\\tests-index.jsx"
     },
     {
       "Identity": "C:\\Users\\timur\\source\\repos\\TestBaza\\TestBaza\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap.css",

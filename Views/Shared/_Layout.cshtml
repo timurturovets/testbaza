@@ -14,10 +14,19 @@
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container-fluid">
                 <a class="navbar-brand text-primary" href="/home/index">ТестБаза</a>
+                
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Открыть панель">
                     <span class="navbar-toggler-icon"></span>
                 </button>
+                <ul class="navbar nav">
+                    <li class="nav-item">
+                        <a class="nav-link text-dark" href="/tests/create">Создать тест</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-dark" href="/tests/index">Список тестов</a>
+                    </li>
+                </ul>
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <partial name="_LoginPartial" />
                 </div>
@@ -26,6 +35,7 @@
     </header>
     <div class="container">
         <main role="main" class="pb-3">
+            <div class="text-center text-danger"><p>@ViewData["Error"]</p></div>
             @RenderBody()
         </main>
     </div>

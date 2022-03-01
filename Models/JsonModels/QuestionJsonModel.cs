@@ -2,8 +2,8 @@
 {
     public class QuestionJsonModel
     {
-#pragma warning disable 8618
-        public string Question { get; set; }
-        public string Answer { get; set; }
+        public int Id { get; set; }
+        public string? Question { get; set; }
+        public string? Answer { get; set; }
     }
 }

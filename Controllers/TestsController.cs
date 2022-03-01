@@ -2,11 +2,12 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
 
-using TestsBaza.Repositories;
+using TestBaza.Repositories;
 
 namespace TestBaza.Controllers
 {   
-    public class TestsController : ControllerBase
+    [Authorize]
+    public class TestsController : Controller
     {
         private readonly ITestsRepository _testsRepo;
         private readonly UserManager<User> _userManager;
@@ -23,10 +24,18 @@ namespace TestBaza.Controllers
             _logger = logger;
         }
 
-        public IActionResult Get()
+        public IActionResult Index()
         {
-            if (!_testsRepo.GetAllTests().Any()) return NotFound();
-            IEnumerable<TestJsonModel> allTests = _testsRepo.GetAllTests().Select(t=>new TestJsonModel
+            if (!_signInManager.IsSignedIn(User)) 
+                return RedirectToAction(actionName: "login", controllerName: "auth");
+            return View();
+        }
+
+        [HttpGet("/tests/all")]
+        public IActionResult All()
+        {
+            if (!_testsRepo.GetReadyTests().Any()) return StatusCode(228);
+            IEnumerable<TestJsonModel> allTests = _testsRepo.GetReadyTests().Select(t=>new TestJsonModel
             {
                 TestName = t.TestName!,
                 AuthorName=t.Creator!.UserName,
@@ -39,14 +48,15 @@ namespace TestBaza.Controllers
             return Ok(allTests);
         }
         
-
+        [HttpGet("/tests/getbyid")]
         public IActionResult GetTest([FromQuery][FromRoute]int testId)
         {
             Test? test = _testsRepo.GetTest(testId);
-            if (test is null) return NotFound(new { msg = $"Теста с идентификатором {testId} не существует"});
+            if (test is null) return NotFound();
             return Ok(test);
         }
 
+        [HttpGet("/tests/getbyname")]
         public IActionResult GetTest([FromBody][FromForm]string testName)
         {
             Test? test = _testsRepo.GetTest(testName);
@@ -64,9 +74,13 @@ namespace TestBaza.Controllers
             return Ok(new { test = model });
         }
 
-        
-        [HttpPost("add-test")]
-        public async Task<IActionResult> CreateTest([FromForm] CreateTestRequestModel model)
+        [HttpGet]
+        public IActionResult Create()
+        {
+            return View();
+        }
+        [HttpPost]
+        public async Task<IActionResult> Create([FromForm] CreateTestRequestModel model)
         {
             try
             {
@@ -82,11 +96,13 @@ namespace TestBaza.Controllers
                     {
                         Creator = creator,
                         TestName = model.TestName!,
+                        Description = model.Description ?? "Без описания.",
                         IsPrivate = model.IsPrivate,
                         TimeCreated = DateTime.Now
                     };
                     _testsRepo.AddTest(test);
-                    return Ok();
+                    int id = _testsRepo.GetTest(test.TestName)!.TestId;
+                    return RedirectToAction(actionName:"edit", controllerName:"tests", new { id });
                 }
                 else
                 {
@@ -106,56 +122,17 @@ namespace TestBaza.Controllers
             }
         }
 
-        [HttpPost("get-users-tests")]
-        public async Task<IActionResult> GetUsersTests([FromForm] string stuff)
+        [HttpGet]
+        [Route("/tests/edit{id?}")]
+        public IActionResult Edit([FromRoute] int id)
         {
-
-            User creator = await _userManager.GetUserAsync(HttpContext.User);
-
-            if (creator is null) return Unauthorized();
-            if (!creator.Tests.Any()) return NotFound(new { result = "emptytests" });
-            IEnumerable<TestJsonModel> tests = creator.Tests.Select(t => new TestJsonModel
+            Test? test = _testsRepo.GetTest(testId: id);
+            if(test is null)
             {
-                TestName = t.TestName!,
-                AuthorName = creator.UserName,
-                Questions = t.Questions.Select(q => new QuestionJsonModel
-                {
-                    Question = q.Value!,
-                    Answer = q.Answer!
-                })
-            });
-            return Ok(tests);
-        }
-
-        [HttpPut("update-test")]
-        public async Task<IActionResult> UpdateTest([FromForm] UpdateTestRequestModel model)
-        {
-            User? creator = await _userManager.FindByNameAsync(User.Identity!.Name!);
-            Test? test = _testsRepo.GetTest(model.TestId);
-
-            if (test is null) return NotFound(new { message = $"Теста с идентификатором {model.TestId} не существует" });
-            if (creator is null || !test.Creator!.Equals(creator)) return Unauthorized();
-
-            test.TestName = model.NewTestName ?? test.TestName;
-            test.Questions = test.Questions.Concat(model.NewQuestions.Select(q=>new Question 
-            {
-                Test = test
-            }));
-
-            _testsRepo.UpdateTest(test);
-            return Ok();
-        }
-
-        [HttpDelete("remove-test")]
-        public async Task<IActionResult> RemoveTest([FromBody][FromForm] int testId)
-        {
-            User? creator = await _userManager.GetUserAsync(HttpContext.User);
-            Test? test = _testsRepo.GetTest(testId);
-
-            if (test is null) return NotFound(new { message = $"Теста с идентификатором {testId} не существует" });
-            if (creator is null || !test.Creator!.Equals(creator)) return Unauthorized();
-                  _testsRepo.RemoveTest(test);
-            return Ok();
+                ViewData["Error"] = $"Ошибка. Теста с ID {id} не существует. Попробуйте перезайти на страницу редактирования";
+                return RedirectToAction(actionName: "index", controllerName: "home");
+            }
+            return View();
         }
     }
 }

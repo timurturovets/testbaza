@@ -8,6 +8,8 @@ namespace TestBaza.Models
         [MinLength(4, ErrorMessage="Минимальная длина названия теста - 4 символа")]
         [MaxLength(35, ErrorMessage="Максимальная длина названия теста- 35 символов")]
         public string? TestName { get; set; }
+
+        [MaxLength(250, ErrorMessage="Описание не должно содержать более 250 символов")]
         public string? Description { get; set; }
         public bool IsPrivate { get; set; }
     }

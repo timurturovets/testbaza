@@ -14,10 +14,11 @@
 
         public override bool Equals(object? obj)
         {
-            if (obj is null || obj is not Question) return false;
-            Question question = (obj as Question)!;
-            return question.QuestionId == QuestionId && question.Value == Value
-                && question.Answer == Answer;
+            if (obj is Question q) 
+                return q.QuestionId == QuestionId
+                     && q.Value == Value
+                     && q.Answer == Answer;
+            return false;
         }
         public override int GetHashCode() => QuestionId.GetHashCode();
     }

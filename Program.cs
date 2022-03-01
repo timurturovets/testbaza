@@ -6,7 +6,9 @@ global using TestBaza.Models;
 
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+
 using TestBaza.Data;
+using TestBaza.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,6 +32,13 @@ IServiceCollection services = builder.Services;
         .AddEntityFrameworkStores<AppDbContext>();
 
     services.AddControllersWithViews();
+
+    services.ConfigureApplicationCookie(options =>
+    {
+        options.LoginPath = "/auth/login";
+    });
+
+    services.AddTransient<ITestsRepository, TestsRepository>();
 }
 WebApplication app = builder.Build();
 
@@ -50,4 +59,5 @@ WebApplication app = builder.Build();
         name: "default",
         pattern: "{controller=auth}/{action=reg}");
 }
+
 app.Run();

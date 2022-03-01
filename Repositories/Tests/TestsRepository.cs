@@ -2,7 +2,7 @@
 
 using TestBaza.Data;
 
-namespace TestsBaza.Repositories
+namespace TestBaza.Repositories
 {
     public class TestsRepository : ITestsRepository
     {
@@ -12,7 +12,8 @@ namespace TestsBaza.Repositories
             _context = context;
         }
 
-        public IEnumerable<Test> GetAllTests() => _context.Tests
+        public IEnumerable<Test> GetReadyTests() => _context.Tests
+            .Where(t => t.IsReady)
             .Include(t => t.Questions)
             .Include(t => t.Creator)
             .AsNoTracking();
