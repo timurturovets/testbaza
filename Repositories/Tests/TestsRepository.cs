@@ -26,6 +26,7 @@ namespace TestBaza.Repositories
                 .Include(t => t.Creator)
                 .Single();
         }
+
         public Test? GetTest(int testId)
         {
             if (!_context.Tests.Any(t => t.TestId == testId)) return null;
@@ -34,18 +35,21 @@ namespace TestBaza.Repositories
                 .Include(t => t.Creator)
                 .Single();
         }
+
         public void AddTest(Test test)
         {
             if (_context.Tests.Any(t => t.Equals(test))) return;
             _context.Tests.Add(test);
             _context.SaveChanges();
         }
+
         public void RemoveTest(Test test)
         {
             if (!_context.Tests.Any(t => t.Equals(test))) return;
             _context.Tests.Remove(test);
             _context.SaveChanges();
         }
+
         public void UpdateTest(Test test)
         {
             _context.Tests.Update(test);

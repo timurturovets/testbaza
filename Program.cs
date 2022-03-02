@@ -36,9 +36,12 @@ IServiceCollection services = builder.Services;
     services.ConfigureApplicationCookie(options =>
     {
         options.LoginPath = "/auth/login";
+        options.AccessDeniedPath = "/home/forbidpage";
+        options.LogoutPath = "/auth/login";
     });
 
     services.AddTransient<ITestsRepository, TestsRepository>();
+    services.AddTransient<IQuestionsRepository, QuestionsRepository>();
 }
 WebApplication app = builder.Build();
 

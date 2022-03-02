@@ -10,15 +10,18 @@ namespace TestBaza.Controllers
     public class TestsController : Controller
     {
         private readonly ITestsRepository _testsRepo;
+        private readonly IQuestionsRepository _qsRepo;
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
         private readonly ILogger<TestsController> _logger;
         public TestsController(ITestsRepository testsRepo, 
+            IQuestionsRepository qsRepo,
             UserManager<User> userManager, 
             SignInManager<User> signInManager,
             ILogger<TestsController> logger)
         {
             _testsRepo = testsRepo;
+            _qsRepo = qsRepo;
             _userManager = userManager;
             _signInManager = signInManager;
             _logger = logger;
@@ -26,8 +29,6 @@ namespace TestBaza.Controllers
 
         public IActionResult Index()
         {
-            if (!_signInManager.IsSignedIn(User)) 
-                return RedirectToAction(actionName: "login", controllerName: "auth");
             return View();
         }
 
@@ -35,43 +36,17 @@ namespace TestBaza.Controllers
         public IActionResult All()
         {
             if (!_testsRepo.GetReadyTests().Any()) return StatusCode(228);
-            IEnumerable<TestJsonModel> allTests = _testsRepo.GetReadyTests().Select(t=>new TestJsonModel
-            {
-                TestName = t.TestName!,
-                AuthorName=t.Creator!.UserName,
-                Questions = t.Questions.Select(q=>new QuestionJsonModel
-                {
-                    Question = q.Value!,
-                    Answer = q.Answer!
-                })
-            });
+            IEnumerable<TestJsonModel> allTests = _testsRepo.GetReadyTests().Select(t => t.ToJsonModel());
             return Ok(allTests);
         }
-        
-        [HttpGet("/tests/getbyid")]
-        public IActionResult GetTest([FromQuery][FromRoute]int testId)
-        {
-            Test? test = _testsRepo.GetTest(testId);
-            if (test is null) return NotFound();
-            return Ok(test);
-        }
 
-        [HttpGet("/tests/getbyname")]
-        public IActionResult GetTest([FromBody][FromForm]string testName)
+        [HttpGet("/tests/get-test{id}")]
+        public IActionResult GetTest([FromRoute]int id)
         {
-            Test? test = _testsRepo.GetTest(testName);
+            Test? test = _testsRepo.GetTest(id);
             if (test is null) return NotFound();
-            TestJsonModel model = new()
-            {
-                AuthorName = test.Creator!.UserName,
-                TestName = test.TestName,
-                Questions = test.Questions.Select(q => new QuestionJsonModel
-                {
-                    Question = q.Value!,
-                    Answer = q.Answer!
-                })
-            };
-            return Ok(new { test = model });
+            TestJsonModel model = test.ToJsonModel();
+            return Ok(model);
         }
 
         [HttpGet]
@@ -104,26 +79,18 @@ namespace TestBaza.Controllers
                     int id = _testsRepo.GetTest(test.TestName)!.TestId;
                     return RedirectToAction(actionName:"edit", controllerName:"tests", new { id });
                 }
-                else
-                {
-                    var errors = ModelState.Select(entry =>
-                    {
-                        var query = entry.Value?.Errors.Select(e => e.ErrorMessage);
-                        if (query is null || !query.Any()) return string.Empty;
-                        else return query.Aggregate((x, y) => x + ", " + y);
-                    });
-                    return BadRequest(new { errors });
-                }
+                else return View();
+                
             }
             catch (Exception e)
             {
                 _logger.LogError(e.InnerException?.Message ?? e.Message);
-                return BadRequest(105);
+                return BadRequest();
             }
         }
 
         [HttpGet]
-        [Route("/tests/edit{id?}")]
+        [Route("/tests/edit{id}")]
         public IActionResult Edit([FromRoute] int id)
         {
             Test? test = _testsRepo.GetTest(testId: id);
@@ -132,7 +99,48 @@ namespace TestBaza.Controllers
                 ViewData["Error"] = $"Ошибка. Теста с ID {id} не существует. Попробуйте перезайти на страницу редактирования";
                 return RedirectToAction(actionName: "index", controllerName: "home");
             }
+            ViewData["TestId"] = id;
             return View();
+        }
+
+        [HttpPut("/tests/update-question")]
+        public async Task<IActionResult> UpdateQuestion([FromForm] UpdateQuestionRequestModel model)
+        {
+            _logger.LogInformation($"New change question request, value: {model.Value}, answer: {model.Answer}");
+
+            Question? question = _qsRepo.GetQuestion(model.Id);
+            if (question is null) return NotFound();
+
+            User creator = await _userManager.GetUserAsync(User);
+            if (!question.Test!.Creator!.Equals(creator)) return Forbid();
+
+            question.Value = model.Value;
+            question.Answer = model.Answer;
+
+            _qsRepo.UpdateQuestion(question);
+
+            return Ok();
+        }
+        
+        [HttpPut("/tests/update-test")]
+        public async Task<IActionResult> UpdateTest([FromForm] UpdateTestRequestModel model)
+        {
+            _logger.LogInformation($"New change test request, testName: {model.TestName}, description: {model.Description}," +
+                $"IsPrivate: {model.IsPrivate}");
+
+            Test? test = _testsRepo.GetTest(model.Id);
+            if (test is null) return NotFound();
+
+            User creator = await _userManager.GetUserAsync(User);
+            if (!test.Creator!.Equals(creator)) return Forbid();
+
+            test.TestName = model.TestName;
+            test.Description = model.Description;
+            test.IsPrivate = model.IsPrivate;
+
+            _testsRepo.UpdateTest(test);
+            TestJsonModel testModel = test.ToJsonModel();
+            return Ok(testModel);
         }
     }
 }

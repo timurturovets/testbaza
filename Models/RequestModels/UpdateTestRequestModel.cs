@@ -1,9 +1,10 @@
 ﻿namespace TestBaza.Models
 {
     public class UpdateTestRequestModel
-    {     
-        public int TestId { get; set; }
-        public string? NewTestName { get; set; }
-        public IEnumerable<QuestionJsonModel> NewQuestions { get; set; } = new List<QuestionJsonModel>();
+    {
+        public int Id { get; set; }
+        public string? TestName { get; set; }
+        public string? Description { get; set; }
+        public bool IsPrivate { get; set; }
     }
 }

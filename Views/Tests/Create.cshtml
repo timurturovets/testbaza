@@ -8,7 +8,7 @@
     <h1 class="display-4">Создание теста</h1>
 </div>
 
-<form class="form-horizontal" method="post" action="/tests/create-test">
+<form class="form-horizontal" method="post" action="/tests/create">
     <div class="text-danger" asp-validation-summary="ModelOnly"></div>
 
         <div class="form-group">
@@ -27,7 +27,8 @@
             <span asp-validation-for="Description" class="text-danger"></span>
         </div>
         <div class="form-group">
-            <label class="control=label col-sm-2">Доступ только по ссылке</label>
+            <input class="form-check-input" type="checkbox" asp-for="IsPrivate" />
+            <label class="form-check-label">Доступ только по ссылке</label>
         </div>
     <div class="form-group">        
       <div class="col-sm-offset-2 col-sm-10">

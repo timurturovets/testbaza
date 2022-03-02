@@ -1,9 +1,14 @@
-﻿@model UpdateTestRequestModel
+﻿@model UpdateQuestionRequestModel
 
 @{
-    ViewData["Title"] = "Редактировать тест";
+    ViewData["Title"] = "Редактирование теста";
 }
-
+<h1 class="text-center display-3">Редактирование теста</h1>
 <div id="root"></div>
 
 <partial name="_ReactScriptsPartial" />
+<script src="~/js/tests-edit.jsx" asp-append-version="true" type="text/babel"></script>
+<script type="text/babel">
+    const testId = @ViewData["TestId"];
+    ReactDOM.render(<EditableTest id={testId} />, document.getElementById('root'));
+</script>

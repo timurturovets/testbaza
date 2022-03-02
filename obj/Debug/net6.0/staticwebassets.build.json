@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "2faxkPlBvoRkvJ3CZ7dUOPC6A6cV2/2JOSp6qlc6+lg=",
+  "Hash": "yKggi/nLwUo2IGU7+JnZwSMaVD2QFxmdmP8jh7nI5T4=",
   "Source": "TestBaza",
   "BasePath": "_content/TestBaza",
   "Mode": "Default",
@@ -1103,6 +1103,23 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\favicon.ico"
+    },
+    {
+      "Identity": "C:\\Users\\timur\\source\\repos\\TestBaza\\TestBaza\\wwwroot\\js\\tests-edit.jsx",
+      "SourceId": "TestBaza",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\timur\\source\\repos\\TestBaza\\TestBaza\\wwwroot\\",
+      "BasePath": "_content/TestBaza",
+      "RelativePath": "js/tests-edit.jsx",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\js\\tests-edit.jsx"
     },
     {
       "Identity": "C:\\Users\\timur\\source\\repos\\TestBaza\\TestBaza\\wwwroot\\js\\tests-index.jsx",

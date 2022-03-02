@@ -1,10 +1,9 @@
 ﻿namespace TestBaza.Models
 {
-    public class QuestionJsonModel
+    public class UpdateQuestionRequestModel
     {
         public int Id { get; set; }
-        public int Number { get; set; }
-        public string? Question { get; set; }
+        public string? Value { get; set; }
         public string? Answer { get; set; }
     }
 }
