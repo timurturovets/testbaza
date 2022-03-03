@@ -105,9 +105,11 @@ class EditableTest extends React.Component {
     }
 
     renderTest() {
-        const name = this.state.test.testName,
-            description = this.state.test.description,
-            questions = this.state.test.questions;
+        const test = this.state.test;
+        const name = test.testName,
+            description = test.description,
+            questions = test.questions,
+            isPrivate = test.isPrivate;
 
         return (<div>
             <form name="edit-test" className="form-horizontal">
@@ -120,7 +122,7 @@ class EditableTest extends React.Component {
                     <input type="text" className="form-control" name="description" defaultValue={description} />
                 </div>
                 <div className="form-group">
-                    <input className="form-check-input" type="checkbox" />
+                    <input className="form-check-input" type="checkbox" name="isprivate" defaultValue={isPrivate} />
                     <label className="form-check-label">Доступ только по ссылке</label>
                 </div>
                 <button className="btn btn-outline-success" onClick={e=>this.handleSubmit(e)}>Сохранить изменения</button>
