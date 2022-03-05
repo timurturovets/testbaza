@@ -1,15 +1,17 @@
 ﻿class EditableAnswer extends React.Component {
     constructor(props) {
         super(props);
-
+        this.state = { deleted: false };
     }
 
     render() {
+        if (this.state.deleted) return <div></div>;
         const id = this.props.id,
             value = this.props.value; 
-        return (
-            <input type="text" name="answers" className="form-control" onChange={e => this.props.onValueChange(e, id)} defaultValue={value} />
-        );
+        return
+            <div className="form-group">
+                <input type="text" name="answers" className="form-control" onChange={e => this.props.onValueChange(e, id)} defaultValue={value} />
+            </div>
     }
 
 }
@@ -23,45 +25,63 @@ class EditableQuestion extends React.Component {
         this.handleSubmit = this.handleSubmit.bind(this);
         this.onAnswerValueChange = this.onAnswerValueChange.bind(this);
 
-        this.state = { deleted: false, changed: false, success: false, answerType: 2, answers: [] };
+        this.state = {
+            deleted: false,
+            changed: false,
+            success: false,
+            answerType: this.props.answerType,
+            answers: []
+        };
     }
 
     render() {
         const value = this.props.value === null ? "" : this.props.value,
             answer = this.props.answer === null ? "" : this.props.answer,
-            answers = this.props.answers === null ? [] : this.props.answers;
+            answers = this.props.answers === null || this.props.answers === undefined ? [] : this.props.answers,
+            answerType = this.props.answerType === null ? 1 : this.props.answerType;
         return this.state.deleted
             ? <div></div>
             : <div>
+                <hr />
                 {this.state.changed
                     ? (this.state.success
-                        ? <div className="text-success">Изменения успешно сохранены</div>
-                        : <div className="text-danger">Ошибка. Попробуйте ещё раз</div>)
+                        ? <div className="text-success"><h6 className="display-6">Изменения успешно сохранены</h6></div>
+                        : <div className="text-danger"><h6 className="display-6">Ошибка. Попробуйте ещё раз</h6></div>)
                     : <div></div>}
-                <hr />
                 <form name={`edit-question${this.props.id}`}>
                     <h2>Вопрос {this.props.number}</h2>
+
                     <div className="form-check form-switch">
-                        <input type="radio" className="form-check-input" name="answertype" value="1"
-                            onClick={e => this.handleAnswerTypeChange(e)} />
-                        <label className="form-check-label">Несколько вариантов ответа</label>
-                    </div>
-                    <div className="form-check form-switch">
-                        <input type="radio" className="form-check-input" name="answertype" value="2"
-                            onClick={e => this.handleAnswerTypeChange(e)} defaultChecked />
+                        { answerType === 1
+                            ? <input type="radio" className="form-check-input" name="answertype" value="1"
+                                onClick={e => this.handleAnswerTypeChange(e)} defaultChecked />
+                            : <input type="radio" className="form-check-input" name="answertype" value="1"
+                                onClick={e => this.handleAnswerTypeChange(e)} />
+                            }
                         <label className="form-check-label">Ответ вводится пользователем</label>
                     </div>
+
+                    <div className="form-check form-switch">
+                        {answerType === 2
+                            ? <input type="radio" className="form-check-input" name="answertype" value="2"
+                                onClick={e => this.handleAnswerTypeChange(e)} defaultChecked/>
+                            : <input type="radio" className="form-check-input" name="answertype" value="2"
+                                onClick={e => this.handleAnswerTypeChange(e)} />
+                        }
+                        <label className="form-check-label">Несколько вариантов ответа</label>
+                    </div>
+
                     <div className="form-group">
                         <label>Вопрос:</label>
                         <input type="text" className="form-control" defaultValue={value} name="value" />
                     </div>
-                    {this.state.answerType === 2
+
+                    {this.state.answerType === 1
                         ? <div className="form-group">
                             <label>Верный ответ:</label>
                             <input type="text" className="form-control" defaultValue={answer} name="answer" />
                         </div>
-                        :
-                        answers.map(answer =>
+                        : answers.map(answer =>
                             <div key={answer.id} className="form-group">
                                 <EditableAnswer onValueChange={this.onAnswerValueChange} value={answer.value} />
                             </div>)
@@ -152,8 +172,8 @@ class EditableTest extends React.Component {
         return (<div>
             {this.state.isChanged
                 ? this.state.success
-                    ? <div className="text-success"><p>Изменения сохранены</p></div>
-                    : <div className="text-danger"><p>Произошла ошибка. Попробуйте снова</p></div>
+                    ? <div className="text-success"><h5 className="display-5">Изменения сохранены</h5></div>
+                    : <div className="text-danger"><h5 className="display-5">Произошла ошибка. Попробуйте снова</h5></div>
                 : <div></div>
             }
             {content}
@@ -203,7 +223,7 @@ class EditableTest extends React.Component {
                 </div>
                 <button className="btn btn-outline-success" onClick={e=>this.handleSubmit(e)}>Сохранить изменения</button>
             </form>
-            <h3 className="display-6">Вопросы в тесте</h3>
+            <h1 className="text-center display-3">Вопросы в тесте</h1>
             {console.log(questions)}
                 {questions.length > 0
                 ? questions.map(question =>
@@ -220,7 +240,9 @@ class EditableTest extends React.Component {
                     </div>
                 )
                 : <div><p>В тесте отсутствуют вопросы.</p></div>}
-            <button className="btn btn-outline-success" onClick={e => this.handleAddQuestion(e)}>Добавить вопрос</button>
+            <div className="form-group">
+                <button className="btn btn-outline-success" onClick={e => this.handleAddQuestion(e)}>Добавить вопрос</button>
+            </div>
         </div>);
     }
 
@@ -232,8 +254,10 @@ class EditableTest extends React.Component {
             alert("Вы не можете оставить поля формы пустыми");
             return;
         }
+        const isPrivate = form.elements["isprivate"].checked;
         const formData = new FormData(form);
         formData.append('id', id);
+        formData.set('isprivate', isPrivate)
         await fetch('/tests/update-test', {
             method: 'PUT',
             body: formData

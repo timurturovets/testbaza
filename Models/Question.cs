@@ -32,6 +32,7 @@
                 Id = QuestionId,
                 Number = Number,
                 Value = Value,
+                AnswerType = (int)AnswerType,
                 Answer = Answer,
                 Answers = MultipleAnswers.Select(a => a.ToJsonModel())
             };

@@ -41,10 +41,15 @@ namespace TestBaza.Controllers
         }
 
         [HttpGet("/tests/get-test{id}")]
-        public IActionResult GetTest([FromRoute]int id)
+        public async Task<IActionResult> GetTest([FromRoute]int id)
         {
             Test? test = _testsRepo.GetTest(id);
+            User creator = await _userManager.GetUserAsync(User);
+
             if (test is null) return NotFound();
+
+            if (!test.Creator!.Equals(creator)) return Forbid();
+
             TestJsonModel model = test.ToJsonModel();
             return Ok(model);
         }
@@ -91,43 +96,22 @@ namespace TestBaza.Controllers
 
         [HttpGet]
         [Route("/tests/edit{id}")]
-        public IActionResult Edit([FromRoute] int id)
+        public async Task<IActionResult> Edit([FromRoute] int id)
         {
             Test? test = _testsRepo.GetTest(testId: id);
+            User creator = await _userManager.GetUserAsync(User);
             if(test is null)
             {
                 ViewData["Error"] = $"Ошибка. Теста с ID {id} не существует. Попробуйте перезайти на страницу редактирования";
                 return RedirectToAction(actionName: "index", controllerName: "home");
             }
+
+            if (!test.Creator!.Equals(creator)) return Forbid();
             ViewData["TestId"] = id;
             return View();
         }
 
-        [HttpPut("/tests/update-question")]
-        public async Task<IActionResult> UpdateQuestion([FromForm] UpdateQuestionRequestModel model)
-        {
-            _logger.LogError($"New change question request, value: {model.Value}, answer: {model.Answer}, aType: {model.AnswerType}");
-
-            Question? question = _qsRepo.GetQuestion(model.Id);
-            if (question is null) return NotFound();
-
-            User creator = await _userManager.GetUserAsync(User);
-            if (!question.Test!.Creator!.Equals(creator)) return Forbid();
-
-            question.Value = model.Value;
-            question.AnswerType = model.AnswerType;
-            question.Answer = model.Answer;
-            model.Answers.ToList().ForEach(a =>
-            {
-                Answer? answer = question.MultipleAnswers.FirstOrDefault(ans => ans.AnswerId == a.Id);
-                if (answer is null) return;
-                answer.Value = a.Value;
-            });
-
-            _qsRepo.UpdateQuestion(question);
-
-            return Ok();
-        }
+        
         
         [HttpPut("/tests/update-test")]
         public async Task<IActionResult> UpdateTest([FromForm] UpdateTestRequestModel model)
@@ -171,7 +155,33 @@ namespace TestBaza.Controllers
             int id = createdQuestion!.QuestionId;
             return Ok(new { number, id });
         }
+        [HttpPut("/tests/update-question")]
+        public async Task<IActionResult> UpdateQuestion([FromForm] UpdateQuestionRequestModel model)
+        {
+            _logger.LogError($"New change question request, value: {model.Value}, answer: {model.Answer}, aType: {model.AnswerType}");
 
+            Question? question = _qsRepo.GetQuestion(model.Id);
+            if (question is null) return NotFound();
+
+            User creator = await _userManager.GetUserAsync(User);
+            if (!question.Test!.Creator!.Equals(creator)) return Forbid();
+
+            question.Value = model.Value;
+            question.AnswerType = model.AnswerType;
+            question.Answer = model.Answer;
+            if (model.Answers is not null)
+            {
+                model.Answers.ToList().ForEach(a =>
+                {
+                    Answer? answer = question.MultipleAnswers.FirstOrDefault(ans => ans.AnswerId == a.Id);
+                    if (answer is null) return;
+                    answer.Value = a.Value;
+                });
+            }
+            _qsRepo.UpdateQuestion(question);
+
+            return Ok();
+        }
         [HttpPost("/tests/delete-question")]
         public async Task<IActionResult> DeleteQuestion([FromForm] int id)
         {
