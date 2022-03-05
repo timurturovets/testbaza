@@ -35,13 +35,7 @@
                 IsPrivate = IsPrivate,
                 Description = Description,
                 AuthorName = Creator!.UserName,
-                Questions = Questions.Select(q => new QuestionJsonModel
-                {
-                    Id = q.QuestionId,
-                    Number = q.Number,
-                    Question = q.Value,
-                    Answer = q.Answer
-                })
+                Questions = Questions.Select(q => q.ToJsonModel())
             };
         }
     }

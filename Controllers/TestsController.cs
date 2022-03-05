@@ -106,7 +106,7 @@ namespace TestBaza.Controllers
         [HttpPut("/tests/update-question")]
         public async Task<IActionResult> UpdateQuestion([FromForm] UpdateQuestionRequestModel model)
         {
-            _logger.LogInformation($"New change question request, value: {model.Value}, answer: {model.Answer}");
+            _logger.LogError($"New change question request, value: {model.Value}, answer: {model.Answer}, aType: {model.AnswerType}");
 
             Question? question = _qsRepo.GetQuestion(model.Id);
             if (question is null) return NotFound();
@@ -115,7 +115,14 @@ namespace TestBaza.Controllers
             if (!question.Test!.Creator!.Equals(creator)) return Forbid();
 
             question.Value = model.Value;
+            question.AnswerType = model.AnswerType;
             question.Answer = model.Answer;
+            model.Answers.ToList().ForEach(a =>
+            {
+                Answer? answer = question.MultipleAnswers.FirstOrDefault(ans => ans.AnswerId == a.Id);
+                if (answer is null) return;
+                answer.Value = a.Value;
+            });
 
             _qsRepo.UpdateQuestion(question);
 
@@ -141,6 +148,43 @@ namespace TestBaza.Controllers
             _testsRepo.UpdateTest(test);
             TestJsonModel testModel = test.ToJsonModel();
             return Ok(testModel);
+        }
+
+        [HttpPut("/tests/add-question")]
+        public async Task<IActionResult> AddQuestion([FromForm] int testId)
+        {
+            _logger.LogInformation($"New add question request, testId: {testId}");
+            Test? test = _testsRepo.GetTest(testId);
+            if (test is null) return NotFound();
+
+            User creator = await _userManager.GetUserAsync(User);
+            if (!test.Creator!.Equals(creator)) return Forbid();
+
+            int number = test.Questions.Count()+1;
+            Question newQuestion = new()
+            {
+                Test = test,
+                Number = number
+            };
+            _qsRepo.AddQuestion(newQuestion);
+            Question? createdQuestion = _qsRepo.GetQuestionByTestAndNumber(test, number);
+            int id = createdQuestion!.QuestionId;
+            return Ok(new { number, id });
+        }
+
+        [HttpPost("/tests/delete-question")]
+        public async Task<IActionResult> DeleteQuestion([FromForm] int id)
+        {
+            _logger.LogInformation($"New delete question request, questionId: {id}");
+
+            User creator = await _userManager.GetUserAsync(User);
+            Question? question = _qsRepo.GetQuestion(id);
+
+            if (question is null) return NotFound();
+            if (!question.Test!.Creator!.Equals(creator)) return Forbid();
+
+            _qsRepo.DeleteQuestion(question);
+            return Ok();
         }
     }
 }
