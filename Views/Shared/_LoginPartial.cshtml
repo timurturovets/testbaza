@@ -5,12 +5,10 @@
 @if (SignInManager.IsSignedIn(User))
 {
     <li class="nav-item">
-        <a class="nav-link text-dark" href="#" title="Manage">Личный кабинет</a>
+        <a class="nav-link text-dark" href="#" title="ЛК">Личный кабинет</a>
     </li>
     <li class="nav-item">
-        <form class="form-inline" href="/auth/logout">
-            <button type="submit" class="nav-link btn btn-link text-dark">Выйти</button>
-        </form>
+        <a class="nav-link text-dark" href="/auth/logout" title="Выйти">Выйти</a>
     </li>
 }
 else

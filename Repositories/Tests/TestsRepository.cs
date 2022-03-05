@@ -14,7 +14,7 @@ namespace TestBaza.Repositories
 
         public IEnumerable<Test> GetReadyTests() => _context.Tests
             .Where(t => t.IsReady)
-            .Include(t => t.Questions)
+            .Include(t => t.Questions).ThenInclude(q=>q.MultipleAnswers)
             .Include(t => t.Creator)
             .AsNoTracking();
 
