@@ -14,15 +14,16 @@ namespace TestBaza.Repositories
 
         public IEnumerable<Test> GetReadyTests() => _context.Tests
             .Where(t => t.IsReady)
-            .Include(t => t.Questions).ThenInclude(q=>q.MultipleAnswers)
-            .Include(t => t.Creator)
+            .Include(t=>t.Questions).ThenInclude(q=>q.MultipleAnswers).ThenInclude(a=>a.Question)
+            .Include(t=>t.Creator)
             .AsNoTracking();
 
         public Test? GetTest(string testName)
         {
             if (!_context.Tests.Any(t => t.TestName == testName)) return null;
-            return _context.Tests.Where(t => t.TestName == testName)
-                .Include(t => t.Questions)
+            return _context.Tests
+                .Where(t => t.TestName == testName)
+                .Include(t => t.Questions).ThenInclude(q => q.MultipleAnswers)
                 .Include(t => t.Creator)
                 .Single();
         }
@@ -30,8 +31,9 @@ namespace TestBaza.Repositories
         public Test? GetTest(int testId)
         {
             if (!_context.Tests.Any(t => t.TestId == testId)) return null;
-            return _context.Tests.Where(t => t.TestId == testId)
-                .Include(t => t.Questions)
+            return _context.Tests
+                .Where(t => t.TestId == testId)
+                .Include(t => t.Questions).ThenInclude(q => q.MultipleAnswers)
                 .Include(t => t.Creator)
                 .Single();
         }

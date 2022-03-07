@@ -10,5 +10,5 @@
 <script src="~/js/tests-edit.jsx" asp-append-version="true" type="text/babel"></script>
 <script type="text/babel">
     const testId = @ViewData["TestId"];
-    ReactDOM.render(<EditableTest id={testId} />, document.getElementById('root'));
+    ReactDOM.render(<EditableTest testId={testId} />, document.getElementById('root'));
 </script>

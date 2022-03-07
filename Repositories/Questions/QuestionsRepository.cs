@@ -20,17 +20,59 @@ namespace TestBaza.Repositories
         {
             return _context.Questions
                 .Where(q => q.QuestionId == id)
-                .Include(q => q.Test)
+                .Include(q=>q.Test).ThenInclude(t=>t!.Creator)
+                .Include(q=>q.MultipleAnswers)
                 .SingleOrDefault();
         }
 
         public Question? GetQuestionByTestAndNumber(Test test, int number)
         {
-            return test.Questions.SingleOrDefault(q => q.Number == number);
+            return test.Questions
+                .Where(q => q.Number == number).AsQueryable()
+                .Include(q => q.Test).ThenInclude(t => t!.Creator)
+                .Include(q => q.MultipleAnswers)
+                .SingleOrDefault();
         }
         public void AddQuestion(Question question)
         {
             _context.Questions.Add(question);
+            _context.SaveChanges();
+        }
+        public (int, int) AddAnswerToQuestion(Question question)
+        {
+            int number = question.MultipleAnswers.Count() + 1;
+            Answer answer = new()
+            {
+                Number = number,
+                Question = question
+            };
+            _context.Answers.Add(answer);
+            _context.SaveChanges();
+            _logger.LogError($"Number: {number}");
+
+            Answer createdAnswer = _context.Answers
+                .Include(a => a.Question)
+                .Where(a => a.Question!.Equals(question) && a.Number == number)
+                .Single();
+            int id = createdAnswer.AnswerId;
+
+            return (id, number);
+        }
+        public void RemoveAnswerFromQuestion(Question question, Answer answer)
+        {
+            int number = answer.Number;
+            _context.Answers.Remove(answer);
+            _context.SaveChanges();
+
+            question = GetQuestion(question.QuestionId)!;
+
+            foreach(Answer a in question.MultipleAnswers)
+            {
+                if (a.Number < number) continue;
+                a.Number--;
+                _context.Answers.Update(a);
+            }
+            _context.Questions.Update(question);
             _context.SaveChanges();
         }
         public void UpdateQuestion(Question question)

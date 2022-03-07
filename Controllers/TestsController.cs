@@ -67,11 +67,13 @@ namespace TestBaza.Controllers
                 _logger.LogInformation($"New create test request, TestName-{model.TestName}, IsPrivate:{model.IsPrivate}");
                 if (ModelState.IsValid)
                 {
-                    User creator = await _userManager.GetUserAsync(HttpContext.User);
+                    User creator = await _userManager.GetUserAsync(User);
 
                     if (_testsRepo.GetTest(model.TestName!) is not null)
-                        return Forbid();
-
+                    {
+                        ViewData["Error"] = "Тест с таким названием уже существует.";
+                        return View();
+                    }
                     Test test = new()
                     {
                         Creator = creator,
@@ -105,8 +107,12 @@ namespace TestBaza.Controllers
                 ViewData["Error"] = $"Ошибка. Теста с ID {id} не существует. Попробуйте перезайти на страницу редактирования";
                 return RedirectToAction(actionName: "index", controllerName: "home");
             }
-
-            if (!test.Creator!.Equals(creator)) return Forbid();
+            if (test.Creator is null)
+            {
+                ViewData["Error"] = $"Произошла неизвестная ошибка. Попробуйте перезайти на страницу редактирования";
+                return RedirectToAction(actionName: "index", controllerName: "home");
+            }
+            if (!test.Creator.Equals(creator)) return Forbid();
             ViewData["TestId"] = id;
             return View();
         }
@@ -152,15 +158,16 @@ namespace TestBaza.Controllers
             };
             _qsRepo.AddQuestion(newQuestion);
             Question? createdQuestion = _qsRepo.GetQuestionByTestAndNumber(test, number);
-            int id = createdQuestion!.QuestionId;
-            return Ok(new { number, id });
+            int questionId = createdQuestion!.QuestionId;
+            return Ok(new { questionId, number });
         }
+
         [HttpPut("/tests/update-question")]
         public async Task<IActionResult> UpdateQuestion([FromForm] UpdateQuestionRequestModel model)
         {
             _logger.LogError($"New change question request, value: {model.Value}, answer: {model.Answer}, aType: {model.AnswerType}");
 
-            Question? question = _qsRepo.GetQuestion(model.Id);
+            Question? question = _qsRepo.GetQuestion(model.QuestionId);
             if (question is null) return NotFound();
 
             User creator = await _userManager.GetUserAsync(User);
@@ -173,7 +180,7 @@ namespace TestBaza.Controllers
             {
                 model.Answers.ToList().ForEach(a =>
                 {
-                    Answer? answer = question.MultipleAnswers.FirstOrDefault(ans => ans.AnswerId == a.Id);
+                    Answer? answer = question.MultipleAnswers.FirstOrDefault(ans => ans.AnswerId == a.AnswerId);
                     if (answer is null) return;
                     answer.Value = a.Value;
                 });
@@ -183,18 +190,50 @@ namespace TestBaza.Controllers
             return Ok();
         }
         [HttpPost("/tests/delete-question")]
-        public async Task<IActionResult> DeleteQuestion([FromForm] int id)
+        public async Task<IActionResult> DeleteQuestion([FromForm] int questionId)
         {
-            _logger.LogInformation($"New delete question request, questionId: {id}");
+            _logger.LogInformation($"New delete question request, questionId: {questionId}");
 
             User creator = await _userManager.GetUserAsync(User);
-            Question? question = _qsRepo.GetQuestion(id);
+            Question? question = _qsRepo.GetQuestion(questionId);
 
             if (question is null) return NotFound();
             if (!question.Test!.Creator!.Equals(creator)) return Forbid();
 
             _qsRepo.DeleteQuestion(question);
             return Ok();
+        }
+
+        [HttpPost("/tests/add-answer")]
+        public async Task<IActionResult> AddAnswer(int questionId)
+        {
+            _logger.LogError($"QuestionId: {questionId}");
+            Question? question = _qsRepo.GetQuestion(questionId);
+            User creator = await _userManager.GetUserAsync(User);
+
+            if (question is null) return NotFound();
+            if (!question.Test!.Creator!.Equals(creator)) return Forbid();
+
+            (int answerId, int number) = _qsRepo.AddAnswerToQuestion(question);
+            return Ok(new { answerId , number  });
+        }
+
+        [HttpPost("/tests/delete-answer")]
+        public async Task<IActionResult> DeleteAnswer(int answerId, int questionId)
+        {
+            _logger.LogError($"AnswerID: {answerId}");
+            Question? question = _qsRepo.GetQuestion(questionId);
+            if (question is null) return NotFound();
+
+            User creator = await _userManager.GetUserAsync(User);
+            if (!question.Test!.Creator!.Equals(creator)) return Forbid();
+
+            Answer? answer = question.MultipleAnswers.SingleOrDefault(a => a.AnswerId == answerId);
+            if (answer is null) return BadRequest();
+
+            _qsRepo.RemoveAnswerFromQuestion(question, answer);
+            return Ok();
+            
         }
     }
 }

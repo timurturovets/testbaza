@@ -14,7 +14,7 @@
         {
             return new AnswerJsonModel
             {
-                Id = AnswerId,
+                AnswerId = AnswerId,
                 Number = Number,
                 Value = Value
             };

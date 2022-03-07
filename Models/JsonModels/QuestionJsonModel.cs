@@ -2,7 +2,7 @@
 {
     public class QuestionJsonModel
     {
-        public int Id { get; set; }
+        public int QuestionId { get; set; }
         public int Number { get; set; }
         public string? Value { get; set; }
         public int AnswerType { get; set; }

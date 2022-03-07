@@ -1,21 +1,25 @@
 ﻿class EditableAnswer extends React.Component {
     constructor(props) {
         super(props);
-        this.state = { deleted: false };
     }
 
     render() {
-        if (this.state.deleted) return <div></div>;
-        const id = this.props.id,
-            value = this.props.value; 
-        return
-            <div className="form-group">
-                <input type="text" name="answers" className="form-control" onChange={e => this.props.onValueChange(e, id)} defaultValue={value} />
+        const id = this.props.answerId,
+            value = this.props.value,
+            number = this.props.number;
+        console.log('number: ' + number);
+        return (<div className="input-group mb-3">
+             <input type="text" name={`model.Answers[${number-1}].Value`} className="form-control" onBlur={e => this.props.onValueChange(e, id)}
+                    defaultValue={value} />
+            <div className="input-group-append">
+                    <button className="btn btn-outline-danger" onClick={e=>this.props.onDelete(e, id)}>Удалить</button>
             </div>
+                <input type="hidden" name={`model.Answers[${number-1}].AnswerId`} defaultValue={id} />
+                <input type="hidden" name={`model.Answers[${number-1}].Number`} defaultValue={number} />
+            </div>)
     }
-
 }
-
+    
 class EditableQuestion extends React.Component {
     constructor(props) {
         super(props);
@@ -23,128 +27,191 @@ class EditableQuestion extends React.Component {
         this.handleAnswerTypeChange = this.handleAnswerTypeChange.bind(this);
         this.handleDelete = this.handleDelete.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
+        this.handleAddAnswer = this.handleAddAnswer.bind(this);
         this.onAnswerValueChange = this.onAnswerValueChange.bind(this);
+        this.onAnswerDelete = this.onAnswerDelete.bind(this);
 
         this.state = {
-            deleted: false,
             changed: false,
             success: false,
-            answerType: this.props.answerType,
-            answers: []
+            value: this.props.value === null ? "" : this.props.value,
+            answer: this.props.answer === null ? "" : this.props.answer,
+            answers: this.props.answers === null || this.props.answers === undefined ? [] : this.props.answers,
+            answerType: this.props.answerType === null ? 1 : this.props.answerType
         };
     }
 
     render() {
-        const value = this.props.value === null ? "" : this.props.value,
-            answer = this.props.answer === null ? "" : this.props.answer,
-            answers = this.props.answers === null || this.props.answers === undefined ? [] : this.props.answers,
-            answerType = this.props.answerType === null ? 1 : this.props.answerType;
-        return this.state.deleted
-            ? <div></div>
-            : <div>
-                <hr />
-                {this.state.changed
-                    ? (this.state.success
-                        ? <div className="text-success"><h6 className="display-6">Изменения успешно сохранены</h6></div>
-                        : <div className="text-danger"><h6 className="display-6">Ошибка. Попробуйте ещё раз</h6></div>)
-                    : <div></div>}
-                <form name={`edit-question${this.props.id}`}>
-                    <h2>Вопрос {this.props.number}</h2>
+        const value = this.state.value,
+            answer = this.state.answer,
+            answers = this.state.answers,
+            answerType = this.state.answerType;
+        return <div>
+            <hr />
+            {this.state.changed
+                ? (this.state.success
+                    ? <div className="text-success"><h6 className="display-6">Изменения успешно сохранены</h6></div>
+                    : <div className="text-danger"><h6 className="display-6">Ошибка. Попробуйте ещё раз</h6></div>)
+                : <div></div>}
+            <form name={`edit-question${this.props.questionId}`}>
+                <h2>Вопрос {this.props.number}</h2>
 
-                    <div className="form-check form-switch">
-                        { answerType === 1
-                            ? <input type="radio" className="form-check-input" name="answertype" value="1"
-                                onClick={e => this.handleAnswerTypeChange(e)} defaultChecked />
-                            : <input type="radio" className="form-check-input" name="answertype" value="1"
-                                onClick={e => this.handleAnswerTypeChange(e)} />
-                            }
-                        <label className="form-check-label">Ответ вводится пользователем</label>
-                    </div>
-
-                    <div className="form-check form-switch">
-                        {answerType === 2
-                            ? <input type="radio" className="form-check-input" name="answertype" value="2"
-                                onClick={e => this.handleAnswerTypeChange(e)} defaultChecked/>
-                            : <input type="radio" className="form-check-input" name="answertype" value="2"
-                                onClick={e => this.handleAnswerTypeChange(e)} />
-                        }
-                        <label className="form-check-label">Несколько вариантов ответа</label>
-                    </div>
-
-                    <div className="form-group">
-                        <label>Вопрос:</label>
-                        <input type="text" className="form-control" defaultValue={value} name="value" />
-                    </div>
-
-                    {this.state.answerType === 1
-                        ? <div className="form-group">
-                            <label>Верный ответ:</label>
-                            <input type="text" className="form-control" defaultValue={answer} name="answer" />
-                        </div>
-                        : answers.map(answer =>
-                            <div key={answer.id} className="form-group">
-                                <EditableAnswer onValueChange={this.onAnswerValueChange} value={answer.value} />
-                            </div>)
+                <div className="form-check form-switch">
+                    {answerType === 1
+                        ? <input type="radio" className="form-check-input" name="model.AnswerType" value="1"
+                            onClick={e => this.handleAnswerTypeChange(e)} defaultChecked />
+                        : <input type="radio" className="form-check-input" name="model.AnswerType" value="1"
+                            onClick={e => this.handleAnswerTypeChange(e)} />
                     }
-                    <div className="btn-toolbar">
-                        <div className="btn-group mr-2">
-                            <button className="btn btn-outline-success" onClick={e => this.handleSubmit(e)}>Сохранить изменения</button>
-                            <button className="btn btn-outline-danger" onClick={e => this.handleDelete(e)}>Удалить вопрос</button>
-                        </div>
+                    <label className="form-check-label">Ответ вводится пользователем</label>
+                </div>
+
+                <div className="form-check form-switch">
+                    {answerType === 2
+                        ? <input type="radio" className="form-check-input" name="model.AnswerType" value="2"
+                            onClick={e => this.handleAnswerTypeChange(e)} defaultChecked />
+                        : <input type="radio" className="form-check-input" name="model.AnswerType" value="2"
+                            onClick={e => this.handleAnswerTypeChange(e)} />
+                    }
+                    <label className="form-check-label">Несколько вариантов ответа</label>
+                </div>
+
+                <div className="form-group">
+                    <label>Вопрос:</label>
+                    <input type="text" className="form-control" defaultValue={value} name="model.Value" />
+                </div>
+                {this.state.answerType === 2
+                    ? <div className="form-group">
+                        <label>Верные ответы:</label>
                     </div>
-                </form>
-            </div>
+                    : null}
+                {this.state.answerType === 1
+                    ? <div className="form-group">
+                        <label>Верный ответ:</label>
+                        <input type="text" className="form-control" defaultValue={answer} name="model.Answer" />
+                    </div>
+                    : answers.map(answer =>
+                        <div key={answer.answerId} className="form-group">
+                            <EditableAnswer
+                                onValueChange={this.onAnswerValueChange}
+                                onDelete={this.onAnswerDelete}
+                                value={answer.value}
+                                number={answer.number}
+                                answerId={answer.answerId} />
+                        </div>)
+                }
+                {this.state.answerType === 2
+                    ? <div className="form-group">
+                        <button className="btn btn-outline-success" onClick={e => this.handleAddAnswer(e)}>Добавить</button>
+                    </div>
+                    : null
+                }
+                <div className="btn-toolbar">
+                    <div className="btn-group mr-2">
+                        <button className="btn btn-outline-success" onClick={e => this.handleSubmit(e)}>Сохранить изменения</button>
+                        <button className="btn btn-outline-danger" onClick={e => this.handleDelete(e)}>Удалить вопрос</button>
+                    </div>
+                </div>
+            </form>
+        </div>
     }
+
     handleAnswerTypeChange(event) {
         const elem = event.target;
         this.setState({ answerType: parseInt(elem.value) });
     }
+
     async handleSubmit(e) {
         e.preventDefault();
-        const id = this.props.id;
+        const id = this.props.questionId;
+        const answers = this.state.answers;
         const form = document.forms[`edit-question${id}`];
-        if (form.elements["value"].value === "" || form.elements["answer"] === "") {
+        if (form.elements["model.Value"].value === "" || form.elements["model.Answer"] === "") {
             alert('Вы не можете оставить поля формы пустыми');
             return;
         }
         const formData = new FormData(form);
-        formData.append('id', id);
+        formData.append('model.QuestionId', id);
+        console.log('answers:');
+        console.log(answers);
         await fetch('/tests/update-question', {
             method: 'PUT',
             body: formData
         }).then(response => {
-            this.setState({ changed: true, success: response.status === 200 ? true : false });
+            this.setState({ changed: true, success: response.status === 200 });
         })
     }
 
     async handleDelete(event) {
         event.preventDefault();
-        const id = this.props.id;
-        this.props.onDeleted(this.props.number);
-        const formData = new FormData();
-        formData.append('id', id);
-        await fetch(`/tests/delete-question`, {
-            method: 'POST',
-            body: formData
-        }).then(response => {
-            if (response.status === 200) {
-                this.setState({ deleted: true })
-            } else {
-               // window.location.replace('/home/index');
-            }
-        });
+        const id = this.props.questionId;
+        this.props.onDeleted(id, this.props.number);
     }
+
     onAnswerValueChange(event, id) {
-        event.preventDefault();
+        console.log(`Answer value change event, id: ${id}`);
         const value = event.target.value;
         const answers = this.state.answers;
         for (const obj of answers) {
-            if (obj.id === id) {
+            if (obj.answerId === id) {
+                console.log(obj);
                 answers[answers.indexOf(obj)].value = value;
+                console.log(`value: ${obj.value}`);
                 this.setState({answers: answers})
                 break;
             }
         }
+    }
+
+    async onAnswerDelete(event, answerId) {
+        event.preventDefault();
+
+        const questionId = this.props.questionId;
+
+        const formData = new FormData();
+        formData.append('answerId', answerId);
+        formData.append('questionId', questionId);
+
+        await fetch("/tests/delete-answer", {
+            method: "POST",
+            body: formData
+        }).then(async response => {
+            if (response.status === 200) {
+                const answers = this.state.answers;
+                for (const obj of answers) {
+                    if (obj.answerId === answerId) {
+                        answers.splice(answers.indexOf(obj), 1);
+                        break;
+                    }
+                }
+                this.setState({ answers: answers });
+            }
+        });
+    }
+
+    async handleAddAnswer(event) {
+        event.preventDefault();
+        const id = this.props.questionId;
+        console.log(`questionID: ${id}`);
+        const formData = new FormData();
+        formData.append("questionId", id);
+        await fetch("/tests/add-answer", {
+            method: "POST",
+            body: formData
+        }).then(async response => {
+            if (response.status === 200) {
+                const result = await response.json();
+                console.log(result);
+
+                const answers = this.state.answers;
+                answers.push({ answerId: result.answerId, number: result.number, value: "" });
+
+                this.setState({ answers: answers });
+
+            } else {
+                console.error(`status: ${response.status}`);
+            }
+        });
     }
 }
 
@@ -156,9 +223,9 @@ class EditableTest extends React.Component {
         this.renderTest = this.renderTest.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
         this.handleAddQuestion = this.handleAddQuestion.bind(this);
-        this.handleEnumerationChange = this.handleEnumerationChange.bind(this);
+        this.onQuestionDeleted = this.onQuestionDeleted.bind(this);
 
-        this.state = {isLoading: true, test: {}, isChanged: false, success: false };
+        this.state = {isLoading: true, test: {}, isChanged: false, success: false, hasQuestions: false };
     }
 
     componentDidMount() {
@@ -179,16 +246,17 @@ class EditableTest extends React.Component {
             {content}
             </div>);
     }
-
+0
     async populateData() {
-        const id = this.props.id;
+        const id = this.props.testId;
         await fetch(`/tests/get-test${id}`).then(async response => {
             if (response.status === 200) {
                 const result = await response.json();
                 console.log(result);
                 this.setState({
                     isLoading: false,
-                    test: result
+                    test: result,
+                    hasQuestions: result.questions.length > 0
                 });
             } else {
                 window.location.replace('/home/index');
@@ -201,7 +269,8 @@ class EditableTest extends React.Component {
         const name = test.testName,
             description = test.description,
             questions = test.questions,
-            isPrivate = test.isPrivate;
+            isPrivate = test.isPrivate,
+            hasQuestions = this.state.hasQuestions;
 
         return (<div>
             <form name="edit-test" className="form-horizontal">
@@ -225,17 +294,17 @@ class EditableTest extends React.Component {
             </form>
             <h1 className="text-center display-3">Вопросы в тесте</h1>
             {console.log(questions)}
-                {questions.length > 0
+                {hasQuestions
                 ? questions.map(question =>
-                    <div key={question.id}>
+                    <div key={question.questionId}>
                         <EditableQuestion
-                            id={question.id}
+                            questionId={question.questionId}
                             number={question.number}
                             value={question.value}
                             answerType={question.answerType}
                             answer={question.answer}
                             answers={question.answers}
-                            onDeleted={this.handleEnumerationChange}
+                            onDeleted={this.onQuestionDeleted}
                         />
                     </div>
                 )
@@ -248,7 +317,7 @@ class EditableTest extends React.Component {
 
     async handleSubmit() {
         event.preventDefault();
-        const id = this.props.id;
+        const id = this.props.testId;
         const form = document.forms["edit-test"];
         if (form.elements["testName"].value === "" || form.elements["description"].value === "") {
             alert("Вы не можете оставить поля формы пустыми");
@@ -256,7 +325,7 @@ class EditableTest extends React.Component {
         }
         const isPrivate = form.elements["isprivate"].checked;
         const formData = new FormData(form);
-        formData.append('id', id);
+        formData.append('testid', id);
         formData.set('isprivate', isPrivate)
         await fetch('/tests/update-test', {
             method: 'PUT',
@@ -273,7 +342,7 @@ class EditableTest extends React.Component {
 
     async handleAddQuestion(e) {
         e.preventDefault();
-        const id = this.props.id;
+        const id = this.props.testId;
         const formData = new FormData();
         formData.append('testId', id);
         await fetch('/tests/add-question', {
@@ -284,24 +353,43 @@ class EditableTest extends React.Component {
                 const result = await response.json();
                 console.log(result);
 
-                const questionId = result.id,
+                const questionId = result.questionId,
                     questionNumber = parseInt(result.number);
 
                 const updatedTest = this.state.test;
-                updatedTest.questions.push({ id: questionId, number: questionNumber, value: "", answer: "" });
+                updatedTest.questions.push({ questionId: questionId, number: questionNumber, value: "", answer: "" });
 
-                this.setState({ test: updatedTest });
+                this.setState({ test: updatedTest, hasQuestions:true });
 
             } else console.log(`status: ${response.status}`);
         });
     }
 
-    handleEnumerationChange(number) {
+    async onQuestionDeleted(id, number) {
         const test = this.state.test;
-        for (const question of test.questions) {
-            if (question.number < number + 1) continue;
-                question.number--;
-        }
-        this.setState({ test: test });
+        const formData = new FormData();
+        formData.append('questionId', id);
+        await fetch(`/tests/delete-question`, {
+            method: 'POST',
+            body: formData
+        }).then(response => {
+            if (response.status === 200) {
+                for (const obj of test.questions) {
+                    if (obj.questionId === id) {
+                        test.questions.splice(test.questions.indexOf(obj), 1);
+                        break;
+                    }
+                }
+                for (const obj of test.questions) {
+                    if (obj.number < number) continue;
+                    obj.number--;
+                }
+                const anyQuestionsLeft = test.questions.length > 0;
+                this.setState({ test: test , hasQuestions: anyQuestionsLeft});
+            } else {
+                window.location.replace('/home/index');
+            }
+        });
     }
+
 }

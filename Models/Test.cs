@@ -11,7 +11,7 @@
         public DateTime TimeCreated { get; set; }
         public bool IsPrivate { get; set; }
         public bool IsReady { get => Questions.Count() > 5; set { return; } }
-
+        public bool IsBrowsable { get => IsReady && !IsPrivate; set { return; } }
         public string? CreatorId { get; set; }
         public User? Creator { get; set; }
 
@@ -30,7 +30,7 @@
         {
             return new TestJsonModel
             {
-                Id = TestId,
+                TestId = TestId,
                 TestName = TestName,
                 IsPrivate = IsPrivate,
                 Description = Description,

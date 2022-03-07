@@ -29,7 +29,7 @@
         {
             return new QuestionJsonModel
             {
-                Id = QuestionId,
+                QuestionId = QuestionId,
                 Number = Number,
                 Value = Value,
                 AnswerType = (int)AnswerType,
