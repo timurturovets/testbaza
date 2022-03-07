@@ -252,8 +252,9 @@ class EditableTest extends React.Component {
         this.handleSubmit = this.handleSubmit.bind(this);
         this.handleAddQuestion = this.handleAddQuestion.bind(this);
         this.onQuestionDeleted = this.onQuestionDeleted.bind(this);
+        this.handlePublish = this.handlePublish.bind(this);
 
-        this.state = {isLoading: true, test: {}, isChanged: false, success: false, hasQuestions: false };
+        this.state = {isLoading: true, test: {}, isChanged: false, success: false, hasQuestions: false, publishingErrors: "" };
     }
 
     componentDidMount() {
@@ -298,10 +299,17 @@ class EditableTest extends React.Component {
             description = test.description,
             questions = test.questions,
             isPrivate = test.isPrivate,
-            hasQuestions = this.state.hasQuestions;
+            hasQuestions = this.state.hasQuestions,
+            publishingErrors = this.state.publishingErrors;
 
         return (<div>
             <form name="edit-test" className="form-horizontal">
+                {publishingErrors !== ""
+                    ? <h4 className="text-danger">{publishingErrors}</h4>
+                    : null}
+                <button className="btn btn-outline-primary" onClick={e => this.handlePublish(e)}>
+                    <h3 className="display-3">Опубликовать тест</h3>
+                </button>
                 <div className="form-group">
                 <label className="display-6">Название теста</label>
                     <input type="text" className="form-control" name="testName" defaultValue={name} />
@@ -419,6 +427,21 @@ class EditableTest extends React.Component {
                 this.setState({ test: test , hasQuestions: anyQuestionsLeft});
             } else {
                 window.location.replace('/home/index');
+            }
+        });
+    }
+
+    async handlePublish(event) {
+        event.preventDefault();
+        const id = this.props.testId;
+
+        await fetch(`/tests/publish-test${id}`).then(async response => {
+            if (response.status === 200) {
+                window.location.href = "/profile";
+            } else {
+                const result = await response.json();
+                const errors = await result.errors;
+                this.setState({ publishingErrors: errors });
             }
         });
     }

@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Text;
+
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
 
@@ -35,13 +37,14 @@ namespace TestBaza.Controllers
         [HttpGet("/tests/all")]
         public IActionResult All()
         {
-            if (!_testsRepo.GetReadyTests().Any()) return StatusCode(228);
-            IEnumerable<TestJsonModel> allTests = _testsRepo.GetReadyTests().Select(t => t.ToJsonModel());
-            return Ok(allTests);
+            var tests = _testsRepo.GetBrowsableTests();
+            if (!tests.Any()) return NoContent();
+            IEnumerable<TestSummary> testsSummaries = tests.Select(t => t.ToSummary());
+            return Ok(new { tests = testsSummaries });
         }
 
         [HttpGet("/tests/get-test{id}")]
-        public async Task<IActionResult> GetTest([FromRoute]int id)
+        public async Task<IActionResult> GetTest([FromRoute] int id)
         {
             Test? test = _testsRepo.GetTest(id);
             User creator = await _userManager.GetUserAsync(User);
@@ -235,7 +238,108 @@ namespace TestBaza.Controllers
 
             _qsRepo.RemoveAnswerFromQuestion(question, answer);
             return Ok();
-            
+        }
+
+        [HttpGet("/tests/publish-test{testId}")]
+        public async Task<IActionResult> PublishTest([FromRoute] int testId)
+        {
+            Test? test = _testsRepo.GetTest(testId);
+            if(test is null)
+            {
+                string error = "Произошла непредвиденная ошибка. Перезагрузите страницу.";
+                return BadRequest(new { errors = error });
+            }
+
+            User creator = await _userManager.GetUserAsync(User);
+            if (!test.Creator!.Equals(creator)) return Forbid();
+
+            StringBuilder errors = new();
+            bool isInvalid = false;
+
+            if (string.IsNullOrEmpty(test.TestName)) errors.Append("Вы не ввели название теста");
+
+            if (test.Questions.Count() < 5) {
+                isInvalid = true;
+                errors.Append("В тесте должно быть не менее 5 вопросов. ");
+            }
+
+            foreach(Question q in test.Questions)
+            {
+                IEnumerable<Question> qsWithSameNumbers = test.Questions.Where(qn => qn.Number == q.Number);
+                int qsCount = qsWithSameNumbers.Count();
+                if(qsCount > 1)
+                {
+                    bool hasQsWithSameNumbers = true;
+                    while (hasQsWithSameNumbers)
+                    {
+                        for (int i = 0; i < qsCount; i++)
+                        {
+                            Question last = qsWithSameNumbers.Last();
+                            qsWithSameNumbers.First(qn => qn.Number == last.Number + 1).Number++;
+                            last.Number++;
+                        }
+                    }
+                    if (qsWithSameNumbers.Count() < 2)
+                    {
+                        hasQsWithSameNumbers = false;
+                        _qsRepo.UpdateQuestion(q);
+                    }
+                }
+
+                int n = q.Number;
+                if (string.IsNullOrEmpty(q.Value))
+                {
+                    isInvalid = true;
+                    errors.Append($"Вы не ввели текст вопроса {n}. ");
+                }
+                if (q.HintEnabled && string.IsNullOrEmpty(q.Hint))
+                {
+                    isInvalid = true;
+                    errors.Append($"Вы не ввели текст подсказки в вопросе {n}. ");
+                }
+
+                if (q.AnswerType == AnswerType.HasToBeTyped && string.IsNullOrEmpty(q.Answer))
+                {
+                    isInvalid = true;
+                    errors.Append($"Вы не ввели ответ для вопроса {n}");
+                }
+
+                if(q.AnswerType == AnswerType.MultipleVariants)
+                {
+                    foreach(Answer a in q.MultipleAnswers)
+                    {
+                        IEnumerable<Answer> answersWithSameNumber = q.MultipleAnswers.Where(ans => ans.Number == a.Number);
+                        int answersCount = answersWithSameNumber.Count();
+                        if(answersCount > 1)
+                        {
+                            bool hasAnswersWithSameNumbers = true;
+                            while (hasAnswersWithSameNumbers)
+                            {
+                                for (int i = 0; i < answersCount; i++)
+                                {
+                                    Answer last = answersWithSameNumber.Last();
+                                    answersWithSameNumber.First(a => a.Number == last.Number + 1).Number++;
+                                    last.Number++;
+                                }
+                                if (answersWithSameNumber.Count() < 2)
+                                {
+                                    _qsRepo.UpdateQuestion(q);
+                                    hasAnswersWithSameNumbers = false;
+                                }
+                            }
+                        }
+                        if (string.IsNullOrEmpty(a.Value))
+                        {
+                            isInvalid = true;
+                            errors.Append($"Вы не ввели все варианты ответов в вопросе {n}. ");
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (isInvalid) return BadRequest(new {errors = errors.ToString()});
+            return Ok();
         }
     }
 }

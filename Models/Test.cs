@@ -6,12 +6,13 @@
 
         public string? TestName { get; set; }
         public string? Description { get; set; }
-        public string? Difficulty { get; set; }
         public IEnumerable<Question> Questions { get; set; } = new List<Question>();
         public DateTime TimeCreated { get; set; }
         public bool IsPrivate { get; set; }
-        public bool IsReady { get => Questions.Count() > 5; set { return; } }
-        public bool IsBrowsable { get => IsReady && !IsPrivate; set { return; } }
+        public bool IsPublished { get; set; }
+        public bool IsBrowsable { get => IsPublished && !IsPrivate; set { return; } }
+        public double Rate { get; set; }
+
         public string? CreatorId { get; set; }
         public User? Creator { get; set; }
 
@@ -36,6 +37,17 @@
                 Description = Description,
                 AuthorName = Creator!.UserName,
                 Questions = Questions.Select(q => q.ToJsonModel())
+            };
+        }
+        public TestSummary ToSummary()
+        {
+            return new TestSummary
+            {
+                TestName = TestName,
+                AuthorName = Creator!.UserName,
+                QuestionsCount = Questions.Count(),
+                TimeCreated = TimeCreated,
+                Rate = Rate
             };
         }
     }

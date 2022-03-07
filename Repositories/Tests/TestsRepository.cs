@@ -12,8 +12,8 @@ namespace TestBaza.Repositories
             _context = context;
         }
 
-        public IEnumerable<Test> GetReadyTests() => _context.Tests
-            .Where(t => t.IsReady)
+        public IEnumerable<Test> GetBrowsableTests() => _context.Tests
+            .Where(t => t.IsBrowsable)
             .Include(t=>t.Questions).ThenInclude(q=>q.MultipleAnswers).ThenInclude(a=>a.Question)
             .Include(t=>t.Creator)
             .AsNoTracking();

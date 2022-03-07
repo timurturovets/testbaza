@@ -2,7 +2,7 @@
 {
     public interface ITestsRepository
     {
-        IEnumerable<Test> GetReadyTests();
+        IEnumerable<Test> GetBrowsableTests();
         Test? GetTest(string testName);
         Test? GetTest(int testId);
         void AddTest(Test test);
