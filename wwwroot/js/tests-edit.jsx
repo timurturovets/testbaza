@@ -35,6 +35,8 @@ class EditableQuestion extends React.Component {
             changed: false,
             success: false,
             value: this.props.value === null ? "" : this.props.value,
+            hint: this.props.hint === null ? {} : this.props.hint,
+            hintEnabled: this.props.hintEnabled === null ? false : this.props.hintEnabled,
             answer: this.props.answer === null ? "" : this.props.answer,
             answers: this.props.answers === null || this.props.answers === undefined ? [] : this.props.answers,
             answerType: this.props.answerType === null ? 1 : this.props.answerType
@@ -43,6 +45,8 @@ class EditableQuestion extends React.Component {
 
     render() {
         const value = this.state.value,
+            hint = this.state.hint,
+            hintEnabled = this.state.hintEnabled,
             answer = this.state.answer,
             answers = this.state.answers,
             answerType = this.state.answerType;
@@ -80,6 +84,21 @@ class EditableQuestion extends React.Component {
                     <label>Вопрос:</label>
                     <input type="text" className="form-control" defaultValue={value} name="model.Value" />
                 </div>
+                {hintEnabled
+                    ? <div><div className="form-check form-switch">
+                        <input type="checkbox" className="form-check-input" name="model.HintEnabled" defaultChecked
+                            onClick={e=>this.handleHintPresence(e)} />
+                        <label className="form-check-label">Подсказка</label>
+                        </div>
+                    <div className="form-group">
+                        <input type="text" className="form-control" name="model.Hint" defaultValue={hint === null ? "" : hint} />
+                    </div></div>
+                    : <div className="form-check form-switch">
+                        <input type="checkbox" className="form-check-input" name="model.HintEnabled"
+                        onClick={e => this.handleHintPresence(e)} />
+                        <label className="form-check-label">Подсказка</label>
+                    </div>
+                }
                 {this.state.answerType === 2
                     ? <div className="form-group">
                         <label>Верные ответы:</label>
@@ -120,19 +139,28 @@ class EditableQuestion extends React.Component {
         const elem = event.target;
         this.setState({ answerType: parseInt(elem.value) });
     }
-
+    handleHintPresence(event) {
+        const elem = event.target;
+        this.setState({hintEnabled: elem.checked})
+    }
     async handleSubmit(e) {
         e.preventDefault();
+
         const id = this.props.questionId;
         const answers = this.state.answers;
+
         const form = document.forms[`edit-question${id}`];
         if (form.elements["model.Value"].value === "" || form.elements["model.Answer"] === "") {
             alert('Вы не можете оставить поля формы пустыми');
             return;
         }
+
+        const hintEnabled = form.elements["model.HintEnabled"].checked;
         const formData = new FormData(form);
+
         formData.append('model.QuestionId', id);
-        console.log('answers:');
+        formData.set('model.HintEnabled', hintEnabled);
+
         console.log(answers);
         await fetch('/tests/update-question', {
             method: 'PUT',
@@ -301,9 +329,11 @@ class EditableTest extends React.Component {
                             questionId={question.questionId}
                             number={question.number}
                             value={question.value}
-                            answerType={question.answerType}
+                            hint={question.hint}
+                            hintEnabled={question.hintEnabled}
                             answer={question.answer}
                             answers={question.answers}
+                            answerType={question.answerType}
                             onDeleted={this.onQuestionDeleted}
                         />
                     </div>

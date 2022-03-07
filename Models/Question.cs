@@ -6,6 +6,8 @@
 
         public int Number {get;set;}
         public string? Value { get; set; }
+        public string? Hint { get; set; }
+        public bool HintEnabled { get; set; }
         public string? Answer { get; set; }
         public IEnumerable<Answer> MultipleAnswers { get; set; } = new List<Answer>();
         public AnswerType AnswerType { get; set; } = AnswerType.HasToBeTyped;
@@ -13,13 +15,13 @@
         public int TestId { get; set; }
         public Test? Test { get; set; }
 
-
         public override bool Equals(object? obj)
         {
             if (obj is Question q)
                 return q.QuestionId == QuestionId
                      && q.Value == Value
                      && q.Answer == Answer
+                     && q.Hint == Hint
                      && q.MultipleAnswers.SequenceEqual(MultipleAnswers);
             return false;
         }
@@ -32,9 +34,11 @@
                 QuestionId = QuestionId,
                 Number = Number,
                 Value = Value,
-                AnswerType = (int)AnswerType,
+                Hint = Hint,
+                HintEnabled = HintEnabled,
                 Answer = Answer,
-                Answers = MultipleAnswers.Select(a => a.ToJsonModel())
+                Answers = MultipleAnswers.Select(a => a.ToJsonModel()),
+                AnswerType = (int)AnswerType,
             };
         }
     }

@@ -174,7 +174,8 @@ namespace TestBaza.Controllers
             if (!question.Test!.Creator!.Equals(creator)) return Forbid();
 
             question.Value = model.Value;
-            question.AnswerType = model.AnswerType;
+            question.Hint = model.Hint;
+            question.HintEnabled = model.HintEnabled;
             question.Answer = model.Answer;
             if (model.Answers is not null)
             {
@@ -185,6 +186,7 @@ namespace TestBaza.Controllers
                     answer.Value = a.Value;
                 });
             }
+            question.AnswerType = model.AnswerType;
             _qsRepo.UpdateQuestion(question);
 
             return Ok();
@@ -194,10 +196,10 @@ namespace TestBaza.Controllers
         {
             _logger.LogInformation($"New delete question request, questionId: {questionId}");
 
-            User creator = await _userManager.GetUserAsync(User);
             Question? question = _qsRepo.GetQuestion(questionId);
-
             if (question is null) return NotFound();
+
+            User creator = await _userManager.GetUserAsync(User);
             if (!question.Test!.Creator!.Equals(creator)) return Forbid();
 
             _qsRepo.DeleteQuestion(question);
