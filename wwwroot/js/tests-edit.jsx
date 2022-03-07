@@ -309,6 +309,7 @@ class EditableTest extends React.Component {
                     </div>
                 )
                 : <div><p>В тесте отсутствуют вопросы.</p></div>}
+            <hr />
             <div className="form-group">
                 <button className="btn btn-outline-success" onClick={e => this.handleAddQuestion(e)}>Добавить вопрос</button>
             </div>

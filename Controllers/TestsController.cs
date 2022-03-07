@@ -125,7 +125,7 @@ namespace TestBaza.Controllers
             _logger.LogInformation($"New change test request, testName: {model.TestName}, description: {model.Description}," +
                 $"IsPrivate: {model.IsPrivate}");
 
-            Test? test = _testsRepo.GetTest(model.Id);
+            Test? test = _testsRepo.GetTest(model.TestId);
             if (test is null) return NotFound();
 
             User creator = await _userManager.GetUserAsync(User);
