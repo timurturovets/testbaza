@@ -1,4 +1,4 @@
-﻿using System.Text;
+﻿using System.Text.RegularExpressions;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
@@ -7,25 +7,22 @@ using Microsoft.AspNetCore.Authorization;
 using TestBaza.Repositories;
 
 namespace TestBaza.Controllers
-{   
+{
     [Authorize]
     public class TestsController : Controller
     {
         private readonly ITestsRepository _testsRepo;
         private readonly IQuestionsRepository _qsRepo;
         private readonly UserManager<User> _userManager;
-        private readonly SignInManager<User> _signInManager;
         private readonly ILogger<TestsController> _logger;
-        public TestsController(ITestsRepository testsRepo, 
+        public TestsController(ITestsRepository testsRepo,
             IQuestionsRepository qsRepo,
-            UserManager<User> userManager, 
-            SignInManager<User> signInManager,
+            UserManager<User> userManager,
             ILogger<TestsController> logger)
         {
             _testsRepo = testsRepo;
             _qsRepo = qsRepo;
             _userManager = userManager;
-            _signInManager = signInManager;
             _logger = logger;
         }
 
@@ -87,10 +84,10 @@ namespace TestBaza.Controllers
                     };
                     _testsRepo.AddTest(test);
                     int id = _testsRepo.GetTest(test.TestName)!.TestId;
-                    return RedirectToAction(actionName:"edit", controllerName:"tests", new { id });
+                    return RedirectToAction(actionName: "edit", controllerName: "tests", new { id });
                 }
                 else return View();
-                
+
             }
             catch (Exception e)
             {
@@ -105,7 +102,7 @@ namespace TestBaza.Controllers
         {
             Test? test = _testsRepo.GetTest(testId: id);
             User creator = await _userManager.GetUserAsync(User);
-            if(test is null)
+            if (test is null)
             {
                 ViewData["Error"] = $"Ошибка. Теста с ID {id} не существует. Попробуйте перезайти на страницу редактирования";
                 return RedirectToAction(actionName: "index", controllerName: "home");
@@ -120,8 +117,8 @@ namespace TestBaza.Controllers
             return View();
         }
 
-        
-        
+
+
         [HttpPut("/tests/update-test")]
         public async Task<IActionResult> UpdateTest([FromForm] UpdateTestRequestModel model)
         {
@@ -153,7 +150,7 @@ namespace TestBaza.Controllers
             User creator = await _userManager.GetUserAsync(User);
             if (!test.Creator!.Equals(creator)) return Forbid();
 
-            int number = test.Questions.Count()+1;
+            int number = test.Questions.Count() + 1;
             Question newQuestion = new()
             {
                 Test = test,
@@ -220,7 +217,7 @@ namespace TestBaza.Controllers
             if (!question.Test!.Creator!.Equals(creator)) return Forbid();
 
             (int answerId, int number) = _qsRepo.AddAnswerToQuestion(question);
-            return Ok(new { answerId , number  });
+            return Ok(new { answerId, number });
         }
 
         [HttpPost("/tests/delete-answer")]
@@ -244,30 +241,46 @@ namespace TestBaza.Controllers
         public async Task<IActionResult> PublishTest([FromRoute] int testId)
         {
             Test? test = _testsRepo.GetTest(testId);
-            if(test is null)
+            List<string> errors = new();
+
+            if (test is null)
             {
-                string error = "Произошла непредвиденная ошибка. Перезагрузите страницу.";
-                return BadRequest(new { errors = error });
+                errors.Add("Произошла непредвиденная ошибка. Перезагрузите страницу.");
+                return BadRequest(new { errors });
             }
 
             User creator = await _userManager.GetUserAsync(User);
             if (!test.Creator!.Equals(creator)) return Forbid();
 
-            StringBuilder errors = new();
-            bool isInvalid = false;
-
-            if (string.IsNullOrEmpty(test.TestName)) errors.Append("Вы не ввели название теста");
-
-            if (test.Questions.Count() < 5) {
-                isInvalid = true;
-                errors.Append("В тесте должно быть не менее 5 вопросов. ");
+            if (string.IsNullOrEmpty(test.TestName))
+            {
+                errors.Add("Вы не ввели название теста. ");
             }
 
-            foreach(Question q in test.Questions)
+            if (test.Questions.Count() < 5) {
+                errors.Add("В тесте должно быть не менее 5 вопросов. ");
+            }
+
+            string noQuestionValueErrors = "Вы не ввели текст ",
+                noHintValueErrors = "Вы не ввели текст подсказки ",
+                noQuestionAnswerErrors = "Вы не ввели ответ ",
+                notAllAnswersEnteredErrors = "Вы ввели не все варианты ответа ",
+                answerTypeNotDeclaredErrors = "Вы не выбрали вариант ответа для ",
+                notEnoughAnswersErrors = "Вопросы с несколькими вариантами ответа должны иметь минимум 2 ответа. Под этот критерий не проходит ";
+
+
+            bool hasQuestionsWithoutValue = false,
+                hasHintsWithoutValue = false,
+                hasQuestionsWithoutAnswer = false,
+                hasAnswersWithoutValue = false,
+                hasUndeclaredAnswerTypes = false,
+                hasQuestionsWithNotEnoughAnswers = false;
+
+            foreach (Question q in test.Questions)
             {
                 IEnumerable<Question> qsWithSameNumbers = test.Questions.Where(qn => qn.Number == q.Number);
                 int qsCount = qsWithSameNumbers.Count();
-                if(qsCount > 1)
+                if (qsCount > 1)
                 {
                     bool hasQsWithSameNumbers = true;
                     while (hasQsWithSameNumbers)
@@ -289,28 +302,28 @@ namespace TestBaza.Controllers
                 int n = q.Number;
                 if (string.IsNullOrEmpty(q.Value))
                 {
-                    isInvalid = true;
-                    errors.Append($"Вы не ввели текст вопроса {n}. ");
+                    hasQuestionsWithoutValue = true;
+                    noQuestionValueErrors += $"вопроса {n}, ";
                 }
                 if (q.HintEnabled && string.IsNullOrEmpty(q.Hint))
                 {
-                    isInvalid = true;
-                    errors.Append($"Вы не ввели текст подсказки в вопросе {n}. ");
+                    hasHintsWithoutValue = true;
+                    noHintValueErrors += $"вопроса {n}, ";
                 }
 
                 if (q.AnswerType == AnswerType.HasToBeTyped && string.IsNullOrEmpty(q.Answer))
                 {
-                    isInvalid = true;
-                    errors.Append($"Вы не ввели ответ для вопроса {n}");
+                    hasQuestionsWithoutAnswer = true;
+                    noQuestionAnswerErrors += $"на вопрос {n}, ";
                 }
 
-                if(q.AnswerType == AnswerType.MultipleVariants)
+                if (q.AnswerType == AnswerType.MultipleVariants)
                 {
-                    foreach(Answer a in q.MultipleAnswers)
+                    foreach (Answer a in q.MultipleAnswers)
                     {
                         IEnumerable<Answer> answersWithSameNumber = q.MultipleAnswers.Where(ans => ans.Number == a.Number);
                         int answersCount = answersWithSameNumber.Count();
-                        if(answersCount > 1)
+                        if (answersCount > 1)
                         {
                             bool hasAnswersWithSameNumbers = true;
                             while (hasAnswersWithSameNumbers)
@@ -328,17 +341,40 @@ namespace TestBaza.Controllers
                                 }
                             }
                         }
+
                         if (string.IsNullOrEmpty(a.Value))
                         {
-                            isInvalid = true;
-                            errors.Append($"Вы не ввели все варианты ответов в вопросе {n}. ");
+                            hasAnswersWithoutValue = true;
+                            notAllAnswersEnteredErrors += $"на вопрос {n}, ";
                             break;
                         }
                     }
+                    if (q.MultipleAnswers.Count() < 3)
+                    {
+                        hasQuestionsWithNotEnoughAnswers = true;
+                        notEnoughAnswersErrors += $"вопрос {n}, ";
+                    }
+                }
+                else if (q.AnswerType != AnswerType.HasToBeTyped)
+                {
+                    hasUndeclaredAnswerTypes = true;
+                    answerTypeNotDeclaredErrors += $"вопроса {n}, ";
                 }
             }
 
-            if (isInvalid) return BadRequest(new {errors = errors.ToString()});
+            if (hasQuestionsWithoutValue) errors.Add(Regex.Replace(noQuestionValueErrors, @",\s$", "."));
+            if (hasHintsWithoutValue) errors.Add(Regex.Replace(noHintValueErrors, @",\s$", "."));
+            if (hasQuestionsWithoutAnswer) errors.Add(Regex.Replace(noQuestionAnswerErrors, @",\s$", "."));
+            if (hasAnswersWithoutValue) errors.Add(Regex.Replace(notAllAnswersEnteredErrors, @",\s$", "."));
+            if (hasQuestionsWithNotEnoughAnswers) errors.Add(Regex.Replace(notEnoughAnswersErrors, @",\s$", "."));
+            if (hasUndeclaredAnswerTypes) errors.Add(Regex.Replace(answerTypeNotDeclaredErrors, @",\s$", "."));
+
+            if (errors.Count > 0) return BadRequest(new { errors });
+
+
+            test.IsPublished = true;
+            _testsRepo.UpdateTest(test);
+
             return Ok();
         }
     }

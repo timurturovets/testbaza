@@ -35,7 +35,7 @@ class EditableQuestion extends React.Component {
             changed: false,
             success: false,
             value: this.props.value === null ? "" : this.props.value,
-            hint: this.props.hint === null ? {} : this.props.hint,
+            hint: this.props.hint === null ? "" : this.props.hint,
             hintEnabled: this.props.hintEnabled === null ? false : this.props.hintEnabled,
             answer: this.props.answer === null ? "" : this.props.answer,
             answers: this.props.answers === null || this.props.answers === undefined ? [] : this.props.answers,
@@ -150,10 +150,6 @@ class EditableQuestion extends React.Component {
         const answers = this.state.answers;
 
         const form = document.forms[`edit-question${id}`];
-        if (form.elements["model.Value"].value === "" || form.elements["model.Answer"] === "") {
-            alert('Вы не можете оставить поля формы пустыми');
-            return;
-        }
 
         const hintEnabled = form.elements["model.HintEnabled"].checked;
         const formData = new FormData(form);
@@ -254,7 +250,7 @@ class EditableTest extends React.Component {
         this.onQuestionDeleted = this.onQuestionDeleted.bind(this);
         this.handlePublish = this.handlePublish.bind(this);
 
-        this.state = {isLoading: true, test: {}, isChanged: false, success: false, hasQuestions: false, publishingErrors: "" };
+        this.state = {isLoading: true, test: {}, isChanged: false, success: false, hasQuestions: false, publishingErrors: [] };
     }
 
     componentDidMount() {
@@ -304,12 +300,6 @@ class EditableTest extends React.Component {
 
         return (<div>
             <form name="edit-test" className="form-horizontal">
-                {publishingErrors !== ""
-                    ? <h4 className="text-danger">{publishingErrors}</h4>
-                    : null}
-                <button className="btn btn-outline-primary" onClick={e => this.handlePublish(e)}>
-                    <h3 className="display-3">Опубликовать тест</h3>
-                </button>
                 <div className="form-group">
                 <label className="display-6">Название теста</label>
                     <input type="text" className="form-control" name="testName" defaultValue={name} />
@@ -350,6 +340,21 @@ class EditableTest extends React.Component {
             <hr />
             <div className="form-group">
                 <button className="btn btn-outline-success" onClick={e => this.handleAddQuestion(e)}>Добавить вопрос</button>
+            </div>
+            <div className="text-center">
+
+                {publishingErrors.length > 0
+                    ? publishingErrors.map(error =>
+                        <div key={error} className="text-center">
+                            <h4 className="text-danger">{error}</h4>
+                            <hr />
+                        </div>)
+                    : null}
+            </div>
+            <div className="text-center">
+                <button className="btn btn-outline-primary" onClick={e => this.handlePublish(e)}>
+                    <h3 className="display-3">Опубликовать тест</h3>
+                </button>
             </div>
         </div>);
     }
@@ -440,7 +445,7 @@ class EditableTest extends React.Component {
                 window.location.href = "/profile";
             } else {
                 const result = await response.json();
-                const errors = await result.errors;
+                const errors = result.errors;
                 this.setState({ publishingErrors: errors });
             }
         });
