@@ -366,12 +366,43 @@ namespace TestBaza.Controllers
                 }
             }
 
-            if (hasQuestionsWithoutValue) errors.Add(Regex.Replace(noQuestionValueErrors, @",\s$", "."));
-            if (hasHintsWithoutValue) errors.Add(Regex.Replace(noHintValueErrors, @",\s$", "."));
-            if (hasQuestionsWithoutAnswer) errors.Add(Regex.Replace(noQuestionAnswerErrors, @",\s$", "."));
-            if (hasAnswersWithoutValue) errors.Add(Regex.Replace(notAllAnswersEnteredErrors, @",\s$", "."));
-            if (hasQuestionsWithNotEnoughAnswers) errors.Add(Regex.Replace(notEnoughAnswersErrors, @",\s$", "."));
-            if (hasUndeclaredAnswerTypes) errors.Add(Regex.Replace(answerTypeNotDeclaredErrors, @",\s$", "."));
+            Func<string, string> replaceLastComma = value => Regex.Replace(value, @",\s$", ".");
+
+            string msg;
+            if (hasQuestionsWithoutValue)
+            {
+                msg = replaceLastComma(noQuestionValueErrors);
+                errors.Add(msg);
+            }
+            if (hasHintsWithoutValue)
+            {
+                msg = replaceLastComma(noHintValueErrors);
+                errors.Add(msg);
+            }
+
+            if (hasQuestionsWithoutAnswer)
+            {     
+                msg = replaceLastComma(noQuestionAnswerErrors);
+                errors.Add(msg);
+            }
+
+            if (hasAnswersWithoutValue)
+            {
+                msg = replaceLastComma(notAllAnswersEnteredErrors);
+                errors.Add(msg);
+            }
+
+            if (hasQuestionsWithNotEnoughAnswers)
+            {
+                msg = replaceLastComma(notEnoughAnswersErrors);
+                errors.Add(msg);
+            }
+
+            if (hasUndeclaredAnswerTypes)
+            {
+                msg = replaceLastComma(answerTypeNotDeclaredErrors);
+                errors.Add(msg);
+            }
 
             if (errors.Count > 0) return BadRequest(new { errors });
 
@@ -379,6 +410,16 @@ namespace TestBaza.Controllers
             test.IsPublished = true;
             _testsRepo.UpdateTest(test);
 
+            return Ok();
+        }
+
+        [HttpPost("/tests/rate-test")]
+        public async Task<IActionResult> RateTest([FromForm] RateTestRequestModel model)
+        {
+            User sender = await _userManager.GetUserAsync(User);
+
+            Test? test = _testsRepo.GetTest(model.TestId);
+            if (test is null) return NotFound();
             return Ok();
         }
     }

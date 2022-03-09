@@ -47,7 +47,9 @@
                 AuthorName = Creator!.UserName,
                 QuestionsCount = Questions.Count(),
                 TimeCreated = TimeCreated,
-                Rate = Rate
+                Rate = Rate,
+                IsBrowsable = IsBrowsable,
+                IsPublished = IsPublished
             };
         }
     }
