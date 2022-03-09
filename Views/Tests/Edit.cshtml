@@ -10,5 +10,16 @@
 <script src="~/js/tests-edit.jsx" asp-append-version="true" type="text/babel"></script>
 <script type="text/babel">
     const testId = @ViewData["TestId"];
-    ReactDOM.render(<EditableTest testId={testId} />, document.getElementById('root'));
+    let isEverythingSaved = true;
+    const onSavedChange = isSaved => isEverythingSaved = isSaved;
+    ReactDOM.render(<EditableTest testId={testId} onSavedChange={onSavedChange} />, document.getElementById('root'));
+
+    window.addEventListener("onbeforeunload", e =>{
+        if(!isEverythingSaved){
+            if(!confirm("У вас остались несохранённые изменения. В случае закрытия страницы, они пропадут.")){
+                e.preventDefault();
+                return;
+            }
+        }
+    })
 </script>

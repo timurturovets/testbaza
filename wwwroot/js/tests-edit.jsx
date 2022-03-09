@@ -25,6 +25,7 @@ class EditableQuestion extends React.Component {
         super(props);
 
         this.handleAnswerTypeChange = this.handleAnswerTypeChange.bind(this);
+        this.handleUnsavedState = this.handleUnsavedState.bind(this);
         this.handleDelete = this.handleDelete.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
         this.handleAddAnswer = this.handleAddAnswer.bind(this);
@@ -34,6 +35,7 @@ class EditableQuestion extends React.Component {
         this.state = {
             changed: false,
             success: false,
+            saved: true,
             value: this.props.value === null ? "" : this.props.value,
             hint: this.props.hint === null ? "" : this.props.hint,
             hintEnabled: this.props.hintEnabled === null ? false : this.props.hintEnabled,
@@ -44,21 +46,16 @@ class EditableQuestion extends React.Component {
     }
 
     render() {
-        const value = this.state.value,
-            hint = this.state.hint,
-            hintEnabled = this.state.hintEnabled,
-            answer = this.state.answer,
-            answers = this.state.answers,
-            answerType = this.state.answerType;
+        const { changed, success, saved, value, hint, hintEnabled, answer, answers, answerType } = this.state;
         return <div>
             <hr />
-            {this.state.changed
-                ? (this.state.success
+            {changed
+                ? (success
                     ? <div className="text-success"><h6 className="display-6">Изменения успешно сохранены</h6></div>
                     : <div className="text-danger"><h6 className="display-6">Ошибка. Попробуйте ещё раз</h6></div>)
                 : <div></div>}
             <form name={`edit-question${this.props.questionId}`}>
-                <h2>Вопрос {this.props.number}</h2>
+                <h2>Вопрос {this.props.number} {saved ? null : "*"}</h2>
 
                 <div className="form-check form-switch">
                     {answerType === 1
@@ -82,7 +79,7 @@ class EditableQuestion extends React.Component {
 
                 <div className="form-group">
                     <label>Вопрос:</label>
-                    <input type="text" className="form-control" defaultValue={value} name="model.Value" />
+                    <input type="text" className="form-control" onBlur={this.handleUnsavedState} name="model.Value" defaultValue={value} />
                 </div>
                 {hintEnabled
                     ? <div><div className="form-check form-switch">
@@ -91,7 +88,8 @@ class EditableQuestion extends React.Component {
                         <label className="form-check-label">Подсказка</label>
                         </div>
                     <div className="form-group">
-                        <input type="text" className="form-control" name="model.Hint" defaultValue={hint === null ? "" : hint} />
+                            <input type="text" className="form-control" onBlur={this.handleUnsavedState}
+                                name="model.Hint" defaultValue={hint === null ? "" : hint} />
                     </div></div>
                     : <div className="form-check form-switch">
                         <input type="checkbox" className="form-check-input" name="model.HintEnabled"
@@ -127,7 +125,10 @@ class EditableQuestion extends React.Component {
                 }
                 <div className="btn-toolbar">
                     <div className="btn-group mr-2">
-                        <button className="btn btn-outline-success" onClick={e => this.handleSubmit(e)}>Сохранить изменения</button>
+                        {saved
+                            ? <button className="btn btn-outline-success" onClick={e => this.handleSubmit(e)} disabled>Сохранить изменения</button>
+                            : <button className="btn btn-outline-success" onClick={e => this.handleSubmit(e)}>Сохранить изменения</button>
+                        }
                         <button className="btn btn-outline-danger" onClick={e => this.handleDelete(e)}>Удалить вопрос</button>
                     </div>
                 </div>
@@ -137,15 +138,24 @@ class EditableQuestion extends React.Component {
 
     handleAnswerTypeChange(event) {
         const elem = event.target;
-        this.setState({ answerType: parseInt(elem.value) });
+        this.props.onSavedChange(false);
+        this.setState({ answerType: parseInt(elem.value), saved: false });
     }
+
     handleHintPresence(event) {
         const elem = event.target;
-        this.setState({hintEnabled: elem.checked})
+        this.props.onSavedChange(false);
+        this.setState({hintEnabled: elem.checked, saved: false})
+    }
+    handleUnsavedState() {
+        this.setState({ saved: false });
+        this.props.onSavedChange(false);
     }
     async handleSubmit(e) {
+        this.setState({ saved: true });
+        this.props.onSavedChange(true);
         e.preventDefault();
-
+        
         const id = this.props.questionId;
         const answers = this.state.answers;
 
@@ -181,7 +191,8 @@ class EditableQuestion extends React.Component {
                 console.log(obj);
                 answers[answers.indexOf(obj)].value = value;
                 console.log(`value: ${obj.value}`);
-                this.setState({answers: answers})
+                this.setState({ answers: answers, saved: false });
+                this.props.onSavedChange(false);
                 break;
             }
         }
@@ -249,8 +260,16 @@ class EditableTest extends React.Component {
         this.handleAddQuestion = this.handleAddQuestion.bind(this);
         this.onQuestionDeleted = this.onQuestionDeleted.bind(this);
         this.handlePublish = this.handlePublish.bind(this);
-
-        this.state = {isLoading: true, test: {}, isChanged: false, success: false, hasQuestions: false, publishingErrors: [] };
+        this.handleUnsavedChange = this.handleUnsavedChange.bind(this);
+        this.state = {
+            isLoading: true,
+            test: {},
+            isChanged: false,
+            success: false,
+            isSaved: true,
+            hasQuestions: false,
+            publishingErrors: []
+        };
     }
 
     componentDidMount() {
@@ -258,12 +277,13 @@ class EditableTest extends React.Component {
     }
 
     render() {
-        const content = this.state.isLoading
+        const { isLoading, test, isChanged, success, isSaved } = this.state;
+        const content = isLoading
             ? <h1 className="display-6">Загрузка...</h1>
             : this.renderTest()
         return (<div>
-            {this.state.isChanged
-                ? this.state.success
+            {isChanged
+                ? success
                     ? <div className="text-success"><h5 className="display-5">Изменения сохранены</h5></div>
                     : <div className="text-danger"><h5 className="display-5">Произошла ошибка. Попробуйте снова</h5></div>
                 : <div></div>
@@ -271,7 +291,7 @@ class EditableTest extends React.Component {
             {content}
             </div>);
     }
-0
+
     async populateData() {
         const id = this.props.testId;
         await fetch(`/tests/get-test${id}`).then(async response => {
@@ -296,27 +316,35 @@ class EditableTest extends React.Component {
             questions = test.questions,
             isPrivate = test.isPrivate,
             hasQuestions = this.state.hasQuestions,
-            publishingErrors = this.state.publishingErrors;
+            publishingErrors = this.state.publishingErrors,
+            isSaved = this.state.isSaved;
 
         return (<div>
             <form name="edit-test" className="form-horizontal">
                 <div className="form-group">
                 <label className="display-6">Название теста</label>
-                    <input type="text" className="form-control" name="testName" defaultValue={name} />
+                    <input type="text" className="form-control" name="testName"
+                        onBlur={this.handleUnsavedChange} defaultValue={name} />
                 </div>
                 <div className="form-group">
                 <label className="display-6">Описание теста</label>
-                    <input type="text" className="form-control" name="description" defaultValue={description} />
+                    <input type="text" className="form-control" name="description"
+                        onBlur={this.handleUnsavedChange} defaultValue={description} />
                 </div>
                 <div className="form-group">
                     <div className="form-check form-switch">
                     {isPrivate
-                        ? <input className="form-check-input" type="checkbox" name="isprivate" defaultChecked />
-                        : <input className="form-check-input" type="checkbox" name="isprivate" />}
+                            ? <input className="form-check-input" type="checkbox" name="isprivate"
+                                onClick={this.handleUnsavedChange} defaultChecked />
+                            : <input className="form-check-input" type="checkbox" name="isprivate"
+                            onClick={this.handleUnsavedChange} />}
                         <label className="form-check-label">Доступ только по ссылке</label>
                         </div>
                 </div>
-                <button className="btn btn-outline-success" onClick={e=>this.handleSubmit(e)}>Сохранить изменения</button>
+                {isSaved
+                    ? <button className="btn btn-outline-success" onClick={e => this.handleSubmit(e)} disabled>Сохранить изменения</button>
+                    : <button className="btn btn-outline-success" onClick={e => this.handleSubmit(e)}>Сохранить изменения</button>
+                }
             </form>
             <h1 className="text-center display-3">Вопросы в тесте</h1>
             {console.log(questions)}
@@ -333,6 +361,7 @@ class EditableTest extends React.Component {
                             answers={question.answers}
                             answerType={question.answerType}
                             onDeleted={this.onQuestionDeleted}
+                            onSavedChange={this.props.onSavedChange}
                         />
                     </div>
                 )
@@ -378,9 +407,9 @@ class EditableTest extends React.Component {
             if (response.status === 200) {
                 const result = await response.json();
 
-                this.setState({ test: result, isChanged: true, success: true });
+                this.setState({ test: result, isChanged: true, success: true, isSaved: true });
 
-            } else this.setState({ isChanged: true, success: false });
+            } else this.setState({ isChanged: true, success: false, isSaved: false });
         });
     }
 
@@ -451,4 +480,8 @@ class EditableTest extends React.Component {
         });
     }
 
+    handleUnsavedChange() {
+        this.props.onSavedChange(false);
+        this.setState({ isSaved: false });
+    }
 }

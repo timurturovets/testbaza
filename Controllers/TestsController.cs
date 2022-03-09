@@ -254,8 +254,12 @@ namespace TestBaza.Controllers
 
             if (string.IsNullOrEmpty(test.TestName))
             {
-                errors.Add("Вы не ввели название теста. ");
+                errors.Add("Вы не ввели название теста.");
             }
+            else if (test.TestName.Length < 4) errors.Add("Название теста должно содержать не менее 4 символов.");
+
+            if (string.IsNullOrEmpty(test.Description)) test.Description = "Без описания.";
+            else if (test.Description.Length > 100) errors.Add("Описание теста должно содержать не более 100 символов.");
 
             if (test.Questions.Count() < 5) {
                 errors.Add("В тесте должно быть не менее 5 вопросов. ");
@@ -349,7 +353,7 @@ namespace TestBaza.Controllers
                             break;
                         }
                     }
-                    if (q.MultipleAnswers.Count() < 3)
+                    if (q.MultipleAnswers.Count() < 2)
                     {
                         hasQuestionsWithNotEnoughAnswers = true;
                         notEnoughAnswersErrors += $"вопрос {n}, ";

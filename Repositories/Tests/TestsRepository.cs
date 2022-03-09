@@ -14,9 +14,8 @@ namespace TestBaza.Repositories
 
         public IEnumerable<Test> GetBrowsableTests() => _context.Tests
             .Where(t => t.IsBrowsable)
-            .Include(t=>t.Questions).ThenInclude(q=>q.MultipleAnswers).ThenInclude(a=>a.Question)
-            .Include(t=>t.Creator)
-            .AsNoTracking();
+            .Include(t => t.Questions).ThenInclude(q => q.MultipleAnswers).ThenInclude(a => a.Question)
+            .Include(t => t.Creator);
 
         public Test? GetTest(string testName)
         {
