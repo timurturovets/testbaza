@@ -8,6 +8,6 @@
         public bool IsPublished { get; set; }
         public bool IsBrowsable { get; set; }
         public int QuestionsCount { get; set; }
-        public double Rate { get; set; }
+        public IEnumerable<int> Rates { get; set; } = new List<int>();
     }
 }

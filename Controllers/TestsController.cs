@@ -420,6 +420,8 @@ namespace TestBaza.Controllers
 
             Test? test = _testsRepo.GetTest(model.TestId);
             if (test is null) return NotFound();
+            
+            Test.Rat
             return Ok();
         }
     }

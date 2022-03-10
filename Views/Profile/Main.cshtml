@@ -1,0 +1,11 @@
+﻿<div class="text-center">
+    <h1 class="display-1">Личный кабинет</h1>
+</div>
+
+<div id="root"></div>
+<partial name="_ReactScriptsPartial" />
+<script src="~/js/profile.jsx" asp-append-version="true" type="text/babel"></script>
+
+<script type="text/babel">
+    ReactDOM.render(<ManageAccountForm />, document.getElementById('root'))
+</script>

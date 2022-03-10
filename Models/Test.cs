@@ -11,7 +11,7 @@
         public bool IsPrivate { get; set; }
         public bool IsPublished { get; set; }
         public bool IsBrowsable { get => IsPublished && !IsPrivate; set { return; } }
-        public double Rate { get; set; }
+        public IEnumerable<Rate> Rates { get; set; } = new List<Rate>();
 
         public string? CreatorId { get; set; }
         public User? Creator { get; set; }
@@ -47,7 +47,7 @@
                 AuthorName = Creator!.UserName,
                 QuestionsCount = Questions.Count(),
                 TimeCreated = TimeCreated,
-                Rate = Rate,
+                Rates = Rates.Select(r => r.Value),
                 IsBrowsable = IsBrowsable,
                 IsPublished = IsPublished
             };

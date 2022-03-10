@@ -22,7 +22,7 @@ namespace TestBaza.Controllers
             _userManager = userManager;
         }
 
-        [HttpGet("/profile")]
+        [Route("/profile")]
         public async Task<IActionResult> Get()
         {
             User user = await _userManager.GetUserAsync(User);
@@ -30,11 +30,13 @@ namespace TestBaza.Controllers
             return View(viewName: "main");
         }
 
-        [HttpGet("/profile/tests-user{id}")]
+        [Route("/profile/tests-user{id}")]
         public async Task<IActionResult> GetUserTests([FromRoute] string id)
         {
             User user = await _userManager.GetUserAsync(User);
             User creator = await _userManager.FindByIdAsync(id);
+
+            if (creator is null) return NotFound();
 
             if (!user.Equals(creator)) return Forbid();
 

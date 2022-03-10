@@ -5,5 +5,6 @@ namespace TestBaza.Models
     public class User : IdentityUser
     {
         public IEnumerable<Test> Tests { get; set; } = new List<Test>();
+        public IEnumerable<Rate> Rates { get; set; } = new List<Rate>();
     }
 }
