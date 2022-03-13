@@ -11,15 +11,20 @@ namespace TestBaza.Controllers
     [Authorize]
     public class TestsController : Controller
     {
+        private readonly IRatesRepository _ratesRepo;
         private readonly ITestsRepository _testsRepo;
         private readonly IQuestionsRepository _qsRepo;
         private readonly UserManager<User> _userManager;
         private readonly ILogger<TestsController> _logger;
-        public TestsController(ITestsRepository testsRepo,
+        public TestsController(
+            IRatesRepository ratesRepo,
+            ITestsRepository testsRepo,
             IQuestionsRepository qsRepo,
             UserManager<User> userManager,
-            ILogger<TestsController> logger)
+            ILogger<TestsController> logger
+            )
         {
+            _ratesRepo = ratesRepo;
             _testsRepo = testsRepo;
             _qsRepo = qsRepo;
             _userManager = userManager;
@@ -366,7 +371,7 @@ namespace TestBaza.Controllers
                 }
             }
 
-            Func<string, string> replaceLastComma = value => Regex.Replace(value, @",\s$", ".");
+            static string replaceLastComma(string value) => Regex.Replace(value, @",\s$", ".");
 
             string msg;
             if (hasQuestionsWithoutValue)
@@ -416,12 +421,14 @@ namespace TestBaza.Controllers
         [HttpPost("/tests/rate-test")]
         public async Task<IActionResult> RateTest([FromForm] RateTestRequestModel model)
         {
-            User sender = await _userManager.GetUserAsync(User);
+            User rater = await _userManager.GetUserAsync(User);
 
             Test? test = _testsRepo.GetTest(model.TestId);
             if (test is null) return NotFound();
+
+            Rate rate = new() { Value = model.Rate, Test = test, User = rater };
+            _ratesRepo.AddRate(rate);
             
-            Test.Rat
             return Ok();
         }
     }

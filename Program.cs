@@ -42,6 +42,7 @@ IServiceCollection services = builder.Services;
 
     services.AddTransient<ITestsRepository, TestsRepository>();
     services.AddTransient<IQuestionsRepository, QuestionsRepository>();
+    services.AddTransient<IRatesRepository, RatesRepository>();
 }
 WebApplication app = builder.Build();
 

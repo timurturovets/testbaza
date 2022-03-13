@@ -15,10 +15,16 @@ namespace TestBaza.Data
         {
             builder.Entity<Rate>()
                 .HasOne(r => r.Test)
-                .WithOne(t => t.Rates)
+                .WithMany(t => t.Rates)
                 .IsRequired()
                 .HasForeignKey(r => r.TestId);
-            
+
+            builder.Entity<Rate>()
+                .HasOne(r => r.User)
+                .WithMany(u => u.Rates)
+                .IsRequired()
+                .HasForeignKey(r=> r.UserId);
+
             base.OnModelCreating(builder);
         }
         public AppDbContext(DbContextOptions options)

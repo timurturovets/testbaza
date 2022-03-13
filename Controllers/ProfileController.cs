@@ -26,11 +26,15 @@ namespace TestBaza.Controllers
         public async Task<IActionResult> Get()
         {
             User user = await _userManager.GetUserAsync(User);
-            ViewData["UserId"] = user.Id;
             return View(viewName: "main");
         }
-
-        [Route("/profile/tests-user{id}")]
+        [HttpGet("/profile/user-info")]
+        public async Task<IActionResult> GetUserInfo()
+        {
+            User user = await _userManager.GetUserAsync(User);
+            return Ok(new { result = user.ToJsonModel() });
+        }
+        [HttpGet("/profile/tests-user{id}")]
         public async Task<IActionResult> GetUserTests([FromRoute] string id)
         {
             User user = await _userManager.GetUserAsync(User);
@@ -44,6 +48,26 @@ namespace TestBaza.Controllers
 
             IEnumerable<TestSummary> summaries = creator.Tests.Select(t => t.ToSummary());
             return Ok(new { result = summaries });
+        }
+
+        [Authorize]
+        [HttpPost("/profile/update-user")]
+        public async Task<IActionResult> UpdateUser([FromForm] UpdateUserRequestModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                User user = await _userManager.GetUserAsync(User);
+                user.UserName = model.UserName;
+                if (user.Email != model.Email) user.EmailConfirmed = false;
+                user.Email = model.Email;
+                IdentityResult result = await _userManager.ChangePasswordAsync(user, model.OldPassword, model.NewPassword);
+                if (result.Succeeded)
+                {
+                    return Ok();
+                }
+                else return BadRequest();
+            }
+            else return BadRequest(new { errors = ModelState });
         }
     }
 }
