@@ -2,10 +2,12 @@
     <h1 class="display-1">Личный кабинет</h1>
 </div>
 
-<div id="root"></div>
+<div id="manage-acc"></div>
+<div id="change-pass"></div>
 <partial name="_ReactScriptsPartial" />
 <script src="~/js/profile-account.jsx" asp-append-version="true" type="text/babel"></script>
 
 <script type="text/babel">
-    ReactDOM.render(<ManageAccountForm />, document.getElementById('root'))
+    ReactDOM.render(<ManageAccountForm />, document.getElementById('manage-acc'))
+    ReactDOM.render(<PasswordChangeForm />, document.getElementById('change-pass'))
 </script>

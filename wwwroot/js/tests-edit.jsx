@@ -1,5 +1,4 @@
-﻿
-class EditableTest extends React.Component {
+﻿class EditableTest extends React.Component {
     constructor(props) {
         super(props);
 
@@ -73,12 +72,12 @@ class EditableTest extends React.Component {
                 <div className="form-group">
                     <label className="display-6">Название теста</label>
                     <input type="text" className="form-control" name="testName"
-                        onBlur={this.handleUnsavedChange} defaultValue={name} />
+                        onChange={this.handleUnsavedChange} defaultValue={name} />
                 </div>
                 <div className="form-group">
                     <label className="display-6">Описание теста</label>
                     <input type="text" className="form-control" name="description"
-                        onBlur={this.handleUnsavedChange} defaultValue={description} />
+                        onChange={this.handleUnsavedChange} defaultValue={description} />
                 </div>
                 <div className="form-group">
                     <div className="form-check form-switch">
@@ -294,7 +293,7 @@ class EditableQuestion extends React.Component {
 
                 <div className="form-group">
                     <label>Вопрос:</label>
-                    <input type="text" className="form-control" onBlur={this.handleUnsavedState} name="model.Value" defaultValue={value} />
+                    <input type="text" className="form-control" onChange={this.handleUnsavedState} name="model.Value" defaultValue={value} />
                 </div>
                 {hintEnabled
                     ? <div><div className="form-check form-switch">
@@ -303,7 +302,7 @@ class EditableQuestion extends React.Component {
                         <label className="form-check-label">Подсказка</label>
                         </div>
                     <div className="form-group">
-                            <input type="text" className="form-control" onBlur={this.handleUnsavedState}
+                            <input type="text" className="form-control" onChange={this.handleUnsavedState}
                                 name="model.Hint" defaultValue={hint === null ? "" : hint} />
                     </div></div>
                     : <div className="form-check form-switch">
@@ -320,7 +319,8 @@ class EditableQuestion extends React.Component {
                 {this.state.answerType === 1
                     ? <div className="form-group">
                         <label>Верный ответ:</label>
-                        <input type="text" className="form-control" defaultValue={answer} name="model.Answer" />
+                        <input type="text" className="form-control" onChange={this.handleUnsavedState}
+                            defaultValue={answer} name="model.Answer" />
                     </div>
                     : answers.map(answer =>
                         <div key={answer.answerId} className="form-group">

@@ -13,8 +13,7 @@ namespace TestBaza.Models
             {
                 UserName = UserName,
                 Email = Email,
-                EmailConfirmed = EmailConfirmed,
-                Tests = Tests.Select(t=>t.ToJsonModel())
+                EmailConfirmed = EmailConfirmed
             };
         }
     }

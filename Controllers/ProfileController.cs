@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
 
 using TestBaza.Models;
+using TestBaza.Extensions;
 using TestBaza.Repositories;
 
 namespace TestBaza.Controllers
@@ -12,14 +13,16 @@ namespace TestBaza.Controllers
     {
         private readonly ITestsRepository _testsRepo;
         private readonly UserManager<User> _userManager;
-
+        private readonly ILogger<ProfileController> _logger;
         public ProfileController(
             ITestsRepository testsRepo,
-            UserManager<User> userManager
+            UserManager<User> userManager,
+            ILogger<ProfileController> logger
             )
         {
             _testsRepo = testsRepo;
             _userManager = userManager;
+            _logger = logger;
         }
 
         [Route("/profile")]
@@ -50,24 +53,46 @@ namespace TestBaza.Controllers
             return Ok(new { result = summaries });
         }
 
-        [Authorize]
         [HttpPost("/profile/update-user")]
         public async Task<IActionResult> UpdateUser([FromForm] UpdateUserRequestModel model)
+        {
+            _logger.LogError($"New update user request, name: {model.UserName}, " +
+                $"email: {model.Email}, password: {model.Password}");
+            if (ModelState.IsValid)
+            {
+                User user = await _userManager.GetUserAsync(User);
+                if (!await _userManager.CheckPasswordAsync(user, model.Password))
+                    return BadRequest(new { errors = new[] { "Вы ввели неверный пароль" } });
+
+                user.UserName = model.UserName;
+                if (user.Email != model.Email) user.EmailConfirmed = false;
+                user.Email = model.Email;
+                await _userManager.UpdateAsync(user);
+
+                return Ok();
+            }
+            else
+            {
+                string[] errors = ModelState.Select(entry => {
+                    var query = entry.Value?.Errors.Select(e => e.ErrorMessage);
+                    if (query is null || !query.Any()) return string.Empty;
+                    else return query.Aggregate((x, y) => x + ", " + y);
+                    }).Select(value=>value+". ").ToArray();
+                return BadRequest(new { errors });
+            }
+        }
+
+        [HttpPost("/profile/change-password")]
+        public async Task<IActionResult> ChangePassword([FromForm] ChangePasswordRequestModel model)
         {
             if (ModelState.IsValid)
             {
                 User user = await _userManager.GetUserAsync(User);
-                user.UserName = model.UserName;
-                if (user.Email != model.Email) user.EmailConfirmed = false;
-                user.Email = model.Email;
                 IdentityResult result = await _userManager.ChangePasswordAsync(user, model.OldPassword, model.NewPassword);
-                if (result.Succeeded)
-                {
-                    return Ok();
-                }
-                else return BadRequest();
+                if (result.Succeeded) return Ok();
+                else return BadRequest(new { error = new[] { "Вы ввели неверный пароль" } });
             }
-            else return BadRequest(new { errors = ModelState });
+            else return BadRequest(new { error = ModelState.ToStringEnumerable() });
         }
     }
 }
