@@ -19,7 +19,7 @@
     render() {
         const isLoading = this.state.isLoading;
         return (
-        <div className="text-center">
+        <div>
             { isLoading
                 ? <h3>Загрузка...</h3>
                 : this.renderForm()
@@ -31,6 +31,7 @@
     renderForm() {
         const user = this.state.user, errors = this.state.errors;
         return (<div>
+            <h2 className="text-center">Изменение информации об аккаунте</h2>
             <div>{errors.map(error => 
                 <h3 key={error} className="text-danger">{error}</h3>
                 )}
@@ -213,17 +214,6 @@ class PasswordInput extends React.Component {
                         : <h3 className="text-danger">{this.state.error}</h3>
                     : null
                 }
-            {/*<div className="form-group">*/}
-            {/*        <label>Старый пароль</label>*/}
-            {/*        {this.state.isChanged*/}
-            {/*            ? this.state.isSuccess*/}
-            {/*                ? <input type="password" className="form-control" name="oldpassword"*/}
-            {/*                    onBlur={e => this.onBlur(e)} />*/}
-            {/*                : <input type="password" className="form-control" name="oldpassword" readOnly disabled/>*/}
-            {/*            : <input type="password" className="form-control" name="oldpassword"*/}
-            {/*                onBlur={e => this.onBlur(e)} />*/}
-            {/*        }*/}
-            {/*</div>*/}
             <div className="form-group">
                 <label>Подтверждение пароля</label>
                     <input type="password" className="form-control" name="confirmpassword"
@@ -253,6 +243,7 @@ class PasswordChangeForm extends React.Component {
     render() {
         return (
             <form>
+                <h2 className="text-center">Смена пароля</h2>
                 {this.state.error === null ? null : <h3 className="text-danger">{this.state.error}</h3>}
                 <div className="form-group">
                     <label>Старый пароль</label>
@@ -341,7 +332,7 @@ class UserTests extends React.Component {
         const { isLoading, tests, isEmpty } = this.state;
         console.log(tests);
         return (<div>
-            
+            <h2 className="text-center">Ваши тесты</h2>
             {isLoading
                 ? <h2>Загрузка...</h2>
                 : isEmpty
@@ -349,16 +340,18 @@ class UserTests extends React.Component {
                         <label className="d-inline">У вас нет созданных тестов. </label>
                         <a className="btn btn-outline-success" href="/tests/create">Создать новый тест</a>
                     </div>
-                    : tests.map(test =>
-                        <EditableTestSummary
+                    : tests.map(test => {
+                        return (<div><EditableTestSummary
                             key={test.testId}
                             id={test.testId}
                             name={test.testName}
                             timeCreated={test.timeCreated}
                             isPublished={test.isPublished}
                             isBrowsable={test.isBrowsable}
-                        />
-                    )
+                            ratesCount={test.ratesCount}
+                            averageRate={test.averageRate}
+                        /><hr /></div>)
+                    })
             }
             </div>
             );
@@ -391,20 +384,21 @@ class EditableTestSummary extends React.Component {
     }
 
     render() {
+        const { id, name, timeCreated, isPublished, isBrowsable, ratesCount, averageRate } = this.props;
+        console.log('props')
         console.log(this.props);
-        const { id, name, timeCreated, isPublished, isBrowsable } = this.props;
-
         return (<div>
-            <h2>Тест {name}</h2>
-            <h3>Создан {timeCreated}</h3>
+            <h3>Тест {name}</h3>
+            <p>Создан {timeCreated}</p>
             {isPublished
-                ? <h5 className="text-success">Опубликован</h5>
-                : <h5 className="text-danger">Не опубликован</h5>
+                ? <p className="text-success">Опубликован</p>
+                : <p className="text-danger">Не опубликован</p>
             }
             {isBrowsable
-                ? <h5>Доступен по ссылке</h5>
-                : <h5>Недоступен по ссылке</h5>
+                ? <p className="text-success">В открытом доступе</p>
+                : <p className="text-danger">Доступен только по ссылке</p>
             }
+            <p>Оценили <b>{ratesCount}</b> раз, средняя оценка: <b>{averageRate}</b></p>
             <a className="btn btn-outline-success" href={`/tests/edit${id}`}>Редактировать</a>
             </div>);
     }

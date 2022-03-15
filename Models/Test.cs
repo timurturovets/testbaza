@@ -47,9 +47,9 @@
                 TestName = TestName,
                 AuthorName = Creator!.UserName,
                 QuestionsCount = Questions.Count(),
-                TimeCreated = TimeCreated,
+                TimeCreated = TimeCreated.ToUniversalTime().AddHours(3).ToString("dd.MM.yyyy HH:mm:ss"),
                 RatesCount = Rates.Count(),
-                AverageRate = Rates.Select(r => r.Value).Average(),
+                AverageRate = Rates.Any() ? Rates.Select(r => r.Value).Average() : 0,
                 IsBrowsable = IsBrowsable,
                 IsPublished = IsPublished
             };
