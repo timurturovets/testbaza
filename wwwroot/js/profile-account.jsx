@@ -39,13 +39,13 @@
                 <UserNameInput defaultUsername={user.userName} handleChange={this.onNameChanged} />
                 <EmailInput defaultEmail={user.email} handleChange={this.onEmailChanged} />
                 <PasswordInput handleChange={this.onPasswordChanged} />
-                {this.state.isSaved || !this.state.noErrors
-                    ? <button className="btn btn-outline-primary"
-                        onClick={e => this.handleSubmit(e)} disabled>Сохранить изменения</button>
-                    : <button className="btn btn-outline-primary"
-                        onClick={e => this.handleSubmit(e)}>Сохранить изменения</button>
-                }
             </form>
+            {this.state.isSaved || !this.state.noErrors
+                ? <button className="btn btn-outline-primary"
+                    onClick={e => this.handleSubmit(e)} disabled>Сохранить изменения</button>
+                : <button className="btn btn-outline-primary"
+                    onClick={e => this.handleSubmit(e)}>Сохранить изменения</button>
+            }
         </div>);
     }
 
@@ -273,14 +273,17 @@ class PasswordChangeForm extends React.Component {
         if (oldPassword === null || oldPassword === undefined || oldPassword === "") {
             error = "Вы не ввели текущий пароль";
             this.setState({ error: error });
+            return;
         }
         if (newPassword === null || newPassword === undefined || newPassword === "") {
             error = "Вы не ввели новый пароль";
             this.setState({ error: error });
+            return;
         }
         if (oldPassword === newPassword && oldPassword !== null) {
             error = "Пароли совпадают";
             this.setState({ error: error });
+            return;
         }
 
         const formData = new FormData();
@@ -319,5 +322,90 @@ class PasswordChangeForm extends React.Component {
         } else {
             this.setState({oldPassword: value});
         }
+    }
+}
+
+class UserTests extends React.Component {
+    constructor(props) {
+        super(props);
+
+        this.populateData = this.populateData.bind(this);
+        this.state = { isLoading: true, tests: [], isEmpty: false };
+    }
+
+    componentDidMount() {
+        this.populateData();
+    }
+
+    render() {
+        const { isLoading, tests, isEmpty } = this.state;
+        console.log(tests);
+        return (<div>
+            
+            {isLoading
+                ? <h2>Загрузка...</h2>
+                : isEmpty
+                    ? <div className="form-inline">
+                        <label className="d-inline">У вас нет созданных тестов. </label>
+                        <a className="btn btn-outline-success" href="/tests/create">Создать новый тест</a>
+                    </div>
+                    : tests.map(test =>
+                        <EditableTestSummary
+                            key={test.testId}
+                            id={test.testId}
+                            name={test.testName}
+                            timeCreated={test.timeCreated}
+                            isPublished={test.isPublished}
+                            isBrowsable={test.isBrowsable}
+                        />
+                    )
+            }
+            </div>
+            );
+    }
+
+    async populateData() {
+        let { isLoading, tests, isEmpty } = this.state;
+
+        await fetch('/profile/user-tests').then(async response => {
+            if (response.status === 204) {
+                isEmpty = false;
+                this.setState({ isLoading: false, isEmpty: true });
+            } else if (response.status === 200) {
+                const object = await response.json();
+                const result = object.result;
+
+                isLoading = false;
+                tests = result;
+                isEmpty = false;
+
+                this.setState({ isLoading: isLoading, tests: tests, isEmpty: isEmpty })
+            } else alert(`Перезагрузите страницу. (Статус ${response.status})`);
+        });
+    }
+}
+
+class EditableTestSummary extends React.Component {
+    constructor(props) {
+        super(props);
+    }
+
+    render() {
+        console.log(this.props);
+        const { id, name, timeCreated, isPublished, isBrowsable } = this.props;
+
+        return (<div>
+            <h2>Тест {name}</h2>
+            <h3>Создан {timeCreated}</h3>
+            {isPublished
+                ? <h5 className="text-success">Опубликован</h5>
+                : <h5 className="text-danger">Не опубликован</h5>
+            }
+            {isBrowsable
+                ? <h5>Доступен по ссылке</h5>
+                : <h5>Недоступен по ссылке</h5>
+            }
+            <a className="btn btn-outline-success" href={`/tests/edit${id}`}>Редактировать</a>
+            </div>);
     }
 }

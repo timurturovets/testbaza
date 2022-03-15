@@ -60,10 +60,8 @@ namespace TestBaza.Controllers
         }
 
         [HttpGet]
-        public IActionResult Create()
-        {
-            return View();
-        }
+        public IActionResult Create() => View();
+        
         [HttpPost]
         public async Task<IActionResult> Create([FromForm] CreateTestRequestModel model)
         {
@@ -88,7 +86,10 @@ namespace TestBaza.Controllers
                         TimeCreated = DateTime.Now
                     };
                     _testsRepo.AddTest(test);
+
+                    await _userManager.UpdateAsync(creator);
                     int id = _testsRepo.GetTest(test.TestName)!.TestId;
+
                     return RedirectToAction(actionName: "edit", controllerName: "tests", new { id });
                 }
                 else return View();

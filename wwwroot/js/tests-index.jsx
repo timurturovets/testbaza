@@ -1,4 +1,4 @@
-﻿class TestSummary extends React.Component {
+﻿export default class TestSummary extends React.Component {
     constructor(props) {
         super(props);
     }

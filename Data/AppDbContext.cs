@@ -13,11 +13,18 @@ namespace TestBaza.Data
     {
         protected override void OnModelCreating(ModelBuilder builder)
         {
+            builder.Entity<User>()
+                .HasMany(u => u.Tests)
+                .WithOne(t => t.Creator)
+                .IsRequired()
+                .HasForeignKey(t => t.CreatorId);
+
             builder.Entity<Rate>()
                 .HasOne(r => r.Test)
                 .WithMany(t => t.Rates)
                 .IsRequired()
-                .HasForeignKey(r => r.TestId);
+                .HasForeignKey(r => r.TestId)
+                .OnDelete(DeleteBehavior.NoAction);
 
             builder.Entity<Rate>()
                 .HasOne(r => r.User)

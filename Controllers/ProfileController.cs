@@ -71,15 +71,7 @@ namespace TestBaza.Controllers
 
                 return Ok();
             }
-            else
-            {
-                string[] errors = ModelState.Select(entry => {
-                    var query = entry.Value?.Errors.Select(e => e.ErrorMessage);
-                    if (query is null || !query.Any()) return string.Empty;
-                    else return query.Aggregate((x, y) => x + ", " + y);
-                    }).Select(value=>value+". ").ToArray();
-                return BadRequest(new { errors });
-            }
+            else return BadRequest(new { errors = ModelState.ToStringEnumerable() });
         }
 
         [HttpPost("/profile/change-password")]
@@ -88,11 +80,26 @@ namespace TestBaza.Controllers
             if (ModelState.IsValid)
             {
                 User user = await _userManager.GetUserAsync(User);
+
                 IdentityResult result = await _userManager.ChangePasswordAsync(user, model.OldPassword, model.NewPassword);
+
                 if (result.Succeeded) return Ok();
                 else return BadRequest(new { error = new[] { "Вы ввели неверный пароль" } });
             }
             else return BadRequest(new { error = ModelState.ToStringEnumerable() });
+        }
+
+        [HttpGet("/profile/user-tests")]
+        public async Task<IActionResult> GetUserTests()
+        {
+            User creator = await _userManager.GetUserAsync(User);
+
+            List<TestSummary> tests = _testsRepo.GetUserTests(creator).Select(t => t.ToSummary()).ToList();
+
+            _logger.LogError($"New user test request, length : {tests.Count}");
+            if (!tests.Any()) return NoContent();
+
+            return Ok(new { result = tests });
         }
     }
 }

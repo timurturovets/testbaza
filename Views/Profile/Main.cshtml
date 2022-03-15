@@ -3,11 +3,15 @@
 </div>
 
 <div id="manage-acc"></div>
+<hr />
 <div id="change-pass"></div>
+<hr />
+<div id="user-tests"></div>
 <partial name="_ReactScriptsPartial" />
 <script src="~/js/profile-account.jsx" asp-append-version="true" type="text/babel"></script>
 
 <script type="text/babel">
     ReactDOM.render(<ManageAccountForm />, document.getElementById('manage-acc'))
     ReactDOM.render(<PasswordChangeForm />, document.getElementById('change-pass'))
+    ReactDOM.render(<UserTests />, document.getElementById('user-tests'))
 </script>

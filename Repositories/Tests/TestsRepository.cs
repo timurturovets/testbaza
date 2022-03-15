@@ -14,8 +14,9 @@ namespace TestBaza.Repositories
 
         public IEnumerable<Test> GetBrowsableTests() => _context.Tests
             .Where(t => t.IsBrowsable)
-            .Include(t => t.Questions).ThenInclude(q => q.MultipleAnswers).ThenInclude(a => a.Question)
-            .Include(t => t.Creator);
+            .Include(t => t.Questions).ThenInclude(q => q.MultipleAnswers)
+            .Include(t => t.Creator)
+            .Include(t=>t.Rates);
 
         public Test? GetTest(string testName)
         {
@@ -24,6 +25,7 @@ namespace TestBaza.Repositories
                 .Where(t => t.TestName == testName)
                 .Include(t => t.Questions).ThenInclude(q => q.MultipleAnswers)
                 .Include(t => t.Creator)
+                .Include(t=>t.Rates)
                 .Single();
         }
 
@@ -34,9 +36,17 @@ namespace TestBaza.Repositories
                 .Where(t => t.TestId == testId)
                 .Include(t => t.Questions).ThenInclude(q => q.MultipleAnswers)
                 .Include(t => t.Creator)
+                .Include(t => t.Rates)
                 .Single();
         }
 
+        public IEnumerable<Test> GetUserTests(User user)
+        {
+            return _context.Tests.Include(t => t.Creator)
+                .Where(t => t.Creator!.Equals(user))
+                .Include(t => t.Questions).ThenInclude(q => q.MultipleAnswers)
+                .Include(t => t.Rates);
+        }
         public void AddTest(Test test)
         {
             if (_context.Tests.Any(t => t.Equals(test))) return;

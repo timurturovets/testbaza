@@ -43,11 +43,13 @@
         {
             return new TestSummary
             {
+                TestId = TestId,
                 TestName = TestName,
                 AuthorName = Creator!.UserName,
                 QuestionsCount = Questions.Count(),
                 TimeCreated = TimeCreated,
-                Rates = Rates.Select(r => r.Value),
+                RatesCount = Rates.Count(),
+                AverageRate = Rates.Select(r => r.Value).Average(),
                 IsBrowsable = IsBrowsable,
                 IsPublished = IsPublished
             };
