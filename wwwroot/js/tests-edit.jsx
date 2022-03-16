@@ -219,7 +219,7 @@
 
         await fetch(`/tests/publish-test${id}`).then(async response => {
             if (response.status === 200) {
-                window.location.href = "/profile";
+                window.location.href = "/profile#tests";
             } else {
                 const result = await response.json();
                 const errors = result.errors;

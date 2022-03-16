@@ -8,10 +8,20 @@
         this.onEmailChanged = this.onEmailChanged.bind(this);
         this.onPasswordChanged = this.onPasswordChanged.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
-
-        this.state = { isLoading: true, isSaved: true, noErrors: true, errors: [], user: null };
+        this.renderInputs = this.renderInputs.bind(this);
+        
+        this.state = {
+            isLoading: true,
+            changeInfo: {
+                isSaved: true,
+                isChanged: false,
+                isSuccess: false,
+                noErrors: true,
+                errors: [],
+            },
+            user: null
+        };
     }
-
     componentDidMount() {
         this.populateData();
     }
@@ -29,24 +39,37 @@
     }
 
     renderForm() {
-        const user = this.state.user, errors = this.state.errors;
+        const user = this.state.user, { isChanged, isSaved, isSuccess, noErrors, errors} = this.state.changeInfo;
         return (<div>
-            <h2 className="text-center">Изменение информации об аккаунте</h2>
+            <h2 className="text-center">Информация об аккаунте</h2>
+            {isChanged
+                ? isSuccess
+                    ? <h3 className="text-success">Изменения успешно сохранены</h3>
+                    : <h3 className="text-danger">Изменения не сохранены</h3>
+                : null
+            }
             <div>{errors.map(error => 
                 <h3 key={error} className="text-danger">{error}</h3>
                 )}
             </div>
             <form>
-                <UserNameInput defaultUsername={user.userName} handleChange={this.onNameChanged} />
-                <EmailInput defaultEmail={user.email} handleChange={this.onEmailChanged} />
-                <PasswordInput handleChange={this.onPasswordChanged} />
+                {this.renderInputs()}
             </form>
-            {this.state.isSaved || !this.state.noErrors
+            {isSaved || !noErrors
                 ? <button className="btn btn-outline-primary"
                     onClick={e => this.handleSubmit(e)} disabled>Сохранить изменения</button>
                 : <button className="btn btn-outline-primary"
                     onClick={e => this.handleSubmit(e)}>Сохранить изменения</button>
             }
+        </div>);
+    }
+    
+    renderInputs() {
+        const user = this.state.user;
+        return (<div>
+            <UserNameInput defaultUsername={user.userName} handleChange={this.onNameChanged} />
+            <EmailInput defaultEmail={user.email} handleChange={this.onEmailChanged} />
+            <PasswordInput handleChange={this.onPasswordChanged} />
         </div>);
     }
 
@@ -55,7 +78,7 @@
             if (response.status === 200) {
                 const object = await response.json();
                 const result = object.result;
-                console.log(result);
+
                 this.setState({ isLoading: false, user: result });
             } else {
                 window.location.replace('/');
@@ -65,7 +88,7 @@
 
     async handleSubmit(e) {
         e.preventDefault();
-        const user = this.state.user;
+        const user = this.state.user, changeInfo = this.state.changeInfo;
 
         if (user.password === null || user.password === undefined || user.password === "") {
             alert('Вы не ввели пароль');
@@ -82,45 +105,75 @@
             body: formData
         }).then(async response => {
             if (response.status === 200) {
-                this.setState({ isSaved: true });
+
+                changeInfo.isSaved = true;
+                changeInfo.isChanged = true;
+                changeInfo.isSuccess = true;
+                changeInfo.noErrors = true;
+                changeInfo.errors = [];
+                user.password = null;
+
+                this.setState({ user: user, changeInfo: changeInfo });
+
             } else if (response.status === 400) {
+
                 const result = await response.json();
                 const errors = result.errors;
-                console.log(errors);
-                this.setState({ isSaved: false, noErrors: false, errors: errors });
-            }
+
+                changeInfo.isSaved = false;
+                changeInfo.isChanged = true;
+                changeInfo.isSuccess = false;
+                changeInfo.errors = errors;
+                user.password = null;
+
+                this.setState({ user: user, changeInfo: changeInfo });
+            } else alert(`Произошла ошибка. Перезагрузите страницу (статус ${response.status})`);
         });
     }
 
     onNameChanged(newUserName) {
+        const changeInfo = this.state.changeInfo;
+
+        newUserName = newUserName.trim();
+
         if (newUserName === "" || newUserName === null) return { isSuccess: false, error: 'Вы не ввели имя' };
+        if (newUserName.match(/\s/)) return { isSuccess: false, error: 'Имя не должно содержать пробела' };
         if (newUserName.length < 4) {
-            this.setState({ noErrors: false });
+            changeInfo.noErrors = false;
+            this.setState({ changeInfo: changeInfo });
             return { isSuccess: false, error: 'Имя должно быть длиной не менее 3 символов' };
         }
         if (newUserName.length > 20) {
-            this.setState({ noErrors: false });
+            changeInfo.noErrors = false;
+            this.setState({ changeInfo: changeInfo });
             return { isSuccess: false, error: 'Имя должно быть длиной не более 20 символов' };
         }
 
         const user = this.state.user;
         user.userName = newUserName;
+        changeInfo.isSaved = false;
+        changeInfo.noErrors = true;
 
-        this.setState({ isSaved: false, noErrors: true, user: user });
+        this.setState({ changeInfo: changeInfo, user: user });
         return { isSuccess: true, error: null };
     }
 
     onEmailChanged(newEmail) {
+        const changeInfo = this.state.changeInfo;
+
         const emailRegexp = /^(?!\s)(\d|\w)+@\w+\.\w+$/ig;
         if (!emailRegexp.test(newEmail)) {
-            this.setState({ noErrors: false });
+            changeInfo.noErrors = false;
+            this.setState({ changeInfo: changeInfo });
             return { isSuccess: false, error: 'Вы ввели некорректный адрес эл.почты' };
         }
 
         const user = this.state.user;
         user.email = newEmail;
 
-        this.setState({ isSaved: false, noErrors: true, user: user });
+        changeInfo.isSaved = false;
+        changeInfo.noErrors = true;
+        this.setState({ changeInfo: changeInfo, user: user });
         return { isSuccess: true, error: null};
     }
 
@@ -246,7 +299,7 @@ class PasswordChangeForm extends React.Component {
                 <h2 className="text-center">Смена пароля</h2>
                 {this.state.error === null ? null : <h3 className="text-danger">{this.state.error}</h3>}
                 <div className="form-group">
-                    <label>Старый пароль</label>
+                    <label>Текущий пароль</label>
                     <input type="password" className="form-control" name="oldpassword" onChange={e => this.handleChange(e, "old")} />
                 </div>
                 <div className="form-group">
@@ -297,7 +350,6 @@ class PasswordChangeForm extends React.Component {
     }
 
     handleChange(event, type) {
-        event.preventDefault();
         const value = event.target.value;
         let error = this.state.error;
         if (type === "new") {
@@ -341,8 +393,8 @@ class UserTests extends React.Component {
                         <a className="btn btn-outline-success" href="/tests/create">Создать новый тест</a>
                     </div>
                     : tests.map(test => {
-                        return (<div><EditableTestSummary
-                            key={test.testId}
+                        return (<div key={test.testId}>
+                            <EditableTestSummary
                             id={test.testId}
                             name={test.testName}
                             timeCreated={test.timeCreated}
@@ -385,20 +437,18 @@ class EditableTestSummary extends React.Component {
 
     render() {
         const { id, name, timeCreated, isPublished, isBrowsable, ratesCount, averageRate } = this.props;
-        console.log('props')
-        console.log(this.props);
         return (<div>
             <h3>Тест {name}</h3>
             <p>Создан {timeCreated}</p>
             {isPublished
-                ? <p className="text-success">Опубликован</p>
-                : <p className="text-danger">Не опубликован</p>
+                ? <p className="text-success d-inline">Опубликован</p>
+                : <p className="text-danger d-inline">Не опубликован</p>
             }
             {isBrowsable
                 ? <p className="text-success">В открытом доступе</p>
                 : <p className="text-danger">Доступен только по ссылке</p>
             }
-            <p>Оценили <b>{ratesCount}</b> раз, средняя оценка: <b>{averageRate}</b></p>
+            <p>Оценили: <b>{ratesCount}</b>, средняя оценка: <b>{averageRate}</b></p>
             <a className="btn btn-outline-success" href={`/tests/edit${id}`}>Редактировать</a>
             </div>);
     }
