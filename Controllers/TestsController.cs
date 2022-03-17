@@ -146,6 +146,20 @@ namespace TestBaza.Controllers
             return Ok(testModel);
         }
 
+        [HttpPost("/tests/delete-test")]
+        public async Task<IActionResult> DeleteTest([FromForm] int testId)
+        {
+            User creator = await _userManager.GetUserAsync(User);
+
+            Test? test = _testsRepo.GetTest(testId);
+            if (test is null) return NotFound();
+
+            if (!test.Creator!.Equals(creator)) return Forbid();
+
+            _testsRepo.RemoveTest(test);
+            return Ok();
+        }
+
         [HttpPut("/tests/add-question")]
         public async Task<IActionResult> AddQuestion([FromForm] int testId)
         {

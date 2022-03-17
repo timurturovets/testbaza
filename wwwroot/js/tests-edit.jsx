@@ -9,6 +9,8 @@
         this.onQuestionDeleted = this.onQuestionDeleted.bind(this);
         this.handlePublish = this.handlePublish.bind(this);
         this.handleUnsavedChange = this.handleUnsavedChange.bind(this);
+        this.handleDelete = this.handleDelete.bind(this);
+
         this.state = {
             isLoading: true,
             test: {},
@@ -132,6 +134,10 @@
                 <button className="btn btn-outline-primary" onClick={e => this.handlePublish(e)}>
                     <h3 className="display-3">Опубликовать тест</h3>
                 </button>
+                <br />
+                <button className="btn btn-outline-danger mt-2" onClick={e => this.handleDelete(e)}>
+                    <h4 className="display-4">Удалить тест</h4>
+                </button>
             </div>
         </div>);
     }
@@ -161,8 +167,25 @@
         });
     }
 
-    async handleAddQuestion(e) {
-        e.preventDefault();
+    async handleDelete(event) {
+        event.preventDefault();
+
+        if (!confirm("Вы уверены, что хотите удалить тест? Его нельзя будет восстановить")) return;
+        const id = this.props.testId;
+        const formData = new FormData();
+        formData.append('testId', id);
+        await fetch('/tests/delete-test', {
+            method: 'POST',
+            body: formData
+        }).then(async response => {
+            if (response.status === 200) {
+                alert('Тест успешно удалён. Переадресация на главную страницу...');
+                window.location.href = "/home/index";
+            } else alert(`При попытке удалить тест был получен статус ${response.status}. Попробуйте перезагрузить страницу`);
+        });
+    }
+    async handleAddQuestion(event) {
+        event.preventDefault();
         const id = this.props.testId;
         const formData = new FormData();
         formData.append('testId', id);
@@ -177,10 +200,10 @@
                 const questionId = result.questionId,
                     questionNumber = parseInt(result.number);
 
-                const updatedTest = this.state.test;
-                updatedTest.questions.push({ questionId: questionId, number: questionNumber, value: "", answer: "" });
+                const test = this.state.test;
+                test.questions.push({ questionId: questionId, number: questionNumber, value: "", answer: "" });
 
-                this.setState({ test: updatedTest, hasQuestions: true });
+                this.setState({ test: test, hasQuestions: true });
 
             } else console.log(`status: ${response.status}`);
         });
