@@ -45,6 +45,15 @@ namespace TestBaza.Controllers
             return Ok(new { tests = testsSummaries });
         }
 
+        [HttpGet]
+        public IActionResult Pass([FromQuery] int id)
+        {
+            Test? test = _testsRepo.GetTest(id);
+            if (test is null) return NotFound();
+            if (!(test.IsPublished && test.IsBrowsable)) return Forbid();
+            return Ok(test);
+
+        }
         [HttpGet("/tests/get-test{id}")]
         public async Task<IActionResult> GetTest([FromRoute] int id)
         {
@@ -122,8 +131,6 @@ namespace TestBaza.Controllers
             ViewData["TestId"] = id;
             return View();
         }
-
-
 
         [HttpPut("/tests/update-test")]
         public async Task<IActionResult> UpdateTest([FromForm] UpdateTestRequestModel model)

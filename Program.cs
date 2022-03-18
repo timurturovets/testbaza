@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 using TestBaza.Data;
+using TestBaza.Extensions;
 using TestBaza.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -44,13 +45,15 @@ IServiceCollection services = builder.Services;
     services.AddTransient<IQuestionsRepository, QuestionsRepository>();
     services.AddTransient<IRatesRepository, RatesRepository>();
 }
+
 WebApplication app = builder.Build();
 
 {
     if (app.Environment.IsDevelopment()) app.UseMigrationsEndPoint();
     else app.UseHsts();
-    
 
+
+    app.UseErrorStatusCodesHandler();
     app.UseHttpsRedirection();
     app.UseStaticFiles();
 

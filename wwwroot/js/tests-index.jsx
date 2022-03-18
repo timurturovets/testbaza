@@ -3,13 +3,13 @@
         super(props);
     }
     render() {
-        return (<Fragment>
-            <h1 className="display-1">Тест "{this.props.name}"</h1>
-            <p>Создан {this.props.whenCreated}</p>
+        return (<div>
+            <h2 className="display-2">Тест "{this.props.name}"</h2>
+            <p>Создан {this.props.timeCreated}</p>
             <p>Автор: {this.props.authorName}</p>
             <p>Вопросов: {this.props.questionsCount}</p>
             <a className="btn btn-outline-success" href={`/tests/pass?id=${this.props.id}`}>Пройти тест</a>
-        </Fragment>);
+        </div>);
     }
 }
 
@@ -37,7 +37,8 @@ class TestsList extends React.Component {
         const response = await fetch('/tests/all');
         if (response.status == 200) {
             await response.json().then(result => {
-                this.setState({ isLoading: false, tests: result });
+                console.log(result);
+                this.setState({ isLoading: false, tests: result.tests });
             })
             .catch(err => {
                 alert(`Ошибка при попытке получить данные с сервера: ${err}`);
@@ -46,26 +47,28 @@ class TestsList extends React.Component {
     }
 
     renderTests() {
-        return this.state.tests.length > 0 ?
-            <Fragment>
+        console.log(this.state);
+        return this.state.tests.length > 0
+            ? (<div>
                 {
                     this.state.tests.map(test => {
-                        <div key={test.id}>
+                        return(
+                        <div key={test.testName}>
                             <TestSummary id={test.id}
-                                name={test.name}
+                                name={test.testName}
                                 authorName={test.authorName}
-                                questionsCount={test.questions.length}
-                                whenCreated={test.timeCreated}
+                                questionsCount={test.questionsCount}
+                                timeCreated={test.timeCreated}
                             />
                             <hr />
-                        </div>
+                        </div>)
                     })
                 }
-            </Fragment>
+            </div>)
 
-        : <Fragment>Пока-что ещё не создано ни одного теста.
+        : (<p>Пока-что ещё не создано ни одного теста.
                 <a className="btn btn-outline-success" href="/tests/create">Создайте первый! :)</a>
-        </Fragment>
+        </p>)
     }
 }
 
