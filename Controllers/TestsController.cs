@@ -49,14 +49,22 @@ namespace TestBaza.Controllers
         public IActionResult Pass([FromQuery] int id)
         {
             Test? test = _testsRepo.GetTest(id);
+
             if (test is null) return NotFound();
+
             if (!(test.IsPublished && test.IsBrowsable)) return Forbid();
-            return Ok(test);
+
+            ViewData["TestId"] = id;
+            return View();
 
         }
+
         [HttpGet("/tests/get-test{id}")]
         public async Task<IActionResult> GetTest([FromRoute] int id)
         {
+            string path = HttpContext.Request.Path;
+            if (!path.Contains($"/tests/edit{id}")) return Forbid(); 
+
             Test? test = _testsRepo.GetTest(id);
             User creator = await _userManager.GetUserAsync(User);
 
@@ -68,6 +76,22 @@ namespace TestBaza.Controllers
             return Ok(model);
         }
 
+        [HttpGet("/tests/pass-test-info${id}")]
+        public IActionResult GetTestForPass([FromRoute] int id)
+        {
+            Test? test = _testsRepo.GetTest(id);
+
+            if (test is null) return NotFound();
+
+            test.Questions = test.Questions.Select(q => 
+            { 
+                q.Answer = string.Empty; 
+                q.MultipleAnswers = Array.Empty<Answer>(); 
+                return q; 
+            }).ToArray();
+
+            return Ok(new { result = test });
+        }
         [HttpGet]
         public IActionResult Create() => View();
         

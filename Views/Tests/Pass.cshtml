@@ -1,0 +1,14 @@
+﻿@{
+    ViewData["Title"] = "Прохождение теста";
+}
+
+<div id="root"><h1 class="display-1">Загрузка...</h1></div>
+
+
+<partial name="_ReactScriptsPartial" />
+<script src="~/js/tests-pass.jsx" asp-append-version="true" type="text/babel"></script>
+
+<script type="text/babel">
+    const testId = @ViewData["TestId"];
+    ReactDOM.render(<Test testId={testId} />, document.getElementById("root"))
+</script>

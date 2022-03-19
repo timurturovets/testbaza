@@ -6,13 +6,15 @@
 
         public string? TestName { get; set; }
         public string? Description { get; set; }
-        public IEnumerable<Question> Questions { get; set; } = new List<Question>();
         public DateTime TimeCreated { get; set; }
         public bool IsPrivate { get; set; }
+        public bool IsTimeLimited { get; set; }
+        public int TimeLimit { get; set; } // В секундах
         public bool IsPublished { get; set; }
         public bool IsBrowsable { get => IsPublished && !IsPrivate; set { return; } }
-        public IEnumerable<Rate> Rates { get; set; } = new List<Rate>();
 
+        public IEnumerable<Question> Questions { get; set; } = new List<Question>();
+        public IEnumerable<Rate> Rates { get; set; } = new List<Rate>();
         public string? CreatorId { get; set; }
         public User? Creator { get; set; }
 
@@ -23,7 +25,6 @@
                      && test.TestName == TestName
                      && test.Questions.SequenceEqual(Questions);
             return false;
-
         }
         public override int GetHashCode() => TestId.GetHashCode();
 
@@ -51,7 +52,9 @@
                 RatesCount = Rates.Count(),
                 AverageRate = Rates.Any() ? Rates.Select(r => r.Value).Average() : 0,
                 IsBrowsable = IsBrowsable,
-                IsPublished = IsPublished
+                IsPublished = IsPublished,
+                IsTimeLimited = IsTimeLimited,
+                TimeLimit = TimeLimit
             };
         }
     }
