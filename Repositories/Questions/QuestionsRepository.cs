@@ -38,7 +38,7 @@ namespace TestBaza.Repositories
             _context.Questions.Add(question);
             _context.SaveChanges();
         }
-        public (int, int) AddAnswerToQuestion(Question question)
+        public AnswerInfo AddAnswerToQuestion(Question question)
         {
             int number = question.MultipleAnswers.Count() + 1;
             Answer answer = new()
@@ -56,7 +56,7 @@ namespace TestBaza.Repositories
                 .Single();
             int id = createdAnswer.AnswerId;
 
-            return (id, number);
+            return new AnswerInfo(id, number);
         }
         public void RemoveAnswerFromQuestion(Question question, Answer answer)
         {
@@ -102,4 +102,5 @@ namespace TestBaza.Repositories
             _context.SaveChanges();
         }
     }
+    public record class AnswerInfo(int Id, int Number);
 }

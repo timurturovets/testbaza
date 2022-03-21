@@ -8,6 +8,7 @@
         public string? Description { get; set; }
         public DateTime TimeCreated { get; set; }
         public bool IsPrivate { get; set; }
+        public string? Link { get; set;}
         public bool IsTimeLimited { get; set; }
         public int TimeLimit { get; set; } // В секундах
         public bool IsPublished { get; set; }
@@ -34,9 +35,10 @@
             {
                 TestId = TestId,
                 TestName = TestName,
-                IsPrivate = IsPrivate,
                 Description = Description,
                 AuthorName = Creator!.UserName,
+                IsTimeLimited = IsTimeLimited,
+                TimeLimit = TimeLimit,
                 Questions = Questions.Select(q => q.ToJsonModel())
             };
         }

@@ -31,7 +31,7 @@ namespace TestBaza.Data
                 .WithMany(u => u.Rates)
                 .IsRequired()
                 .HasForeignKey(r=> r.UserId);
-
+                
             base.OnModelCreating(builder);
         }
         public AppDbContext(DbContextOptions options)

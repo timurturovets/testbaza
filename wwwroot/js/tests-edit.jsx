@@ -44,7 +44,7 @@
 
     async populateData() {
         const id = this.props.testId;
-        await fetch(`/tests/get-test${id}`).then(async response => {
+        await fetch(`/api/tests/wq/get-test${id}`).then(async response => {
             if (response.status === 200) {
                 const result = await response.json();
                 console.log(result);
@@ -154,7 +154,7 @@
         const formData = new FormData(form);
         formData.append('testid', id);
         formData.set('isprivate', isPrivate)
-        await fetch('/tests/update-test', {
+        await fetch('/api/tests/wq/update-test', {
             method: 'PUT',
             body: formData
         }).then(async response => {
@@ -174,7 +174,7 @@
         const id = this.props.testId;
         const formData = new FormData();
         formData.append('testId', id);
-        await fetch('/tests/delete-test', {
+        await fetch('/api/tests/delete-test', {
             method: 'POST',
             body: formData
         }).then(async response => {
@@ -189,7 +189,7 @@
         const id = this.props.testId;
         const formData = new FormData();
         formData.append('testId', id);
-        await fetch('/tests/add-question', {
+        await fetch('/api/tests/add-question', {
             method: 'PUT',
             body: formData
         }).then(async response => {
@@ -213,7 +213,7 @@
         const test = this.state.test;
         const formData = new FormData();
         formData.append('questionId', id);
-        await fetch(`/tests/delete-question`, {
+        await fetch(`/api/tests/delete-question`, {
             method: 'POST',
             body: formData
         }).then(response => {
@@ -240,7 +240,7 @@
         event.preventDefault();
         const id = this.props.testId;
 
-        await fetch(`/tests/publish-test${id}`).then(async response => {
+        await fetch(`/api/tests/publish-test${id}`).then(async response => {
             if (response.status === 200) {
                 window.location.href = "/profile#tests";
             } else {
@@ -406,7 +406,7 @@ class EditableQuestion extends React.Component {
         formData.set('model.HintEnabled', hintEnabled);
 
         console.log(answers);
-        await fetch('/tests/update-question', {
+        await fetch('/api/tests/update-question', {
             method: 'PUT',
             body: formData
         }).then(response => {
@@ -445,7 +445,7 @@ class EditableQuestion extends React.Component {
         formData.append('answerId', answerId);
         formData.append('questionId', questionId);
 
-        await fetch("/tests/delete-answer", {
+        await fetch("/api/tests/delete-answer", {
             method: "POST",
             body: formData
         }).then(async response => {
@@ -468,7 +468,7 @@ class EditableQuestion extends React.Component {
         console.log(`questionID: ${id}`);
         const formData = new FormData();
         formData.append("questionId", id);
-        await fetch("/tests/add-answer", {
+        await fetch("/api/tests/add-answer", {
             method: "POST",
             body: formData
         }).then(async response => {
@@ -499,7 +499,7 @@ class EditableAnswer extends React.Component {
             number = this.props.number;
         console.log('number: ' + number);
         return (<div className="input-group mb-3">
-            <input type="text" name={`model.Answers[${number - 1}].Value`} className="form-control" onBlur={e => this.props.onValueChange(e, id)}
+            <input type="text" name={`model.Answers[${number - 1}].Value`} className="form-control" onChange={e => this.props.onValueChange(e, id)}
                 defaultValue={value} />
             <div className="input-group-append">
                 <button className="btn btn-outline-danger" onClick={e => this.props.onDelete(e, id)}>Удалить</button>

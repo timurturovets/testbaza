@@ -31,13 +31,13 @@ namespace TestBaza.Controllers
             User user = await _userManager.GetUserAsync(User);
             return View(viewName: "main");
         }
-        [HttpGet("/profile/user-info")]
+        [HttpGet("/api/profile/user-info")]
         public async Task<IActionResult> GetUserInfo()
         {
             User user = await _userManager.GetUserAsync(User);
             return Ok(new { result = user.ToJsonModel() });
         }
-        [HttpGet("/profile/tests-user{id}")]
+        [HttpGet("/api/profile/tests-user{id}")]
         public async Task<IActionResult> GetUserTests([FromRoute] string id)
         {
             User user = await _userManager.GetUserAsync(User);
@@ -53,7 +53,7 @@ namespace TestBaza.Controllers
             return Ok(new { result = summaries });
         }
 
-        [HttpPost("/profile/update-user")]
+        [HttpPost("/api/profile/update-user")]
         public async Task<IActionResult> UpdateUser([FromForm] UpdateUserRequestModel model)
         {
             _logger.LogError($"New update user request, name: {model.UserName}, " +
@@ -74,7 +74,7 @@ namespace TestBaza.Controllers
             else return BadRequest(new { errors = ModelState.ToStringEnumerable() });
         }
 
-        [HttpPost("/profile/change-password")]
+        [HttpPost("/api/profile/change-password")]
         public async Task<IActionResult> ChangePassword([FromForm] ChangePasswordRequestModel model)
         {
             if (ModelState.IsValid)
@@ -89,7 +89,7 @@ namespace TestBaza.Controllers
             else return BadRequest(new { error = ModelState.ToStringEnumerable() });
         }
 
-        [HttpGet("/profile/user-tests")]
+        [HttpGet("/api/profile/user-tests")]
         public async Task<IActionResult> GetUserTests()
         {
             User creator = await _userManager.GetUserAsync(User);

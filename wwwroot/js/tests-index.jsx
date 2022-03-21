@@ -34,16 +34,14 @@ class TestsList extends React.Component {
     }
 
     async populateTests() {
-        const response = await fetch('/tests/all');
+        const response = await fetch('/api/tests/all');
         if (response.status == 200) {
             await response.json().then(result => {
                 console.log(result);
                 this.setState({ isLoading: false, tests: result.tests });
             })
-            .catch(err => {
-                alert(`Ошибка при попытке получить данные с сервера: ${err}`);
-            });
-        } else alert(`При попытке получить данные с сервера был получен статус ${response.status}`)
+        } else if (response.status === 204) this.setState({ isLoading: false, tests: [] });
+        else alert("Произошла непредвиденная ошибка. Попробуйте перезагрузить страницу");
     }
 
     renderTests() {
@@ -67,7 +65,7 @@ class TestsList extends React.Component {
             </div>)
 
         : (<p>Пока-что ещё не создано ни одного теста.
-                <a className="btn btn-outline-success" href="/tests/create">Создайте первый! :)</a>
+                <a className="btn btn-outline-success m-1" href="/tests/create">Создайте первый! :)</a>
         </p>)
     }
 }

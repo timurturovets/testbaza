@@ -3,11 +3,13 @@ global using System.Threading.Tasks;
 global using System.Collections.Generic;
 
 global using TestBaza.Models;
+global using static TestBaza.Constants;
 
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 using TestBaza.Data;
+using TestBaza.Factories;
 using TestBaza.Extensions;
 using TestBaza.Repositories;
 
@@ -44,19 +46,26 @@ IServiceCollection services = builder.Services;
     services.AddTransient<ITestsRepository, TestsRepository>();
     services.AddTransient<IQuestionsRepository, QuestionsRepository>();
     services.AddTransient<IRatesRepository, RatesRepository>();
+
+    services.AddTransient<IUserFactory, UserFactory>();
+    services.AddTransient<ITestFactory, TestFactory>();
+
+    services.AddSession();
 }
 
 WebApplication app = builder.Build();
-
 {
     if (app.Environment.IsDevelopment()) app.UseMigrationsEndPoint();
     else app.UseHsts();
 
+    app.UseSession();
 
+    app.ClearSession();
     app.UseErrorStatusCodesHandler();
+    app.UseApiKeysHandler();
+
     app.UseHttpsRedirection();
     app.UseStaticFiles();
-
     app.UseRouting();
 
     app.UseAuthentication();

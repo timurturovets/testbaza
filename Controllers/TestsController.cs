@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
 
+using TestBaza.Extensions;
 using TestBaza.Repositories;
 
 namespace TestBaza.Controllers
@@ -36,7 +37,7 @@ namespace TestBaza.Controllers
             return View();
         }
 
-        [HttpGet("/tests/all")]
+        [HttpGet("/api/tests/all")]
         public IActionResult All()
         {
             var tests = _testsRepo.GetBrowsableTests();
@@ -59,11 +60,12 @@ namespace TestBaza.Controllers
 
         }
 
-        [HttpGet("/tests/get-test{id}")]
+        [HttpGet("/api/tests/wq/get-test{id}")]
         public async Task<IActionResult> GetTest([FromRoute] int id)
         {
-            string path = HttpContext.Request.Path;
-            if (!path.Contains($"/tests/edit{id}")) return Forbid(); 
+            string apiKey = HttpContext.GetApiKey();
+            string? clientApiKey = HttpContext.Session.GetString(API_KEY);
+            if (apiKey != clientApiKey) return Forbid();
 
             Test? test = _testsRepo.GetTest(id);
             User creator = await _userManager.GetUserAsync(User);
@@ -76,22 +78,25 @@ namespace TestBaza.Controllers
             return Ok(model);
         }
 
-        [HttpGet("/tests/pass-test-info${id}")]
+        [HttpGet("/api/tests/pass-test-info${id}")]
         public IActionResult GetTestForPass([FromRoute] int id)
         {
             Test? test = _testsRepo.GetTest(id);
 
             if (test is null) return NotFound();
 
-            test.Questions = test.Questions.Select(q => 
+            TestJsonModel model = test.ToJsonModel();
+
+            model.Questions = model.Questions.Select(q =>
             { 
-                q.Answer = string.Empty; 
-                q.MultipleAnswers = Array.Empty<Answer>(); 
+                q.Answer = string.Empty;
+                q.Answers = Array.Empty<AnswerJsonModel>(); 
                 return q; 
             }).ToArray();
 
-            return Ok(new { result = test });
+            return Ok(new { result = model });
         }
+
         [HttpGet]
         public IActionResult Create() => View();
         
@@ -153,10 +158,16 @@ namespace TestBaza.Controllers
             }
             if (!test.Creator.Equals(creator)) return Forbid();
             ViewData["TestId"] = id;
+
+            string apiKey = HttpContext.GetApiKey();
+            ISession session = HttpContext.Session;
+            session.SetString(API_KEY, apiKey);
+
+            _logger.LogError($"String from session: {session.GetString(API_KEY)}");
             return View();
         }
 
-        [HttpPut("/tests/update-test")]
+        [HttpPut("/api/tests/wq/update-test")]
         public async Task<IActionResult> UpdateTest([FromForm] UpdateTestRequestModel model)
         {
             _logger.LogInformation($"New change test request, testName: {model.TestName}, description: {model.Description}," +
@@ -177,7 +188,7 @@ namespace TestBaza.Controllers
             return Ok(testModel);
         }
 
-        [HttpPost("/tests/delete-test")]
+        [HttpPost("/api/tests/delete-test")]
         public async Task<IActionResult> DeleteTest([FromForm] int testId)
         {
             User creator = await _userManager.GetUserAsync(User);
@@ -191,7 +202,7 @@ namespace TestBaza.Controllers
             return Ok();
         }
 
-        [HttpPut("/tests/add-question")]
+        [HttpPut("/api/tests/add-question")]
         public async Task<IActionResult> AddQuestion([FromForm] int testId)
         {
             _logger.LogInformation($"New add question request, testId: {testId}");
@@ -213,7 +224,7 @@ namespace TestBaza.Controllers
             return Ok(new { questionId, number });
         }
 
-        [HttpPut("/tests/update-question")]
+        [HttpPut("/api/tests/update-question")]
         public async Task<IActionResult> UpdateQuestion([FromForm] UpdateQuestionRequestModel model)
         {
             _logger.LogError($"New change question request, value: {model.Value}, answer: {model.Answer}, aType: {model.AnswerType}");
@@ -242,7 +253,7 @@ namespace TestBaza.Controllers
 
             return Ok();
         }
-        [HttpPost("/tests/delete-question")]
+        [HttpPost("/api/tests/delete-question")]
         public async Task<IActionResult> DeleteQuestion([FromForm] int questionId)
         {
             _logger.LogInformation($"New delete question request, questionId: {questionId}");
@@ -257,7 +268,7 @@ namespace TestBaza.Controllers
             return Ok();
         }
 
-        [HttpPost("/tests/add-answer")]
+        [HttpPost("/api/tests/add-answer")]
         public async Task<IActionResult> AddAnswer(int questionId)
         {
             _logger.LogError($"QuestionId: {questionId}");
@@ -267,11 +278,11 @@ namespace TestBaza.Controllers
             if (question is null) return NotFound();
             if (!question.Test!.Creator!.Equals(creator)) return Forbid();
 
-            (int answerId, int number) = _qsRepo.AddAnswerToQuestion(question);
-            return Ok(new { answerId, number });
+            AnswerInfo info = _qsRepo.AddAnswerToQuestion(question);
+            return Ok(new { answerId = info.Id, number = info.Number });
         }
 
-        [HttpPost("/tests/delete-answer")]
+        [HttpPost("/api/tests/delete-answer")]
         public async Task<IActionResult> DeleteAnswer(int answerId, int questionId)
         {
             _logger.LogError($"AnswerID: {answerId}");
@@ -288,7 +299,7 @@ namespace TestBaza.Controllers
             return Ok();
         }
 
-        [HttpGet("/tests/publish-test{testId}")]
+        [HttpGet("/api/tests/publish-test{testId}")]
         public async Task<IActionResult> PublishTest([FromRoute] int testId)
         {
             Test? test = _testsRepo.GetTest(testId);
@@ -464,7 +475,7 @@ namespace TestBaza.Controllers
             return Ok();
         }
 
-        [HttpPost("/tests/rate-test")]
+        [HttpPost("/api/tests/rate-test")]
         public async Task<IActionResult> RateTest([FromForm] RateTestRequestModel model)
         {
             User rater = await _userManager.GetUserAsync(User);

@@ -74,7 +74,7 @@
     }
 
     async populateData() {
-        await fetch('/profile/user-info').then(async response => {
+        await fetch('/api/profile/user-info').then(async response => {
             if (response.status === 200) {
                 const object = await response.json();
                 const result = object.result;
@@ -100,7 +100,7 @@
         formData.append('email', user.email);
         formData.append('password', user.password);
 
-        await fetch('/profile/update-user', {
+        await fetch('/api/profile/update-user', {
             method: 'POST',
             body: formData
         }).then(async response => {
@@ -334,7 +334,7 @@ class PasswordChangeForm extends React.Component {
         formData.append('oldpassword', oldPassword);
         formData.append('newpassword', newPassword);
 
-        await fetch('/profile/change-password', {
+        await fetch('/api/profile/change-password', {
             method: 'POST',
             body: formData
         }).then(async response => {
@@ -412,7 +412,7 @@ class UserTests extends React.Component {
     async populateData() {
         let { isLoading, tests, isEmpty } = this.state;
 
-        await fetch('/profile/user-tests').then(async response => {
+        await fetch('/api/profile/user-tests').then(async response => {
             if (response.status === 204) {
                 isEmpty = false;
                 this.setState({ isLoading: false, isEmpty: true });
