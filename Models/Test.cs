@@ -37,8 +37,7 @@
                 TestName = TestName,
                 Description = Description,
                 AuthorName = Creator!.UserName,
-                IsTimeLimited = IsTimeLimited,
-                TimeLimit = TimeLimit,
+                TimeInfo = new TimeInfo(IsTimeLimited, TimeLimit),
                 Questions = Questions.Select(q => q.ToJsonModel())
             };
         }
@@ -55,8 +54,7 @@
                 AverageRate = Rates.Any() ? Rates.Select(r => r.Value).Average() : 0,
                 IsBrowsable = IsBrowsable,
                 IsPublished = IsPublished,
-                IsTimeLimited = IsTimeLimited,
-                TimeLimit = TimeLimit
+                TimeInfo = new TimeInfo(IsTimeLimited, TimeLimit)
             };
         }
     }

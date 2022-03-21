@@ -7,8 +7,7 @@
         public string? AuthorName { get; set; }
         public string? TimeCreated { get; set; }
         public bool IsPublished { get; set; }
-        public bool IsTimeLimited { get; set; }
-        public int TimeLimit { get; set; }
+        public TimeInfo? TimeInfo { get; set; }
         public bool IsBrowsable { get; set; }
         public int QuestionsCount { get; set; }
         public int RatesCount { get; set; }

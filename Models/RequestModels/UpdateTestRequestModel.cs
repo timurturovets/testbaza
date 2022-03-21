@@ -1,10 +1,14 @@
-﻿namespace TestBaza.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace TestBaza.Models
 {
     public class UpdateTestRequestModel
     {
         public int TestId { get; set; }
+        [Required]
         public string? TestName { get; set; }
         public string? Description { get; set; }
         public bool IsPrivate { get; set; }
+        public TimeInfo TimeInfo { get; set; } = new(false, 0);
     }
 }

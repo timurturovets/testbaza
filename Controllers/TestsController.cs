@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
 
+using TestBaza.Factories;
 using TestBaza.Extensions;
 using TestBaza.Repositories;
 
@@ -16,12 +17,14 @@ namespace TestBaza.Controllers
         private readonly ITestsRepository _testsRepo;
         private readonly IQuestionsRepository _qsRepo;
         private readonly UserManager<User> _userManager;
+        private readonly ITestFactory _testFactory;
         private readonly ILogger<TestsController> _logger;
         public TestsController(
             IRatesRepository ratesRepo,
             ITestsRepository testsRepo,
             IQuestionsRepository qsRepo,
             UserManager<User> userManager,
+            ITestFactory testFactory,
             ILogger<TestsController> logger
             )
         {
@@ -29,6 +32,7 @@ namespace TestBaza.Controllers
             _testsRepo = testsRepo;
             _qsRepo = qsRepo;
             _userManager = userManager;
+            _testFactory = testFactory;
             _logger = logger;
         }
 
@@ -115,18 +119,18 @@ namespace TestBaza.Controllers
                         ViewData["Error"] = "Тест с таким названием уже существует.";
                         return View();
                     }
-                    Test test = new()
-                    {
-                        Creator = creator,
-                        TestName = model.TestName!,
-                        Description = model.Description ?? "Без описания.",
-                        IsPrivate = model.IsPrivate,
-                        TimeCreated = DateTime.Now
-                    };
+                    Test test = _testFactory.Create(
+                        testName: model.TestName!,
+                        description: model.Description ?? "Без описания",
+                        isPrivate: model.IsPrivate,
+                        isTimeLimited: model.TimeInfo.IsTimeLimited,
+                        timeLimit: model.TimeInfo.Seconds + model.TimeInfo.Minutes*60+model.TimeInfo.Hours * 3600,
+                        creator: creator);
+
                     _testsRepo.AddTest(test);
 
                     await _userManager.UpdateAsync(creator);
-                    int id = _testsRepo.GetTest(test.TestName)!.TestId;
+                    int id = _testsRepo.GetTest(test.TestName!)!.TestId;
 
                     return RedirectToAction(actionName: "edit", controllerName: "tests", new { id });
                 }
@@ -182,6 +186,8 @@ namespace TestBaza.Controllers
             test.TestName = model.TestName;
             test.Description = model.Description;
             test.IsPrivate = model.IsPrivate;
+            test.IsTimeLimited = model.TimeInfo.IsTimeLimited;
+            test.TimeLimit = model.TimeInfo.ConvertToSeconds();
 
             _testsRepo.UpdateTest(test);
             TestJsonModel testModel = test.ToJsonModel();

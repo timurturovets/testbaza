@@ -75,5 +75,4 @@ WebApplication app = builder.Build();
         name: "default",
         pattern: "{controller=auth}/{action=reg}");
 }
-
 app.Run();

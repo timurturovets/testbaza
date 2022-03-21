@@ -2,16 +2,26 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
 
+using TestBaza.Factories;
+
 namespace TestBaza.Controllers
 {
     public class AuthController : Controller
     {
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
-        public AuthController(UserManager<User> userManager, SignInManager<User> signInManager)
+
+        private readonly IUserFactory _userFactory;
+        public AuthController(
+            UserManager<User> userManager, 
+            SignInManager<User> signInManager,
+            IUserFactory userFactory
+            )
         {
             _userManager = userManager;
             _signInManager = signInManager;
+
+            _userFactory = userFactory;
         }
 
         [HttpGet]
@@ -36,11 +46,7 @@ namespace TestBaza.Controllers
                 }
                 else
                 {
-                    User user = new()
-                    {
-                        UserName = model.UserName,
-                        Email = model.Email
-                    };
+                    User user = _userFactory.Create(model.UserName!, model.Email!);
                     IdentityResult createResult = await _userManager.CreateAsync(user, model.Password);
 
                     if (createResult.Succeeded)

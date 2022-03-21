@@ -10,6 +10,7 @@
         this.handlePublish = this.handlePublish.bind(this);
         this.handleUnsavedChange = this.handleUnsavedChange.bind(this);
         this.handleDelete = this.handleDelete.bind(this);
+        this.renderTimeInputs = this.renderTimeInputs.bind(this);
 
         this.state = {
             isLoading: true,
@@ -18,7 +19,8 @@
             success: false,
             isSaved: true,
             hasQuestions: false,
-            publishingErrors: []
+            publishingErrors: [],
+            isTimeLimited: false
         };
     }
 
@@ -51,7 +53,8 @@
                 this.setState({
                     isLoading: false,
                     test: result,
-                    hasQuestions: result.questions.length > 0
+                    hasQuestions: result.questions.length > 0,
+                    isTimeLimited: result.timeInfo.isTimeLimited
                 });
             } else {
                 window.location.replace('/home/index');
@@ -65,10 +68,12 @@
             description = test.description,
             questions = test.questions,
             isPrivate = test.isPrivate,
+            timeInfo = test.timeInfo,
             hasQuestions = this.state.hasQuestions,
             publishingErrors = this.state.publishingErrors,
             isSaved = this.state.isSaved;
-
+        console.log('rendering test! test is');
+        console.log(test);
         return (<div>
             <form name="edit-test" className="form-horizontal">
                 <div className="form-group">
@@ -89,6 +94,17 @@
                             : <input className="form-check-input" type="checkbox" name="isprivate"
                                 onClick={this.handleUnsavedChange} />}
                         <label className="form-check-label">Доступ только по ссылке</label>
+                    </div>
+                    <div className="form-check form-switch">
+                        {timeInfo.isTimeLimited
+                            ? (<div>
+                                <input className="form-check-input" type="checkbox" name="timeinfo.istimelimited"
+                                    onClick={e=>this.handleTimeInfoChange(e)} defaultChecked />
+                                {this.renderTimeInputs(timeInfo.hours, timeInfo.minutes, timeInfo.seconds)}
+                            </div>)
+                            : <input className="form-check-input" type="checkbox" name="timeinfo.istimelimited"
+                                onClick={e => this.handleTimeInfoChange(e)} />}
+                        <label className="form-check-label">Ограничен по времени</label>
                     </div>
                 </div>
                 {isSaved
@@ -142,6 +158,48 @@
         </div>);
     }
 
+    renderTimeInputs(hours = 0, minutes = 0, seconds = 0) {
+        console.log('rendering time inputs');
+        return (<div>
+            <input className="d-inline" type="number" name="timeinfo.hours" min="0" max="48" defaultValue={hours}
+                onChange={e=>this.handleTimeInfoChange(e)}/>
+            <label className="d-inline">:</label>
+            <input className="d-inline" type="number" name="timeinfo.minutes" min="0" max="59" defaultValue={minutes}
+                onChange={e => this.handleTimeInfoChange(e)} />
+            <label className="d-inline">:</label>
+            <input type="number" name="timeinfo.seconds" min="0" max="59" defaultValue={seconds}
+                onChange={e => this.handleTimeInfoChange(e)} />
+        </div>)
+    }
+    handleTimeInfoChange(event) {
+        event.preventDefault();
+        console.log('handling timeinfochange');
+        const name = event.target.name.toLowerCase(),
+            test = this.state.test,
+            value = parseInt(event.target.value);
+        console.log(`value is ${value}, name is ${name}`);
+        if (name === "timeinfo.istimelimited") {
+
+            test.timeInfo.isTimeLimited = event.target.checked;
+            this.setState({ test: test, isSaved: false });
+
+        } else if (name === "timeinfo.hours") {
+
+            test.timeInfo.hours = value;
+            this.setState({ test: test, isSaved: false });
+
+        } else if (name === "timeinfo.minutes") {
+
+            test.timeInfo.minutes = value;
+            this.setState({ test: test, isSaved: false });
+
+        } else if (name === "timelimit.seconds") {
+
+            test.timeInfo.seconds = value;
+            this.setState({ test: test, isSaved: false });
+
+        }
+    }
     async handleSubmit() {
         event.preventDefault();
         const id = this.props.testId;
@@ -151,9 +209,11 @@
             return;
         }
         const isPrivate = form.elements["isprivate"].checked;
+        const isTimeLimited = form.elements["timeinfo.istimelimited"].checked;
         const formData = new FormData(form);
         formData.append('testid', id);
-        formData.set('isprivate', isPrivate)
+        formData.set('isprivate', isPrivate);
+        formData.set('timeinfo.istimelimited', isTimeLimited);
         await fetch('/api/tests/wq/update-test', {
             method: 'PUT',
             body: formData
