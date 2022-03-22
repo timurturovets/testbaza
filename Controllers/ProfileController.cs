@@ -26,11 +26,8 @@ namespace TestBaza.Controllers
         }
 
         [Route("/profile")]
-        public async Task<IActionResult> Get()
-        {
-            User user = await _userManager.GetUserAsync(User);
-            return View(viewName: "main");
-        }
+        public IActionResult Get()=> View(viewName: "main");
+        
         [HttpGet("/api/profile/user-info")]
         public async Task<IActionResult> GetUserInfo()
         {

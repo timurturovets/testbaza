@@ -25,21 +25,17 @@
     }
 
     componentDidMount() {
+        console.log('func is');
+        console.log(this.props.onSavedChange);
         this.populateData();
     }
 
     render() {
-        const { isLoading, test, isChanged, success, isSaved } = this.state;
-        const content = isLoading
+        const content = this.state.isLoading
             ? <h1 className="display-6">Загрузка...</h1>
             : this.renderTest()
         return (<div>
-            {isChanged
-                ? success
-                    ? <div className="text-success"><h5 className="display-5">Изменения сохранены</h5></div>
-                    : <div className="text-danger"><h5 className="display-5">Произошла ошибка. Попробуйте снова</h5></div>
-                : <div></div>
-            }
+
             {content}
         </div>);
     }
@@ -63,6 +59,7 @@
     }
 
     renderTest() {
+        const { _, __, isChanged, success, ___, isSaved } = this.state;
         const test = this.state.test;
         const name = test.testName,
             description = test.description,
@@ -70,8 +67,7 @@
             isPrivate = test.isPrivate,
             timeInfo = test.timeInfo,
             hasQuestions = this.state.hasQuestions,
-            publishingErrors = this.state.publishingErrors,
-            isSaved = this.state.isSaved;
+            publishingErrors = this.state.publishingErrors;
         console.log('rendering test! test is');
         console.log(test);
         return (<div>
@@ -96,6 +92,7 @@
                         <label className="form-check-label">Доступ только по ссылке</label>
                     </div>
                     <div className="form-check form-switch">
+                        <label className="form-check-label">Ограничен по времени</label>
                         {timeInfo.isTimeLimited
                             ? (<div>
                                 <input className="form-check-input" type="checkbox" name="timeinfo.istimelimited"
@@ -104,12 +101,19 @@
                             </div>)
                             : <input className="form-check-input" type="checkbox" name="timeinfo.istimelimited"
                                 onClick={e => this.handleTimeInfoChange(e)} />}
-                        <label className="form-check-label">Ограничен по времени</label>
                     </div>
                 </div>
                 {isSaved
                     ? <button className="btn btn-outline-success" onClick={e => this.handleSubmit(e)} disabled>Сохранить изменения</button>
                     : <button className="btn btn-outline-success" onClick={e => this.handleSubmit(e)}>Сохранить изменения</button>
+                }
+                {isChanged
+                    ? isSaved
+                        ? success
+                            ? <div className="text-success"><p>Изменения сохранены</p></div>
+                            : <div className="text-danger"><p>Произошла ошибка. Попробуйте снова</p></div>
+                        : null
+                    : null
                 }
             </form>
             <h1 className="text-center display-3">Вопросы в тесте</h1>
@@ -163,12 +167,13 @@
         return (<div>
             <input className="d-inline" type="number" name="timeinfo.hours" min="0" max="48" defaultValue={hours}
                 onChange={e=>this.handleTimeInfoChange(e)}/>
-            <label className="d-inline">:</label>
+            <label className="d-inline">ч</label>
             <input className="d-inline" type="number" name="timeinfo.minutes" min="0" max="59" defaultValue={minutes}
                 onChange={e => this.handleTimeInfoChange(e)} />
-            <label className="d-inline">:</label>
-            <input type="number" name="timeinfo.seconds" min="0" max="59" defaultValue={seconds}
+            <label className="d-inline">мин</label>
+            <input className="d-inline" type="number" name="timeinfo.seconds" min="0" max="59" defaultValue={seconds}
                 onChange={e => this.handleTimeInfoChange(e)} />
+            <label>сек</label>
         </div>)
     }
     handleTimeInfoChange(event) {
@@ -193,7 +198,7 @@
             test.timeInfo.minutes = value;
             this.setState({ test: test, isSaved: false });
 
-        } else if (name === "timelimit.seconds") {
+        } else if (name === "timeinfo.seconds") {
 
             test.timeInfo.seconds = value;
             this.setState({ test: test, isSaved: false });
@@ -346,11 +351,7 @@ class EditableQuestion extends React.Component {
         const { changed, success, saved, value, hint, hintEnabled, answer, answers, answerType } = this.state;
         return <div>
             <hr />
-            {changed
-                ? (success
-                    ? <div className="text-success"><h6 className="display-6">Изменения успешно сохранены</h6></div>
-                    : <div className="text-danger"><h6 className="display-6">Ошибка. Попробуйте ещё раз</h6></div>)
-                : <div></div>}
+
             <form name={`edit-question${this.props.questionId}`}>
                 <h2>Вопрос {this.props.number} {saved ? null : "*"}</h2>
 
@@ -430,6 +431,13 @@ class EditableQuestion extends React.Component {
                         <button className="btn btn-outline-danger" onClick={e => this.handleDelete(e)}>Удалить вопрос</button>
                     </div>
                 </div>
+                {changed
+                    ? saved
+                        ? success
+                            ? <div className="text-success"><p>Изменения сохранены</p></div>
+                            : <div className="text-danger"><p>Ошибка. Попробуйте ещё раз</p></div>
+                        : null
+                    : null}
             </form>
         </div>
     }

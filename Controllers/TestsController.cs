@@ -124,7 +124,7 @@ namespace TestBaza.Controllers
                         description: model.Description ?? "Без описания",
                         isPrivate: model.IsPrivate,
                         isTimeLimited: model.TimeInfo.IsTimeLimited,
-                        timeLimit: model.TimeInfo.Seconds + model.TimeInfo.Minutes*60+model.TimeInfo.Hours * 3600,
+                        timeLimit: model.TimeInfo.ConvertToSeconds(),
                         creator: creator);
 
                     _testsRepo.AddTest(test);
@@ -176,22 +176,25 @@ namespace TestBaza.Controllers
         {
             _logger.LogInformation($"New change test request, testName: {model.TestName}, description: {model.Description}," +
                 $"IsPrivate: {model.IsPrivate}");
+            if (ModelState.IsValid)
+            {
+                Test? test = _testsRepo.GetTest(model.TestId);
+                if (test is null) return NotFound();
 
-            Test? test = _testsRepo.GetTest(model.TestId);
-            if (test is null) return NotFound();
+                User creator = await _userManager.GetUserAsync(User);
+                if (!test.Creator!.Equals(creator)) return Forbid();
 
-            User creator = await _userManager.GetUserAsync(User);
-            if (!test.Creator!.Equals(creator)) return Forbid();
+                test.TestName = model.TestName;
+                test.Description = model.Description;
+                test.IsPrivate = model.IsPrivate;
+                test.IsTimeLimited = model.TimeInfo.IsTimeLimited;
+                test.TimeLimit = model.TimeInfo.ConvertToSeconds();
 
-            test.TestName = model.TestName;
-            test.Description = model.Description;
-            test.IsPrivate = model.IsPrivate;
-            test.IsTimeLimited = model.TimeInfo.IsTimeLimited;
-            test.TimeLimit = model.TimeInfo.ConvertToSeconds();
-
-            _testsRepo.UpdateTest(test);
-            TestJsonModel testModel = test.ToJsonModel();
-            return Ok(testModel);
+                _testsRepo.UpdateTest(test);
+                TestJsonModel testModel = test.ToJsonModel();
+                return Ok(testModel);
+            }
+            else return BadRequest();
         }
 
         [HttpPost("/api/tests/delete-test")]
@@ -329,10 +332,14 @@ namespace TestBaza.Controllers
             if (string.IsNullOrEmpty(test.Description)) test.Description = "Без описания.";
             else if (test.Description.Length > 100) errors.Add("Описание теста должно содержать не более 100 символов.");
 
-            if (test.Questions.Count() < 5) {
-                errors.Add("В тесте должно быть не менее 5 вопросов. ");
+            if (test.Questions.Count() < 3)
+            {
+                errors.Add("В тесте должно быть не менее 3 вопросов. ");
             }
-
+            if (test.IsTimeLimited && test.TimeLimit < 30)
+            {
+                errors.Add("Ограничение по времени прохождения теста должно быть не менее 30 секунд.");
+            }
             string noQuestionValueErrors = "Вы не ввели текст ",
                 noHintValueErrors = "Вы не ввели текст подсказки ",
                 noQuestionAnswerErrors = "Вы не ввели ответ ",
