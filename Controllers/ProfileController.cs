@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
 
 using TestBaza.Models;
+using TestBaza.Factories;
 using TestBaza.Extensions;
 using TestBaza.Repositories;
 
@@ -12,27 +13,30 @@ namespace TestBaza.Controllers
     public class ProfileController : Controller
     {
         private readonly ITestsRepository _testsRepo;
+        private readonly IResponseFactory _responseFactory;
         private readonly UserManager<User> _userManager;
         private readonly ILogger<ProfileController> _logger;
         public ProfileController(
             ITestsRepository testsRepo,
+            IResponseFactory responseFactory,
             UserManager<User> userManager,
             ILogger<ProfileController> logger
             )
         {
+            _responseFactory = responseFactory;
             _testsRepo = testsRepo;
             _userManager = userManager;
             _logger = logger;
         }
 
         [Route("/profile")]
-        public IActionResult Get()=> View(viewName: "main");
+        public IActionResult Get()=> _responseFactory.View(this, viewName: "main");
         
         [HttpGet("/api/profile/user-info")]
         public async Task<IActionResult> GetUserInfo()
         {
             User user = await _userManager.GetUserAsync(User);
-            return Ok(new { result = user.ToJsonModel() });
+            return _responseFactory.Ok(this, result: user.ToJsonModel());
         }
         [HttpGet("/api/profile/tests-user{id}")]
         public async Task<IActionResult> GetUserTests([FromRoute] string id)
@@ -40,14 +44,14 @@ namespace TestBaza.Controllers
             User user = await _userManager.GetUserAsync(User);
             User creator = await _userManager.FindByIdAsync(id);
 
-            if (creator is null) return NotFound();
+            if (creator is null) return _responseFactory.NotFound(this);
 
-            if (!user.Equals(creator)) return Forbid();
+            if (!user.Equals(creator)) return _responseFactory.Forbid(this);
 
-            if (!user.Tests.Any()) return NoContent();
+            if (!user.Tests.Any()) return _responseFactory.NoContent(this);
 
             IEnumerable<TestSummary> summaries = creator.Tests.Select(t => t.ToSummary());
-            return Ok(new { result = summaries });
+            return _responseFactory.Ok(this, result: summaries);
         }
 
         [HttpPost("/api/profile/update-user")]
@@ -59,16 +63,16 @@ namespace TestBaza.Controllers
             {
                 User user = await _userManager.GetUserAsync(User);
                 if (!await _userManager.CheckPasswordAsync(user, model.Password))
-                    return BadRequest(new { errors = new[] { "Вы ввели неверный пароль" } });
+                    return _responseFactory.BadRequest(this, result: new[] { "Вы ввели неверный пароль" } );
 
                 user.UserName = model.UserName;
                 if (user.Email != model.Email) user.EmailConfirmed = false;
                 user.Email = model.Email;
                 await _userManager.UpdateAsync(user);
 
-                return Ok();
+                return _responseFactory.Ok(this);
             }
-            else return BadRequest(new { errors = ModelState.ToStringEnumerable() });
+            else return _responseFactory.BadRequest(this, result: ModelState.ToStringEnumerable());
         }
 
         [HttpPost("/api/profile/change-password")]
@@ -80,10 +84,10 @@ namespace TestBaza.Controllers
 
                 IdentityResult result = await _userManager.ChangePasswordAsync(user, model.OldPassword, model.NewPassword);
 
-                if (result.Succeeded) return Ok();
-                else return BadRequest(new { error = new[] { "Вы ввели неверный пароль" } });
+                if (result.Succeeded) return _responseFactory.Ok(this);
+                else return _responseFactory.BadRequest(this, result: new[] { "Вы ввели неверный пароль" });
             }
-            else return BadRequest(new { error = ModelState.ToStringEnumerable() });
+            else return _responseFactory.BadRequest(this, result: ModelState.ToStringEnumerable());
         }
 
         [HttpGet("/api/profile/user-tests")]
@@ -94,9 +98,9 @@ namespace TestBaza.Controllers
             List<TestSummary> tests = _testsRepo.GetUserTests(creator).Select(t => t.ToSummary()).ToList();
 
             _logger.LogError($"New user test request, length : {tests.Count}");
-            if (!tests.Any()) return NoContent();
+            if (!tests.Any()) return _responseFactory.NoContent(this);
 
-            return Ok(new { result = tests });
+            return _responseFactory.Ok(this, result: tests );
         }
     }
 }

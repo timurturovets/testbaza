@@ -39,13 +39,13 @@
         await fetch(`/api/tests/pass-test-info${testId}`).then(async response => {
 
             if (response.status === 200) {
-
-                const result = await response.json();
-                const test = result.test;
+                const object = await response.json();
+                console.log(`result`);
+                console.log(object);
+                const test = object.result
                 this.setState({ test: test });
 
-            } else window.location.replace('/home/index');
-
+            } else alert(`status: ${response.status}`)//window.location.replace('/home/index');
         });
     }
 
@@ -79,8 +79,8 @@
             passingInfo = this.state.passingInfo;
 
         const now = new Date();
-        passingInfo.timeLeft = now.setSeconds(now.getSeconds() + test.t)
-        passingInfo.timeStarted = new D.getTime();
+        passingInfo.timeStarted = now.getSeconds();
+        passingInfo.timeLeft = now.setSeconds(now.getSeconds() + test.timeInfo.seconds)
 
         const interval = setInterval(() => {
 

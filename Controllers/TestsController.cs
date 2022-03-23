@@ -16,23 +16,33 @@ namespace TestBaza.Controllers
         private readonly IRatesRepository _ratesRepo;
         private readonly ITestsRepository _testsRepo;
         private readonly IQuestionsRepository _qsRepo;
+
         private readonly UserManager<User> _userManager;
+
         private readonly ITestFactory _testFactory;
+        private readonly IResponseFactory _responseFactory;
         private readonly ILogger<TestsController> _logger;
         public TestsController(
             IRatesRepository ratesRepo,
             ITestsRepository testsRepo,
             IQuestionsRepository qsRepo,
+
             UserManager<User> userManager,
+
             ITestFactory testFactory,
+            IResponseFactory responseFactory,
+
             ILogger<TestsController> logger
             )
         {
             _ratesRepo = ratesRepo;
             _testsRepo = testsRepo;
             _qsRepo = qsRepo;
+
             _userManager = userManager;
+
             _testFactory = testFactory;
+            _responseFactory = responseFactory;
             _logger = logger;
         }
 
@@ -45,9 +55,9 @@ namespace TestBaza.Controllers
         public IActionResult All()
         {
             var tests = _testsRepo.GetBrowsableTests();
-            if (!tests.Any()) return NoContent();
+            if (!tests.Any()) return _responseFactory.NoContent(this);
             IEnumerable<TestSummary> testsSummaries = tests.Select(t => t.ToSummary());
-            return Ok(new { tests = testsSummaries });
+            return _responseFactory.Ok(this, result: testsSummaries);
         }
 
         [HttpGet]
@@ -55,12 +65,12 @@ namespace TestBaza.Controllers
         {
             Test? test = _testsRepo.GetTest(id);
 
-            if (test is null) return NotFound();
+            if (test is null) return _responseFactory.NotFound(this);
 
-            if (!(test.IsPublished && test.IsBrowsable)) return Forbid();
+            if (!(test.IsPublished && test.IsBrowsable)) return _responseFactory.Forbid(this);
 
             ViewData["TestId"] = id;
-            return View();
+            return _responseFactory.View(this);
 
         }
 
@@ -69,25 +79,25 @@ namespace TestBaza.Controllers
         {
             string apiKey = HttpContext.GetApiKey();
             string? clientApiKey = HttpContext.Session.GetString(API_KEY);
-            if (apiKey != clientApiKey) return Forbid();
+            if (apiKey != clientApiKey) return _responseFactory.Forbid(this);
 
             Test? test = _testsRepo.GetTest(id);
             User creator = await _userManager.GetUserAsync(User);
 
-            if (test is null) return NotFound();
+            if (test is null) return _responseFactory.NotFound(this);
 
-            if (!test.Creator!.Equals(creator)) return Forbid();
+            if (!test.Creator!.Equals(creator)) return _responseFactory.Forbid(this);
 
             TestJsonModel model = test.ToJsonModel();
-            return Ok(model);
+            return _responseFactory.Ok(this, result: model);
         }
 
-        [HttpGet("/api/tests/pass-test-info${id}")]
+        [HttpGet("/api/tests/pass-test-info{id}")]
         public IActionResult GetTestForPass([FromRoute] int id)
         {
             Test? test = _testsRepo.GetTest(id);
 
-            if (test is null) return NotFound();
+            if (test is null) return _responseFactory.NotFound(this);
 
             TestJsonModel model = test.ToJsonModel();
 
@@ -98,7 +108,7 @@ namespace TestBaza.Controllers
                 return q; 
             }).ToArray();
 
-            return Ok(new { result = model });
+            return _responseFactory.Ok(this, result: model);
         }
 
         [HttpGet]
@@ -117,8 +127,9 @@ namespace TestBaza.Controllers
                     if (_testsRepo.GetTest(model.TestName!) is not null)
                     {
                         ViewData["Error"] = "Тест с таким названием уже существует.";
-                        return View();
+                        return _responseFactory.View(this);
                     }
+
                     Test test = _testFactory.Create(
                         testName: model.TestName!,
                         description: model.Description ?? "Без описания",
@@ -132,15 +143,14 @@ namespace TestBaza.Controllers
                     await _userManager.UpdateAsync(creator);
                     int id = _testsRepo.GetTest(test.TestName!)!.TestId;
 
-                    return RedirectToAction(actionName: "edit", controllerName: "tests", new { id });
+                    return _responseFactory.RedirectToAction(this, actionName: "edit", controllerName: "tests", new { id });
                 }
                 else return View();
-
             }
             catch (Exception e)
             {
                 _logger.LogError(e.InnerException?.Message ?? e.Message);
-                return BadRequest();
+                return _responseFactory.BadRequest(this);
             }
         }
 
@@ -153,14 +163,14 @@ namespace TestBaza.Controllers
             if (test is null)
             {
                 ViewData["Error"] = $"Ошибка. Теста с ID {id} не существует. Попробуйте перезайти на страницу редактирования";
-                return RedirectToAction(actionName: "index", controllerName: "home");
+                return _responseFactory.RedirectToAction(this, actionName: "index", controllerName: "home", null);
             }
             if (test.Creator is null)
             {
                 ViewData["Error"] = $"Произошла неизвестная ошибка. Попробуйте перезайти на страницу редактирования";
-                return RedirectToAction(actionName: "index", controllerName: "home");
+                return _responseFactory.RedirectToAction(this, actionName: "index", controllerName: "home", null);
             }
-            if (!test.Creator.Equals(creator)) return Forbid();
+            if (!test.Creator.Equals(creator)) return _responseFactory.Forbid(this);
             ViewData["TestId"] = id;
 
             string apiKey = HttpContext.GetApiKey();
@@ -168,7 +178,7 @@ namespace TestBaza.Controllers
             session.SetString(API_KEY, apiKey);
 
             _logger.LogError($"String from session: {session.GetString(API_KEY)}");
-            return View();
+            return _responseFactory.View(this);
         }
 
         [HttpPut("/api/tests/wq/update-test")]
@@ -179,10 +189,10 @@ namespace TestBaza.Controllers
             if (ModelState.IsValid)
             {
                 Test? test = _testsRepo.GetTest(model.TestId);
-                if (test is null) return NotFound();
+                if (test is null) return _responseFactory.NotFound(this);
 
                 User creator = await _userManager.GetUserAsync(User);
-                if (!test.Creator!.Equals(creator)) return Forbid();
+                if (!test.Creator!.Equals(creator)) return _responseFactory.Forbid(this);
 
                 test.TestName = model.TestName;
                 test.Description = model.Description;
@@ -192,9 +202,9 @@ namespace TestBaza.Controllers
 
                 _testsRepo.UpdateTest(test);
                 TestJsonModel testModel = test.ToJsonModel();
-                return Ok(testModel);
+                return _responseFactory.Ok(this, result: testModel);
             }
-            else return BadRequest();
+            else return _responseFactory.BadRequest(this);
         }
 
         [HttpPost("/api/tests/delete-test")]
@@ -203,12 +213,12 @@ namespace TestBaza.Controllers
             User creator = await _userManager.GetUserAsync(User);
 
             Test? test = _testsRepo.GetTest(testId);
-            if (test is null) return NotFound();
+            if (test is null) return _responseFactory.NotFound(this);
 
-            if (!test.Creator!.Equals(creator)) return Forbid();
+            if (!test.Creator!.Equals(creator)) return _responseFactory.Forbid(this);
 
             _testsRepo.RemoveTest(test);
-            return Ok();
+            return _responseFactory.Ok(this);
         }
 
         [HttpPut("/api/tests/add-question")]
@@ -216,10 +226,10 @@ namespace TestBaza.Controllers
         {
             _logger.LogInformation($"New add question request, testId: {testId}");
             Test? test = _testsRepo.GetTest(testId);
-            if (test is null) return NotFound();
+            if (test is null) return _responseFactory.NotFound(this);
 
             User creator = await _userManager.GetUserAsync(User);
-            if (!test.Creator!.Equals(creator)) return Forbid();
+            if (!test.Creator!.Equals(creator)) return _responseFactory.Forbid(this);
 
             int number = test.Questions.Count() + 1;
             Question newQuestion = new()
@@ -230,7 +240,7 @@ namespace TestBaza.Controllers
             _qsRepo.AddQuestion(newQuestion);
             Question? createdQuestion = _qsRepo.GetQuestionByTestAndNumber(test, number);
             int questionId = createdQuestion!.QuestionId;
-            return Ok(new { questionId, number });
+            return _responseFactory.Ok(this, result: new { questionId, number });
         }
 
         [HttpPut("/api/tests/update-question")]
@@ -239,10 +249,10 @@ namespace TestBaza.Controllers
             _logger.LogError($"New change question request, value: {model.Value}, answer: {model.Answer}, aType: {model.AnswerType}");
 
             Question? question = _qsRepo.GetQuestion(model.QuestionId);
-            if (question is null) return NotFound();
+            if (question is null) return _responseFactory.NotFound(this);
 
             User creator = await _userManager.GetUserAsync(User);
-            if (!question.Test!.Creator!.Equals(creator)) return Forbid();
+            if (!question.Test!.Creator!.Equals(creator)) return _responseFactory.Forbid(this);
 
             question.Value = model.Value;
             question.Hint = model.Hint;
@@ -260,7 +270,7 @@ namespace TestBaza.Controllers
             question.AnswerType = model.AnswerType;
             _qsRepo.UpdateQuestion(question);
 
-            return Ok();
+            return _responseFactory.Ok(this);
         }
         [HttpPost("/api/tests/delete-question")]
         public async Task<IActionResult> DeleteQuestion([FromForm] int questionId)
@@ -268,13 +278,13 @@ namespace TestBaza.Controllers
             _logger.LogInformation($"New delete question request, questionId: {questionId}");
 
             Question? question = _qsRepo.GetQuestion(questionId);
-            if (question is null) return NotFound();
+            if (question is null) return _responseFactory.NotFound(this);
 
             User creator = await _userManager.GetUserAsync(User);
-            if (!question.Test!.Creator!.Equals(creator)) return Forbid();
+            if (!question.Test!.Creator!.Equals(creator)) return _responseFactory.Forbid(this);
 
             _qsRepo.DeleteQuestion(question);
-            return Ok();
+            return _responseFactory.Ok(this);
         }
 
         [HttpPost("/api/tests/add-answer")]
@@ -284,11 +294,11 @@ namespace TestBaza.Controllers
             Question? question = _qsRepo.GetQuestion(questionId);
             User creator = await _userManager.GetUserAsync(User);
 
-            if (question is null) return NotFound();
-            if (!question.Test!.Creator!.Equals(creator)) return Forbid();
+            if (question is null) return _responseFactory.NotFound(this);
+            if (!question.Test!.Creator!.Equals(creator)) return _responseFactory.Forbid(this);
 
             AnswerInfo info = _qsRepo.AddAnswerToQuestion(question);
-            return Ok(new { answerId = info.Id, number = info.Number });
+            return _responseFactory.Ok(this, result: new { answerId = info.Id, number = info.Number });
         }
 
         [HttpPost("/api/tests/delete-answer")]
@@ -296,16 +306,16 @@ namespace TestBaza.Controllers
         {
             _logger.LogError($"AnswerID: {answerId}");
             Question? question = _qsRepo.GetQuestion(questionId);
-            if (question is null) return NotFound();
+            if (question is null) return _responseFactory.NotFound(this);
 
             User creator = await _userManager.GetUserAsync(User);
-            if (!question.Test!.Creator!.Equals(creator)) return Forbid();
+            if (!question.Test!.Creator!.Equals(creator)) return _responseFactory.Forbid(this);
 
             Answer? answer = question.MultipleAnswers.SingleOrDefault(a => a.AnswerId == answerId);
-            if (answer is null) return BadRequest();
+            if (answer is null) return _responseFactory.BadRequest(this);
 
             _qsRepo.RemoveAnswerFromQuestion(question, answer);
-            return Ok();
+            return _responseFactory.Ok(this);
         }
 
         [HttpGet("/api/tests/publish-test{testId}")]
@@ -317,11 +327,11 @@ namespace TestBaza.Controllers
             if (test is null)
             {
                 errors.Add("Произошла непредвиденная ошибка. Перезагрузите страницу.");
-                return BadRequest(new { errors });
+                return _responseFactory.BadRequest(this, result: errors );
             }
 
             User creator = await _userManager.GetUserAsync(User);
-            if (!test.Creator!.Equals(creator)) return Forbid();
+            if (!test.Creator!.Equals(creator)) return _responseFactory.Forbid(this);
 
             if (string.IsNullOrEmpty(test.TestName))
             {
@@ -479,13 +489,13 @@ namespace TestBaza.Controllers
                 errors.Add(msg);
             }
 
-            if (errors.Count > 0) return BadRequest(new { errors });
+            if (errors.Count > 0) return _responseFactory.BadRequest(this, result: errors);
 
 
             test.IsPublished = true;
             _testsRepo.UpdateTest(test);
 
-            return Ok();
+            return _responseFactory.Ok(this);
         }
 
         [HttpPost("/api/tests/rate-test")]
@@ -494,12 +504,12 @@ namespace TestBaza.Controllers
             User rater = await _userManager.GetUserAsync(User);
 
             Test? test = _testsRepo.GetTest(model.TestId);
-            if (test is null) return NotFound();
+            if (test is null) return _responseFactory.NotFound(this);
 
             Rate rate = new() { Value = model.Rate, Test = test, User = rater };
             _ratesRepo.AddRate(rate);
             
-            return Ok();
+            return _responseFactory.Ok(this);
         }
     }
 }

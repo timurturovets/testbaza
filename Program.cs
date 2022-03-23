@@ -49,6 +49,8 @@ IServiceCollection services = builder.Services;
 
     services.AddTransient<IUserFactory, UserFactory>();
     services.AddTransient<ITestFactory, TestFactory>();
+    services.AddTransient<IQuestionFactory, QuestionFactory>();
+    services.AddTransient<IResponseFactory, ResponseFactory>();
 
     services.AddSession();
 }

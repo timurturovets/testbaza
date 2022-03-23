@@ -17,7 +17,7 @@
     ReactDOM.render(<EditableTest testId={testId} onSavedChange={onSavedChange} />, document.getElementById('root'));
     
     window.addEventListener("beforeunload", e => {
-        console.log(`isSaved: ${isEverythingSaved}`)
+        console.log(`isSaved: ${isEverythingSaved}`);
         if(!isEverythingSaved){
             const msg = "У вас остались несохранённые изменения. В случае закрытия страницы, они пропадут.";
             e.returnValue=msg;

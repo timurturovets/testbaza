@@ -12,16 +12,18 @@ namespace TestBaza.Controllers
         private readonly SignInManager<User> _signInManager;
 
         private readonly IUserFactory _userFactory;
+        private readonly IResponseFactory _responseFactory;
         public AuthController(
-            UserManager<User> userManager, 
+            UserManager<User> userManager,
             SignInManager<User> signInManager,
-            IUserFactory userFactory
-            )
+            IUserFactory userFactory,
+            IResponseFactory responseFactory)
         {
             _userManager = userManager;
             _signInManager = signInManager;
 
             _userFactory = userFactory;
+            _responseFactory = responseFactory;
         }
 
         [HttpGet]
@@ -29,8 +31,8 @@ namespace TestBaza.Controllers
         public IActionResult Register()
         {
             if (_signInManager.IsSignedIn(HttpContext.User)) 
-                return RedirectToAction(actionName: "index", controllerName: "home");
-            return View(viewName:"register");
+                return _responseFactory.RedirectToAction(this, actionName: "index", controllerName: "home", null);
+            return _responseFactory.View(this, viewName:"register");
         }
 
         [HttpPost]
@@ -52,20 +54,21 @@ namespace TestBaza.Controllers
                     if (createResult.Succeeded)
                     {
                         var signInResult = await _signInManager.PasswordSignInAsync(user, model.Password, true, false);
-                        if (signInResult.Succeeded) return RedirectToAction(actionName: "index", controllerName: "home");
+                        if (signInResult.Succeeded) 
+                            return _responseFactory.RedirectToAction(this, actionName: "index", controllerName: "home", null);
                     }
                     ModelState.AddModelError(string.Empty, "Произоша ошибка при попытке зарегистрироваться. Попробуйте снова");
                 }
             }
-            return View(viewName: "register",model: model);
+            return _responseFactory.View(this, viewName: "register", model: model);
         }
 
         [HttpGet]
         public IActionResult Login()
         {
             if (_signInManager.IsSignedIn(HttpContext.User))
-                return RedirectToAction(actionName: "index", controllerName: "home");
-            return View();
+                return _responseFactory.RedirectToAction(this, actionName: "index", controllerName: "home", null);
+            return _responseFactory.View(this);
         }
 
         [HttpPost]
@@ -84,7 +87,7 @@ namespace TestBaza.Controllers
                     var result = await _signInManager.PasswordSignInAsync(user, model.Password, true, false);
                     if (result.Succeeded)
                     {
-                        return RedirectToAction(actionName: "index", controllerName: "home");
+                        return _responseFactory.RedirectToAction(this, actionName: "index", controllerName: "home", null);
                     }
                     else
                     {
@@ -94,12 +97,13 @@ namespace TestBaza.Controllers
                 }
                 else ModelState.AddModelError(string.Empty, "Вы ввели неверный логин");
             }
-            return View(model);
+            return _responseFactory.View(this, model: model);
         }
         public async Task<IActionResult> Logout()
         {
             await _signInManager.SignOutAsync();
-            return RedirectToAction(actionName: "login", controllerName: "auth");
+           
+            return _responseFactory.RedirectToAction(this, actionName: "login", controllerName: "auth", null);
         }
     }
 }

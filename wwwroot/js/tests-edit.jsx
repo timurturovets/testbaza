@@ -44,13 +44,14 @@
         const id = this.props.testId;
         await fetch(`/api/tests/wq/get-test${id}`).then(async response => {
             if (response.status === 200) {
-                const result = await response.json();
-                console.log(result);
+                const object = await response.json();
+                console.log(object);
+                const test = object.result;
                 this.setState({
                     isLoading: false,
-                    test: result,
-                    hasQuestions: result.questions.length > 0,
-                    isTimeLimited: result.timeInfo.isTimeLimited
+                    test: test,
+                    hasQuestions: test.questions.length > 0,
+                    isTimeLimited: test.timeInfo.isTimeLimited
                 });
             } else {
                 window.location.replace('/home/index');
@@ -224,9 +225,10 @@
             body: formData
         }).then(async response => {
             if (response.status === 200) {
-                const result = await response.json();
+                const object = await response.json();
+                const test = object.result;
 
-                this.setState({ test: result, isChanged: true, success: true, isSaved: true });
+                this.setState({ test: test, isChanged: true, success: true, isSaved: true });
 
             } else this.setState({ isChanged: true, success: false, isSaved: false });
         });
@@ -259,11 +261,11 @@
             body: formData
         }).then(async response => {
             if (response.status === 200) {
-                const result = await response.json();
-                console.log(result);
-
-                const questionId = result.questionId,
-                    questionNumber = parseInt(result.number);
+                const object = await response.json();
+                console.log(object);
+                const question = object.result;
+                const questionId = question.questionId,
+                    questionNumber = parseInt(question.number);
 
                 const test = this.state.test;
                 test.questions.push({ questionId: questionId, number: questionNumber, value: "", answer: "" });
@@ -309,8 +311,8 @@
             if (response.status === 200) {
                 window.location.href = "/profile#tests";
             } else {
-                const result = await response.json();
-                const errors = result.errors;
+                const object = await response.json();
+                const errors = object.result;
                 this.setState({ publishingErrors: errors });
             }
         });
@@ -541,9 +543,10 @@ class EditableQuestion extends React.Component {
             body: formData
         }).then(async response => {
             if (response.status === 200) {
-                const result = await response.json();
-                console.log(result);
+                const object = await response.json();
+                console.log(object);
 
+                const result = object.result;
                 const answers = this.state.answers;
                 answers.push({ answerId: result.answerId, number: result.number, value: "" });
 
