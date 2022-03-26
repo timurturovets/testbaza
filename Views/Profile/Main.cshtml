@@ -9,12 +9,3 @@
 <div id="tests"></div>
 <partial name="_ReactScriptsPartial" />
 <script src="~/js/profile-account.jsx" asp-append-version="true" type="text/babel"></script>
-
-<script type="text/babel">
-    ReactDOM.render(<ManageAccountForm />, document.getElementById('manage-acc'))
-    ReactDOM.render(<PasswordChangeForm />, document.getElementById('change-pass'))
-    ReactDOM.render(<UserTests />, document.getElementById('tests'))
-    setTimeout(()=>{
-        if(window.location.hash.match(/test/)) document.getElementById("tests").scrollIntoView();
-    }, 1500)
-</script>

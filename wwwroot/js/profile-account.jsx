@@ -1,14 +1,6 @@
 ﻿class ManageAccountForm extends React.Component {
     constructor(props) {
         super(props);
-
-        this.populateData = this.populateData.bind(this);
-        this.renderForm = this.renderForm.bind(this);
-        this.onNameChanged = this.onNameChanged.bind(this);
-        this.onEmailChanged = this.onEmailChanged.bind(this);
-        this.onPasswordChanged = this.onPasswordChanged.bind(this);
-        this.handleSubmit = this.handleSubmit.bind(this);
-        this.renderInputs = this.renderInputs.bind(this);
         
         this.state = {
             isLoading: true,
@@ -38,8 +30,8 @@
         );
     }
 
-    renderForm() {
-        const user = this.state.user, { isChanged, isSaved, isSuccess, noErrors, errors} = this.state.changeInfo;
+    renderForm = () => {
+        const { isChanged, isSaved, isSuccess, noErrors, errors} = this.state.changeInfo;
         return (<div>
             <h2 className="text-center">Информация об аккаунте</h2>
             {isChanged
@@ -64,7 +56,7 @@
         </div>);
     }
     
-    renderInputs() {
+    renderInputs = () => {
         const user = this.state.user;
         return (<div>
             <UserNameInput defaultUsername={user.userName} handleChange={this.onNameChanged} />
@@ -73,7 +65,7 @@
         </div>);
     }
 
-    async populateData() {
+    populateData = async () => {
         await fetch('/api/profile/user-info').then(async response => {
             if (response.status === 200) {
                 const object = await response.json();
@@ -86,8 +78,8 @@
         });
     }
 
-    async handleSubmit(e) {
-        e.preventDefault();
+    handleSubmit = async event => {
+        event.preventDefault();
         const user = this.state.user, changeInfo = this.state.changeInfo;
 
         if (user.password === null || user.password === undefined || user.password === "") {
@@ -131,7 +123,7 @@
         });
     }
 
-    onNameChanged(newUserName) {
+    onNameChanged = newUserName => {
         const changeInfo = this.state.changeInfo;
 
         newUserName = newUserName.trim();
@@ -158,7 +150,7 @@
         return { isSuccess: true, error: null };
     }
 
-    onEmailChanged(newEmail) {
+    onEmailChanged = newEmail => {
         const changeInfo = this.state.changeInfo;
 
         const emailRegexp = /^(?!\s)(\d|\w)+@\w+\.\w+$/ig;
@@ -177,7 +169,7 @@
         return { isSuccess: true, error: null};
     }
 
-    onPasswordChanged(newPassword) {
+    onPasswordChanged = newPassword => {
         const user = this.state.user;
         user.password = newPassword;
         this.setState({ isSaved: false, user: user });
@@ -190,8 +182,6 @@ class UserNameInput extends React.Component {
         super(props);
 
         this.state = { isChanged: false, isSuccess: false, error: null };
-
-        this.onChange = this.onChange.bind(this);
     }
 
     render() {
@@ -209,7 +199,7 @@ class UserNameInput extends React.Component {
         </div>)
     }
 
-    onChange(event) {
+    onChange = event => {
         const newUsername = event.target.value;
         const { isSuccess, error } = this.props.handleChange(newUsername);
         this.setState({ isChanged: true, isSuccess: isSuccess, error: error });
@@ -221,8 +211,6 @@ class EmailInput extends React.Component {
         super(props);
 
         this.state = { isChanged: false, isSuccess: false, error: null };
-
-        this.onChange = this.onChange.bind(this);
     }
 
     render() {
@@ -242,7 +230,7 @@ class EmailInput extends React.Component {
         );
     }
 
-    onChange(event) {
+    onChange = event => {
         const newEmail = event.target.value;
         const { isSuccess, error } = this.props.handleChange(newEmail);
         this.setState({ isChanged: true, isSuccess: isSuccess, error: error });
@@ -254,8 +242,6 @@ class PasswordInput extends React.Component {
         super(props);
 
         this.state = { isChanged: false, isSuccess: false, error: null };
-
-        this.onChange = this.onChange.bind(this);
     }
 
     render() {
@@ -275,7 +261,7 @@ class PasswordInput extends React.Component {
             </div>);
     }
 
-    onChange(event) {
+    onChange = event => {
         const elem = event.target;
         const value = elem.value, fieldType = elem.name;
         const { isSuccess, error } = this.props.handleChange(value, fieldType);
@@ -289,8 +275,6 @@ class PasswordChangeForm extends React.Component {
 
         this.state = { oldPassword: null, newPassword: null, error: null };
 
-        this.handleSubmit = this.handleSubmit.bind(this);
-        this.handleChange = this.handleChange.bind(this);
     }
 
     render() {
@@ -311,8 +295,8 @@ class PasswordChangeForm extends React.Component {
             )
     }
 
-    async handleSubmit(e) {
-        e.preventDefault();
+    handleSubmit = async event => {
+        event.preventDefault();
         let { oldPassword, newPassword, error } = this.state;
         if (oldPassword === null || oldPassword === undefined || oldPassword === "") {
             error = "Вы не ввели текущий пароль";
@@ -349,7 +333,7 @@ class PasswordChangeForm extends React.Component {
         });
     }
 
-    handleChange(event, type) {
+    handleChange = (event, type) => {
         const value = event.target.value;
         let error = this.state.error;
         if (type === "new") {
@@ -372,7 +356,6 @@ class UserTests extends React.Component {
     constructor(props) {
         super(props);
 
-        this.populateData = this.populateData.bind(this);
         this.state = { isLoading: true, tests: [], isEmpty: false };
     }
 
@@ -409,7 +392,7 @@ class UserTests extends React.Component {
             );
     }
 
-    async populateData() {
+    populateData = async () => {
         let { isLoading, tests, isEmpty } = this.state;
 
         await fetch('/api/profile/user-tests').then(async response => {
@@ -453,3 +436,10 @@ class EditableTestSummary extends React.Component {
             </div>);
     }
 }
+
+ReactDOM.render(<ManageAccountForm />, document.getElementById('manage-acc'))
+ReactDOM.render(<PasswordChangeForm />, document.getElementById('change-pass'))
+ReactDOM.render(<UserTests />, document.getElementById('tests'))
+setTimeout(() => {
+    if (window.location.hash.match(/test/)) document.getElementById("tests").scrollIntoView();
+}, 1500)

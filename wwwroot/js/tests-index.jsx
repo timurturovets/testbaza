@@ -16,8 +16,7 @@
 class TestsList extends React.Component {
     constructor(props) {
         super(props);
-        this.populateTests = this.populateTests.bind(this);
-        this.renderTests = this.renderTests.bind(this);
+
         this.state = {isLoading: true, tests: []}
     }
 
@@ -33,7 +32,7 @@ class TestsList extends React.Component {
         return content;
     }
 
-    async populateTests() {
+    populateTests = async () => {
         const response = await fetch('/api/tests/all');
         if (response.status == 200) {
             await response.json().then(object => {
@@ -44,7 +43,7 @@ class TestsList extends React.Component {
         else alert("Произошла непредвиденная ошибка. Попробуйте перезагрузить страницу");
     }
 
-    renderTests() {
+    renderTests = () => {
         console.log(this.state);
         return this.state.tests.length > 0
             ? (<div>

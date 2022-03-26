@@ -2,16 +2,6 @@
     constructor(props) {
         super(props);
 
-        this.populateData = this.populateData.bind(this);
-        this.renderTest = this.renderTest.bind(this);
-        this.handleSubmit = this.handleSubmit.bind(this);
-        this.handleAddQuestion = this.handleAddQuestion.bind(this);
-        this.onQuestionDeleted = this.onQuestionDeleted.bind(this);
-        this.handlePublish = this.handlePublish.bind(this);
-        this.handleUnsavedChange = this.handleUnsavedChange.bind(this);
-        this.handleDelete = this.handleDelete.bind(this);
-        this.renderTimeInputs = this.renderTimeInputs.bind(this);
-
         this.state = {
             isLoading: true,
             test: {},
@@ -40,7 +30,7 @@
         </div>);
     }
 
-    async populateData() {
+    populateData = async () => {
         const id = this.props.testId;
         await fetch(`/api/tests/wq/get-test${id}`).then(async response => {
             if (response.status === 200) {
@@ -59,7 +49,7 @@
         });
     }
 
-    renderTest() {
+    renderTest = () => {
         const { _, __, isChanged, success, ___, isSaved } = this.state;
         const test = this.state.test;
         const name = test.testName,
@@ -163,7 +153,7 @@
         </div>);
     }
 
-    renderTimeInputs(hours = 0, minutes = 0, seconds = 0) {
+    renderTimeInputs = (hours = 0, minutes = 0, seconds = 0) => {
         console.log('rendering time inputs');
         return (<div>
             <input className="d-inline" type="number" name="timeinfo.hours" min="0" max="48" defaultValue={hours}
@@ -177,7 +167,8 @@
             <label>сек</label>
         </div>)
     }
-    handleTimeInfoChange(event) {
+
+    handleTimeInfoChange = event => {
         event.preventDefault();
         console.log('handling timeinfochange');
         const name = event.target.name.toLowerCase(),
@@ -206,7 +197,7 @@
 
         }
     }
-    async handleSubmit() {
+    handleSubmit = async () => {
         event.preventDefault();
         const id = this.props.testId;
         const form = document.forms["edit-test"];
@@ -234,7 +225,7 @@
         });
     }
 
-    async handleDelete(event) {
+    handleDelete = async event => {
         event.preventDefault();
 
         if (!confirm("Вы уверены, что хотите удалить тест? Его нельзя будет восстановить")) return;
@@ -251,7 +242,8 @@
             } else alert(`При попытке удалить тест был получен статус ${response.status}. Попробуйте перезагрузить страницу`);
         });
     }
-    async handleAddQuestion(event) {
+
+    handleAddQuestion = async event => {
         event.preventDefault();
         const id = this.props.testId;
         const formData = new FormData();
@@ -276,7 +268,7 @@
         });
     }
 
-    async onQuestionDeleted(id, number) {
+    onQuestionDeleted = async (id, number) => {
         const test = this.state.test;
         const formData = new FormData();
         formData.append('questionId', id);
@@ -303,7 +295,7 @@
         });
     }
 
-    async handlePublish(event) {
+    handlePublish = async event => {
         event.preventDefault();
         const id = this.props.testId;
 
@@ -318,7 +310,7 @@
         });
     }
 
-    handleUnsavedChange() {
+    handleUnsavedChange = () => {
         this.props.onSavedChange(false);
         this.setState({ isSaved: false });
     }
@@ -327,14 +319,6 @@
 class EditableQuestion extends React.Component {
     constructor(props) {
         super(props);
-
-        this.handleAnswerTypeChange = this.handleAnswerTypeChange.bind(this);
-        this.handleUnsavedState = this.handleUnsavedState.bind(this);
-        this.handleDelete = this.handleDelete.bind(this);
-        this.handleSubmit = this.handleSubmit.bind(this);
-        this.handleAddAnswer = this.handleAddAnswer.bind(this);
-        this.onAnswerValueChange = this.onAnswerValueChange.bind(this);
-        this.onAnswerDelete = this.onAnswerDelete.bind(this);
 
         this.state = {
             changed: false,
@@ -444,25 +428,27 @@ class EditableQuestion extends React.Component {
         </div>
     }
 
-    handleAnswerTypeChange(event) {
+    handleAnswerTypeChange = event => {
         const elem = event.target;
         this.props.onSavedChange(false);
         this.setState({ answerType: parseInt(elem.value), saved: false });
     }
 
-    handleHintPresence(event) {
+    handleHintPresence = event => {
         const elem = event.target;
         this.props.onSavedChange(false);
         this.setState({hintEnabled: elem.checked, saved: false})
     }
-    handleUnsavedState() {
+
+    handleUnsavedState = () => {
         this.setState({ saved: false });
         this.props.onSavedChange(false);
     }
-    async handleSubmit(e) {
+
+    handleSubmit = async event => {
         this.setState({ saved: true });
         this.props.onSavedChange(true);
-        e.preventDefault();
+        event.preventDefault();
         
         const id = this.props.questionId;
         const answers = this.state.answers;
@@ -484,13 +470,13 @@ class EditableQuestion extends React.Component {
         })
     }
 
-    async handleDelete(event) {
+    handleDelete = async event => {
         event.preventDefault();
         const id = this.props.questionId;
         this.props.onDeleted(id, this.props.number);
     }
 
-    onAnswerValueChange(event, id) {
+    onAnswerValueChange = (event, id) => {
         console.log(`Answer value change event, id: ${id}`);
         const value = event.target.value;
         const answers = this.state.answers;
@@ -506,7 +492,7 @@ class EditableQuestion extends React.Component {
         }
     }
 
-    async onAnswerDelete(event, answerId) {
+    onAnswerDelete = async (event, answerId) => {
         event.preventDefault();
 
         const questionId = this.props.questionId;
@@ -532,7 +518,7 @@ class EditableQuestion extends React.Component {
         });
     }
 
-    async handleAddAnswer(event) {
+    handleAddAnswer = async event => {
         event.preventDefault();
         const id = this.props.questionId;
         console.log(`questionID: ${id}`);
