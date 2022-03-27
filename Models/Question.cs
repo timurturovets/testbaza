@@ -4,12 +4,13 @@
     {
         public int QuestionId { get; set; }
 
-        public int Number {get;set;}
+        public int Number { get; set; }
         public string? Value { get; set; }
         public string? Hint { get; set; }
         public bool HintEnabled { get; set; }
         public string? Answer { get; set; }
         public IEnumerable<Answer> MultipleAnswers { get; set; } = new List<Answer>();
+        public int CorrectAnswerNumber { get; set; }
         public AnswerType AnswerType { get; set; } = AnswerType.HasToBeTyped;
 
         public int TestId { get; set; }
@@ -27,7 +28,7 @@
         }
         public override int GetHashCode() => QuestionId.GetHashCode();
 
-        public QuestionJsonModel ToJsonModel()
+        public QuestionJsonModel ToJsonModel(bool includeAnswers = true)
         {
             return new QuestionJsonModel
             {
@@ -36,8 +37,9 @@
                 Value = Value,
                 Hint = Hint,
                 HintEnabled = HintEnabled,
-                Answer = Answer,
-                Answers = MultipleAnswers.Select(a => a.ToJsonModel()),
+                Answer = includeAnswers ? Answer : string.Empty,
+                Answers = includeAnswers ? MultipleAnswers.Select(a => a.ToJsonModel()) : Array.Empty<AnswerJsonModel>(),
+                CorrectAnswerNumber = includeAnswers ? CorrectAnswerNumber : -1,
                 AnswerType = (int)AnswerType,
             };
         }

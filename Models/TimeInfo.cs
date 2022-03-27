@@ -4,6 +4,7 @@ namespace TestBaza.Models
 {
     public class TimeInfo
     {
+        public TimeInfo() { }
         public TimeInfo(bool isTimeLimited, int seconds)
         {
             IsTimeLimited = isTimeLimited;

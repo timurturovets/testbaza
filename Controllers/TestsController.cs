@@ -92,25 +92,6 @@ namespace TestBaza.Controllers
             return _responseFactory.Ok(this, result: model);
         }
 
-        [HttpGet("/api/tests/pass-test-info{id}")]
-        public IActionResult GetTestForPass([FromRoute] int id)
-        {
-            Test? test = _testsRepo.GetTest(id);
-
-            if (test is null) return _responseFactory.NotFound(this);
-
-            TestJsonModel model = test.ToJsonModel();
-
-            model.Questions = model.Questions.Select(q =>
-            { 
-                q.Answer = string.Empty;
-                q.Answers = Array.Empty<AnswerJsonModel>(); 
-                return q; 
-            }).ToArray();
-
-            return _responseFactory.Ok(this, result: model);
-        }
-
         [HttpGet]
         public IActionResult Create() => View();
         
@@ -123,7 +104,6 @@ namespace TestBaza.Controllers
                 if (ModelState.IsValid)
                 {
                     User creator = await _userManager.GetUserAsync(User);
-
                     if (_testsRepo.GetTest(model.TestName!) is not null)
                     {
                         ViewData["Error"] = "Тест с таким названием уже существует.";
@@ -134,8 +114,8 @@ namespace TestBaza.Controllers
                         testName: model.TestName!,
                         description: model.Description ?? "Без описания",
                         isPrivate: model.IsPrivate,
-                        isTimeLimited: model.TimeInfo.IsTimeLimited,
-                        timeLimit: model.TimeInfo.ConvertToSeconds(),
+                        isTimeLimited: model.TimeInfo?.IsTimeLimited ?? false,
+                        timeLimit: model.TimeInfo?.ConvertToSeconds() ?? 0,
                         creator: creator);
 
                     _testsRepo.AddTest(test);
@@ -355,7 +335,8 @@ namespace TestBaza.Controllers
                 noQuestionAnswerErrors = "Вы не ввели ответ ",
                 notAllAnswersEnteredErrors = "Вы ввели не все варианты ответа ",
                 answerTypeNotDeclaredErrors = "Вы не выбрали вариант ответа для ",
-                notEnoughAnswersErrors = "Вопросы с несколькими вариантами ответа должны иметь минимум 2 ответа. Под этот критерий не проходит ";
+                notEnoughAnswersErrors = "Вопросы с несколькими вариантами ответа должны иметь минимум 2 ответа. Под этот критерий не проходит ",
+                correctAnswerUnchosenErrors = "Вы не выбрали верный ответ из нескольких вариантов ответа для ";
 
 
             bool hasQuestionsWithoutValue = false,
@@ -363,7 +344,8 @@ namespace TestBaza.Controllers
                 hasQuestionsWithoutAnswer = false,
                 hasAnswersWithoutValue = false,
                 hasUndeclaredAnswerTypes = false,
-                hasQuestionsWithNotEnoughAnswers = false;
+                hasQuestionsWithNotEnoughAnswers = false,
+                hasUnchosenCorrectAnswers = false;
 
             foreach (Question q in test.Questions)
             {
@@ -371,8 +353,7 @@ namespace TestBaza.Controllers
                 int qsCount = qsWithSameNumbers.Count();
                 if (qsCount > 1)
                 {
-                    bool hasQsWithSameNumbers = true;
-                    while (hasQsWithSameNumbers)
+                    while (true)
                     {
                         for (int i = 0; i < qsCount; i++)
                         {
@@ -380,12 +361,13 @@ namespace TestBaza.Controllers
                             qsWithSameNumbers.First(qn => qn.Number == last.Number + 1).Number++;
                             last.Number++;
                         }
+                        if (qsWithSameNumbers.Count() < 2)
+                        {
+                            _qsRepo.UpdateQuestion(q);
+                            break;
+                        }
                     }
-                    if (qsWithSameNumbers.Count() < 2)
-                    {
-                        hasQsWithSameNumbers = false;
-                        _qsRepo.UpdateQuestion(q);
-                    }
+
                 }
 
                 int n = q.Number;
@@ -414,8 +396,8 @@ namespace TestBaza.Controllers
                         int answersCount = answersWithSameNumber.Count();
                         if (answersCount > 1)
                         {
-                            bool hasAnswersWithSameNumbers = true;
-                            while (hasAnswersWithSameNumbers)
+                            //bool hasAnswersWithSameNumbers = true;
+                            while (true)
                             {
                                 for (int i = 0; i < answersCount; i++)
                                 {
@@ -426,7 +408,7 @@ namespace TestBaza.Controllers
                                 if (answersWithSameNumber.Count() < 2)
                                 {
                                     _qsRepo.UpdateQuestion(q);
-                                    hasAnswersWithSameNumbers = false;
+                                    break;
                                 }
                             }
                         }
@@ -442,6 +424,11 @@ namespace TestBaza.Controllers
                     {
                         hasQuestionsWithNotEnoughAnswers = true;
                         notEnoughAnswersErrors += $"вопрос {n}, ";
+                    }
+                    if(q.CorrectAnswerNumber == 0)
+                    {
+                        hasUnchosenCorrectAnswers = true;
+                        correctAnswerUnchosenErrors += $"вопроса {n}, ";
                     }
                 }
                 else if (q.AnswerType != AnswerType.HasToBeTyped)
@@ -486,6 +473,12 @@ namespace TestBaza.Controllers
             if (hasUndeclaredAnswerTypes)
             {
                 msg = replaceLastComma(answerTypeNotDeclaredErrors);
+                errors.Add(msg);
+            }
+
+            if (hasUnchosenCorrectAnswers)
+            {
+                msg = replaceLastComma(correctAnswerUnchosenErrors);
                 errors.Add(msg);
             }
 

@@ -437,9 +437,23 @@ class EditableTestSummary extends React.Component {
     }
 }
 
-ReactDOM.render(<ManageAccountForm />, document.getElementById('manage-acc'))
-ReactDOM.render(<PasswordChangeForm />, document.getElementById('change-pass'))
-ReactDOM.render(<UserTests />, document.getElementById('tests'))
+class Forms extends React.Component {
+    constructor(props) {
+        super(props);
+    }
+    render() {
+        return (<div>
+                <ManageAccountForm />
+                <hr />
+                <PasswordChangeForm />
+                <hr />
+                <UserTests />
+            </div>);
+    }
+}
+
+ReactDOM.render(<Forms />, document.getElementById("root"));
+
 setTimeout(() => {
     if (window.location.hash.match(/test/)) document.getElementById("tests").scrollIntoView();
 }, 1500)

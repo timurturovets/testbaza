@@ -75,11 +75,8 @@
                 </div>
                 <div className="form-group">
                     <div className="form-check form-switch">
-                        {isPrivate
-                            ? <input className="form-check-input" type="checkbox" name="isprivate"
-                                onClick={this.handleUnsavedChange} defaultChecked />
-                            : <input className="form-check-input" type="checkbox" name="isprivate"
-                                onClick={this.handleUnsavedChange} />}
+                        <input className="form-check-input" type="checkbox" name="isprivate"
+                                onClick={this.handleUnsavedChange} defaultChecked={isPrivate && true} />
                         <label className="form-check-label">Доступ только по ссылке</label>
                     </div>
                     <div className="form-check form-switch">
@@ -94,10 +91,7 @@
                                 onClick={e => this.handleTimeInfoChange(e)} />}
                     </div>
                 </div>
-                {isSaved
-                    ? <button className="btn btn-outline-success" onClick={e => this.handleSubmit(e)} disabled>Сохранить изменения</button>
-                    : <button className="btn btn-outline-success" onClick={e => this.handleSubmit(e)}>Сохранить изменения</button>
-                }
+                <button className="btn btn-outline-success" onClick={e => this.handleSubmit(e)} disabled={isSaved}>Сохранить изменения</button>
                 {isChanged
                     ? isSaved
                         ? success
@@ -120,6 +114,7 @@
                             hintEnabled={question.hintEnabled}
                             answer={question.answer}
                             answers={question.answers}
+                            correctAnswer={question.correctAnswerNumber}
                             answerType={question.answerType}
                             onDeleted={this.onQuestionDeleted}
                             onSavedChange={this.props.onSavedChange}
@@ -324,17 +319,18 @@ class EditableQuestion extends React.Component {
             changed: false,
             success: false,
             saved: true,
-            value: this.props.value === null ? "" : this.props.value,
-            hint: this.props.hint === null ? "" : this.props.hint,
-            hintEnabled: this.props.hintEnabled === null ? false : this.props.hintEnabled,
-            answer: this.props.answer === null ? "" : this.props.answer,
-            answers: this.props.answers === null || this.props.answers === undefined ? [] : this.props.answers,
-            answerType: this.props.answerType === null ? 1 : this.props.answerType
+            value: this.props.value,
+            hint: this.props.hint,
+            hintEnabled: this.props.hintEnabled,
+            answer: this.props.answer,
+            answers: this.props.answers,
+            correctAnswer: this.props.correctAnswer,
+            answerType: this.props.answerType
         };
     }
 
     render() {
-        const { changed, success, saved, value, hint, hintEnabled, answer, answers, answerType } = this.state;
+        const { changed, success, saved, value, hint, hintEnabled, answer, answers, correctAnswer, answerType } = this.state;
         return <div>
             <hr />
 
@@ -342,22 +338,14 @@ class EditableQuestion extends React.Component {
                 <h2>Вопрос {this.props.number} {saved ? null : "*"}</h2>
 
                 <div className="form-check form-switch">
-                    {answerType === 1
-                        ? <input type="radio" className="form-check-input" name="model.AnswerType" value="1"
-                            onClick={e => this.handleAnswerTypeChange(e)} defaultChecked />
-                        : <input type="radio" className="form-check-input" name="model.AnswerType" value="1"
-                            onClick={e => this.handleAnswerTypeChange(e)} />
-                    }
+                    <input type="radio" className="form-check-input" name="model.AnswerType" value="1"
+                            onClick={e => this.handleAnswerTypeChange(e)} defaultChecked={answerType===1 && true} />
                     <label className="form-check-label">Ответ вводится пользователем</label>
                 </div>
 
                 <div className="form-check form-switch">
-                    {answerType === 2
-                        ? <input type="radio" className="form-check-input" name="model.AnswerType" value="2"
-                            onClick={e => this.handleAnswerTypeChange(e)} defaultChecked />
-                        : <input type="radio" className="form-check-input" name="model.AnswerType" value="2"
-                            onClick={e => this.handleAnswerTypeChange(e)} />
-                    }
+                    <input type="radio" className="form-check-input" name="model.AnswerType" value="2"
+                            onClick={e => this.handleAnswerTypeChange(e)} defaultChecked={answerType===2 && true} />
                     <label className="form-check-label">Несколько вариантов ответа</label>
                 </div>
 
@@ -383,7 +371,7 @@ class EditableQuestion extends React.Component {
                 }
                 {this.state.answerType === 2
                     ? <div className="form-group">
-                        <label>Верные ответы:</label>
+                        <label>Варианты ответа:</label>
                     </div>
                     : null}
                 {this.state.answerType === 1
@@ -399,7 +387,10 @@ class EditableQuestion extends React.Component {
                                 onDelete={this.onAnswerDelete}
                                 value={answer.value}
                                 number={answer.number}
-                                answerId={answer.answerId} />
+                                answerId={answer.answerId}
+                                isCorrect={}
+                                onUnsaved={this.handleUnsavedState}
+                            />
                         </div>)
                 }
                 {this.state.answerType === 2
@@ -558,9 +549,16 @@ class EditableAnswer extends React.Component {
         return (<div className="input-group mb-3">
             <input type="text" name={`model.Answers[${number - 1}].Value`} className="form-control" onChange={e => this.props.onValueChange(e, id)}
                 defaultValue={value} />
+            <div className="input-group-append form-check form-switch">
+                <label>Верный</label>
+                <input type="radio" name="model.CorrectAnswerNumber" className="form-check-input"
+                    value={number} onClick={e => this.props.onUnsaved(e)} defaultChecked={this.props.isCorrect && true}/>
+            </div>
             <div className="input-group-append">
                 <button className="btn btn-outline-danger" onClick={e => this.props.onDelete(e, id)}>Удалить</button>
             </div>
+
+
             <input type="hidden" name={`model.Answers[${number - 1}].AnswerId`} defaultValue={id} />
             <input type="hidden" name={`model.Answers[${number - 1}].Number`} defaultValue={number} />
         </div>)

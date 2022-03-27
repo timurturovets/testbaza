@@ -1,6 +1,4 @@
-﻿using TestBaza.Data;
-
-namespace TestBaza.Factories
+﻿namespace TestBaza.Factories
 {
     public class TestFactory : ITestFactory
     {
@@ -14,7 +12,7 @@ namespace TestBaza.Factories
                 TimeCreated = DateTime.Now,
                 IsTimeLimited = isTimeLimited,
                 TimeLimit = timeLimit,
-                Link = isPrivate ? new Guid().ToString() : null
+                Link = "test" + Guid.NewGuid()
             };
         }
     }

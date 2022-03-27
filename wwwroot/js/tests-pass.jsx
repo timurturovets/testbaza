@@ -14,6 +14,9 @@
                 isEnded: false
             },
             test: null,
+            answeringInfo: {
+                questions: []
+            },
             currentQuestion: 0
         };
     }
@@ -62,14 +65,16 @@
                     ? <h1>Время вышло!</h1>
                     : <div>
                         <Timer onTimeOut={this.handleTimeout} timeInfo={test.timeInfo} />
-                        <Question number={question.number} value={question.value} />
+                        <Question info={question} />
                     </div>
                 : timeInfo.isTimeLimited
                     ? <h5>Ограничение по времени: {timeLimitString}</h5>
                     :  <h5>Ограничения по времени нет</h5>
             }
             {passingInfo.isStarted
-                ? null
+                ? passingInfo.isEnded
+                    ? <button className="btn btn-outline-success" onClick={e=>this.handleSave(e)}>Отправить решение</button>
+                    : null
                 : <button className="btn btn-outline-primary" onClick={e=>this.handleStart(e)}>Начать</button>
             }
             
@@ -85,10 +90,24 @@
         this.setState({ passingInfo: passingInfo });
     }
 
+    handleSave = async event => {
+        event.preventDefault();
+
+
+    }
+
     handleTimeout = () => {
         const passingInfo = this.state.passingInfo;
         passingInfo.isTimeOut = true;
+        passingInfo.isEnded = true;
         this.setState({ passingInfo: passingInfo });
+    }
+}
+
+class Answer {
+    constructor(answer, questionNumber) {
+        this.answer = answer;
+        this.questionNumber = questionNumber;
     }
 }
 
@@ -143,13 +162,24 @@ class Question extends React.Component {
     }
 
     render() {
-        const { number, value } = this.props;
+        const info = this.props.info;
         return (<div>
-            <h3>Вопрос {number}</h3>
-            <h4>{value}</h4>
+            <h3>Вопрос {info.number}</h3>
+            <h4>{info.value}</h4>
+            {info.answerType === 1
+                ? <div>
+                    <input type="text" className="form-control" placeholder="Ваш ответ" onChange={e=>this.onAnswerChanged(e)} />
+                </div>
+                : <div>
+
+                </div>
+            }
         </div>);
     }
 
+    onAnswerChanged = event => {
+        
+    }
 }
 
 function getCompleteTimeString(allSeconds = 0) {

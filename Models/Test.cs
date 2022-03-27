@@ -29,7 +29,7 @@
         }
         public override int GetHashCode() => TestId.GetHashCode();
 
-        public TestJsonModel ToJsonModel()
+        public TestJsonModel ToJsonModel(bool includeAnswers = true)
         {
             return new TestJsonModel
             {
@@ -38,7 +38,7 @@
                 Description = Description,
                 AuthorName = Creator!.UserName,
                 TimeInfo = new TimeInfo(IsTimeLimited, TimeLimit),
-                Questions = Questions.Select(q => q.ToJsonModel())
+                Questions = Questions.Select(q => q.ToJsonModel(includeAnswers))
             };
         }
         public TestSummary ToSummary()

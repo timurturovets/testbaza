@@ -9,6 +9,7 @@
         public bool HintEnabled { get; set; }
         public string? Answer { get; set; }
         public IEnumerable<AnswerJsonModel> Answers { get; set; } = new List<AnswerJsonModel>();
+        public int CorrectAnswerNumber { get; set; }
         public int AnswerType { get; set; }
     }
 }
