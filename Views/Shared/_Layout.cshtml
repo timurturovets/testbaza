@@ -19,7 +19,8 @@
                         aria-expanded="false" aria-label="Открыть панель">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <ul class="navbar nav">
+                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                                    <ul class="navbar nav">
                     <li class="nav-item">
                         <a class="nav-link text-dark" href="/tests/create">Создать тест</a>
                     </li>
@@ -27,7 +28,6 @@
                         <a class="nav-link text-dark" href="/tests/index">Список тестов</a>
                     </li>
                 </ul>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <partial name="_LoginPartial" />
                 </div>
             </div>

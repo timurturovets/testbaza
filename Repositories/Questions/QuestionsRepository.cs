@@ -33,12 +33,12 @@ namespace TestBaza.Repositories
                 .Include(q => q.MultipleAnswers)
                 .SingleOrDefault();
         }
-        public void AddQuestion(Question question)
+        public async Task AddQuestionAsync(Question question)
         {
-            _context.Questions.Add(question);
-            _context.SaveChanges();
+            await _context.Questions.AddAsync(question);
+            await _context.SaveChangesAsync();
         }
-        public AnswerInfo AddAnswerToQuestion(Question question)
+        public async Task<AnswerInfo> AddAnswerToQuestionAsync(Question question)
         {
             int number = question.MultipleAnswers.Count() + 1;
             Answer answer = new()
@@ -46,23 +46,23 @@ namespace TestBaza.Repositories
                 Number = number,
                 Question = question
             };
-            _context.Answers.Add(answer);
-            _context.SaveChanges();
+            await _context.Answers.AddAsync(answer);
+            await _context.SaveChangesAsync();
             _logger.LogError($"Number: {number}");
 
-            Answer createdAnswer = _context.Answers
+            Answer createdAnswer = await _context.Answers
                 .Include(a => a.Question)
                 .Where(a => a.Question!.Equals(question) && a.Number == number)
-                .Single();
+                .SingleAsync();
             int id = createdAnswer.AnswerId;
 
             return new AnswerInfo(id, number);
         }
-        public void RemoveAnswerFromQuestion(Question question, Answer answer)
+        public async Task RemoveAnswerFromQuestionAsync(Question question, Answer answer)
         {
             int number = answer.Number;
             _context.Answers.Remove(answer);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
             question = GetQuestion(question.QuestionId)!;
 
@@ -73,21 +73,21 @@ namespace TestBaza.Repositories
                 _context.Answers.Update(a);
             }
             _context.Questions.Update(question);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
         }
-        public void UpdateQuestion(Question question)
+        public async Task UpdateQuestionAsync(Question question)
         {
             _context.Questions.Update(question);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
         }
 
-        public void DeleteQuestion(Question question)
+        public async Task DeleteQuestionAsync(Question question)
         {
             int number = question.Number;
             int testId = question.Test!.TestId;
 
             _context.Questions.Remove(question);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
             Test test = _testsRepo.GetTest(testId)!;
 
@@ -99,7 +99,7 @@ namespace TestBaza.Repositories
             }
 
             _context.Tests.Update(test);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
         }
     }
     public record class AnswerInfo(int Id, int Number);

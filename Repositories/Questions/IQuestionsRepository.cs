@@ -4,10 +4,10 @@
     {
         Question? GetQuestion(int id);
         Question? GetQuestionByTestAndNumber(Test test, int number);
-        void AddQuestion(Question question);
-        AnswerInfo AddAnswerToQuestion(Question question);
-        void RemoveAnswerFromQuestion(Question question, Answer answer);
-        void UpdateQuestion(Question question);
-        void DeleteQuestion(Question question);
+        Task AddQuestionAsync(Question question);
+        Task<AnswerInfo> AddAnswerToQuestionAsync(Question question);
+        Task RemoveAnswerFromQuestionAsync(Question question, Answer answer);
+        Task UpdateQuestionAsync(Question question);
+        Task DeleteQuestionAsync(Question question);
     }
 }

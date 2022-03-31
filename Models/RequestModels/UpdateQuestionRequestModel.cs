@@ -8,6 +8,7 @@
         public bool HintEnabled { get; set; }
         public string? Answer { get; set; }
         public AnswerJsonModel[]? Answers { get; set; }
+        public int CorrectAnswerNumber { get; set; }
         public AnswerType AnswerType { get; set; }
     }
 }

@@ -319,13 +319,13 @@ class EditableQuestion extends React.Component {
             changed: false,
             success: false,
             saved: true,
-            value: this.props.value,
-            hint: this.props.hint,
-            hintEnabled: this.props.hintEnabled,
-            answer: this.props.answer,
-            answers: this.props.answers,
-            correctAnswer: this.props.correctAnswer,
-            answerType: this.props.answerType
+            value: !!this.props.value ? this.props.value : "",
+            hint: !!this.props.hint ? this.props.hint : "",
+            hintEnabled: !!this.props.hintEnabled ? this.props.hintEnabled : false,
+            answer: !!this.props.answer ? this.props.answer : "",
+            answers: !!this.props.answers ? this.props.answers : [],
+            correctAnswer: !!this.props.correctAnswer ? this.props.correctAnswer : "",
+            answerType: !!this.props.answerType ? this.props.answerType : 1
         };
     }
 
@@ -371,27 +371,31 @@ class EditableQuestion extends React.Component {
                 }
                 {this.state.answerType === 2
                     ? <div className="form-group">
-                        <label>Варианты ответа:</label>
+                        <h6>Варианты ответа:</h6>
                     </div>
                     : null}
                 {this.state.answerType === 1
                     ? <div className="form-group">
-                        <label>Верный ответ:</label>
+                        <h6>Верный ответ:</h6>
                         <input type="text" className="form-control" onChange={this.handleUnsavedState}
                             defaultValue={answer} name="model.Answer" />
                     </div>
-                    : answers.map(answer =>
-                        <div key={answer.answerId} className="form-group">
-                            <EditableAnswer
-                                onValueChange={this.onAnswerValueChange}
-                                onDelete={this.onAnswerDelete}
-                                value={answer.value}
-                                number={answer.number}
-                                answerId={answer.answerId}
-                                isCorrect={}
-                                onUnsaved={this.handleUnsavedState}
-                            />
-                        </div>)
+                    : <div>{answers.length > 0 ? <label className="input-group-prepend">Верный</label> : null}
+
+                       {answers.map(answer => {
+                           console.log(answer);
+                           return <div key={answer.answerId} className="form-group">
+                               <EditableAnswer
+                                   onValueChange={this.onAnswerValueChange}
+                                   onDelete={this.onAnswerDelete}
+                                   value={answer.value}
+                                   number={answer.number}
+                                   answerId={answer.answerId}
+                                   isCorrect={correctAnswer === answer.number}
+                                   onUnsaved={this.handleUnsavedState}
+                               />
+                           </div>
+                       })}</div>
                 }
                 {this.state.answerType === 2
                     ? <div className="form-group">
@@ -401,10 +405,7 @@ class EditableQuestion extends React.Component {
                 }
                 <div className="btn-toolbar">
                     <div className="btn-group mr-2">
-                        {saved
-                            ? <button className="btn btn-outline-success" onClick={e => this.handleSubmit(e)} disabled>Сохранить изменения</button>
-                            : <button className="btn btn-outline-success" onClick={e => this.handleSubmit(e)}>Сохранить изменения</button>
-                        }
+                        <button className="btn btn-outline-success" onClick={e => this.handleSubmit(e)} disabled={saved}>Сохранить изменения</button>
                         <button className="btn btn-outline-danger" onClick={e => this.handleDelete(e)}>Удалить вопрос</button>
                     </div>
                 </div>
@@ -547,17 +548,15 @@ class EditableAnswer extends React.Component {
             number = this.props.number;
         console.log('number: ' + number);
         return (<div className="input-group mb-3">
+            <div className="input-group-append form-check form-switch">
+                <input type="radio" name="model.CorrectAnswerNumber" className="form-check-input"
+                    value={number} onClick={e => this.props.onUnsaved(e)} defaultChecked={this.props.isCorrect && true} />
+            </div>
             <input type="text" name={`model.Answers[${number - 1}].Value`} className="form-control" onChange={e => this.props.onValueChange(e, id)}
                 defaultValue={value} />
-            <div className="input-group-append form-check form-switch">
-                <label>Верный</label>
-                <input type="radio" name="model.CorrectAnswerNumber" className="form-check-input"
-                    value={number} onClick={e => this.props.onUnsaved(e)} defaultChecked={this.props.isCorrect && true}/>
-            </div>
             <div className="input-group-append">
                 <button className="btn btn-outline-danger" onClick={e => this.props.onDelete(e, id)}>Удалить</button>
             </div>
-
 
             <input type="hidden" name={`model.Answers[${number - 1}].AnswerId`} defaultValue={id} />
             <input type="hidden" name={`model.Answers[${number - 1}].Number`} defaultValue={number} />

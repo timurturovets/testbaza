@@ -47,24 +47,24 @@ namespace TestBaza.Repositories
                 .Include(t => t.Questions).ThenInclude(q => q.MultipleAnswers)
                 .Include(t => t.Rates);
         }
-        public void AddTest(Test test)
+        public async Task AddTestAsync(Test test)
         {
             if (_context.Tests.Any(t => t.Equals(test))) return;
-            _context.Tests.Add(test);
-            _context.SaveChanges();
+            await _context.Tests.AddAsync(test);
+            await _context.SaveChangesAsync();
         }
 
-        public void RemoveTest(Test test)
+        public async Task RemoveTestAsync(Test test)
         {
             if (!_context.Tests.Any(t => t.Equals(test))) return;
             _context.Tests.Remove(test);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
         }
 
-        public void UpdateTest(Test test)
+        public async Task UpdateTestAsync(Test test)
         {
             _context.Tests.Update(test);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
         }
     }
 }

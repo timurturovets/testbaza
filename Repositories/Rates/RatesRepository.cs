@@ -10,20 +10,20 @@ namespace TestBaza.Repositories
         {
             _context = context;
         }
-        public void AddRate(Rate rate)
+        public async Task AddRateAsync(Rate rate)
         {
             _context.Rates.Add(rate);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
         }
-        public void UpdateRate(Rate rate)
+        public async Task UpdateRateAsync(Rate rate)
         {
             _context.Rates.Update(rate);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
         }
-        public void DeleteRate(Rate rate)
+        public async Task DeleteRateAsync(Rate rate)
         {
             _context.Rates.Remove(rate);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
         }
     }
 }

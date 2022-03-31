@@ -77,10 +77,6 @@ namespace TestBaza.Controllers
         [HttpGet("/api/tests/wq/get-test{id}")]
         public async Task<IActionResult> GetTest([FromRoute] int id)
         {
-            string apiKey = HttpContext.GetApiKey();
-            string? clientApiKey = HttpContext.Session.GetString(API_KEY);
-            if (apiKey != clientApiKey) return _responseFactory.Forbid(this);
-
             Test? test = _testsRepo.GetTest(id);
             User creator = await _userManager.GetUserAsync(User);
 
@@ -118,7 +114,7 @@ namespace TestBaza.Controllers
                         timeLimit: model.TimeInfo?.ConvertToSeconds() ?? 0,
                         creator: creator);
 
-                    _testsRepo.AddTest(test);
+                    await _testsRepo.AddTestAsync(test);
 
                     await _userManager.UpdateAsync(creator);
                     int id = _testsRepo.GetTest(test.TestName!)!.TestId;
@@ -174,13 +170,10 @@ namespace TestBaza.Controllers
                 User creator = await _userManager.GetUserAsync(User);
                 if (!test.Creator!.Equals(creator)) return _responseFactory.Forbid(this);
 
-                test.TestName = model.TestName;
-                test.Description = model.Description;
-                test.IsPrivate = model.IsPrivate;
-                test.IsTimeLimited = model.TimeInfo.IsTimeLimited;
-                test.TimeLimit = model.TimeInfo.ConvertToSeconds();
+                test.Update(model);
 
-                _testsRepo.UpdateTest(test);
+                await _testsRepo.UpdateTestAsync(test);
+
                 TestJsonModel testModel = test.ToJsonModel();
                 return _responseFactory.Ok(this, result: testModel);
             }
@@ -197,7 +190,8 @@ namespace TestBaza.Controllers
 
             if (!test.Creator!.Equals(creator)) return _responseFactory.Forbid(this);
 
-            _testsRepo.RemoveTest(test);
+            await _testsRepo.RemoveTestAsync(test);
+
             return _responseFactory.Ok(this);
         }
 
@@ -212,14 +206,17 @@ namespace TestBaza.Controllers
             if (!test.Creator!.Equals(creator)) return _responseFactory.Forbid(this);
 
             int number = test.Questions.Count() + 1;
+
             Question newQuestion = new()
             {
                 Test = test,
                 Number = number
             };
-            _qsRepo.AddQuestion(newQuestion);
+
+            await _qsRepo.AddQuestionAsync(newQuestion);
             Question? createdQuestion = _qsRepo.GetQuestionByTestAndNumber(test, number);
             int questionId = createdQuestion!.QuestionId;
+
             return _responseFactory.Ok(this, result: new { questionId, number });
         }
 
@@ -248,7 +245,9 @@ namespace TestBaza.Controllers
                 });
             }
             question.AnswerType = model.AnswerType;
-            _qsRepo.UpdateQuestion(question);
+            question.CorrectAnswerNumber = model.CorrectAnswerNumber;
+
+            await _qsRepo.UpdateQuestionAsync(question);
 
             return _responseFactory.Ok(this);
         }
@@ -262,8 +261,7 @@ namespace TestBaza.Controllers
 
             User creator = await _userManager.GetUserAsync(User);
             if (!question.Test!.Creator!.Equals(creator)) return _responseFactory.Forbid(this);
-
-            _qsRepo.DeleteQuestion(question);
+            await _qsRepo.DeleteQuestionAsync(question);
             return _responseFactory.Ok(this);
         }
 
@@ -277,7 +275,7 @@ namespace TestBaza.Controllers
             if (question is null) return _responseFactory.NotFound(this);
             if (!question.Test!.Creator!.Equals(creator)) return _responseFactory.Forbid(this);
 
-            AnswerInfo info = _qsRepo.AddAnswerToQuestion(question);
+            AnswerInfo info = await _qsRepo.AddAnswerToQuestionAsync(question);
             return _responseFactory.Ok(this, result: new { answerId = info.Id, number = info.Number });
         }
 
@@ -294,7 +292,7 @@ namespace TestBaza.Controllers
             Answer? answer = question.MultipleAnswers.SingleOrDefault(a => a.AnswerId == answerId);
             if (answer is null) return _responseFactory.BadRequest(this);
 
-            _qsRepo.RemoveAnswerFromQuestion(question, answer);
+            await _qsRepo.RemoveAnswerFromQuestionAsync(question, answer);
             return _responseFactory.Ok(this);
         }
 
@@ -363,7 +361,7 @@ namespace TestBaza.Controllers
                         }
                         if (qsWithSameNumbers.Count() < 2)
                         {
-                            _qsRepo.UpdateQuestion(q);
+                            await _qsRepo.UpdateQuestionAsync(q);
                             break;
                         }
                     }
@@ -396,7 +394,6 @@ namespace TestBaza.Controllers
                         int answersCount = answersWithSameNumber.Count();
                         if (answersCount > 1)
                         {
-                            //bool hasAnswersWithSameNumbers = true;
                             while (true)
                             {
                                 for (int i = 0; i < answersCount; i++)
@@ -407,7 +404,7 @@ namespace TestBaza.Controllers
                                 }
                                 if (answersWithSameNumber.Count() < 2)
                                 {
-                                    _qsRepo.UpdateQuestion(q);
+                                    await _qsRepo.UpdateQuestionAsync(q);
                                     break;
                                 }
                             }
@@ -420,11 +417,13 @@ namespace TestBaza.Controllers
                             break;
                         }
                     }
+
                     if (q.MultipleAnswers.Count() < 2)
                     {
                         hasQuestionsWithNotEnoughAnswers = true;
                         notEnoughAnswersErrors += $"вопрос {n}, ";
                     }
+
                     if(q.CorrectAnswerNumber == 0)
                     {
                         hasUnchosenCorrectAnswers = true;
@@ -486,7 +485,7 @@ namespace TestBaza.Controllers
 
 
             test.IsPublished = true;
-            _testsRepo.UpdateTest(test);
+            await _testsRepo.UpdateTestAsync(test);
 
             return _responseFactory.Ok(this);
         }
@@ -500,7 +499,7 @@ namespace TestBaza.Controllers
             if (test is null) return _responseFactory.NotFound(this);
 
             Rate rate = new() { Value = model.Rate, Test = test, User = rater };
-            _ratesRepo.AddRate(rate);
+            await _ratesRepo.AddRateAsync(rate);
             
             return _responseFactory.Ok(this);
         }

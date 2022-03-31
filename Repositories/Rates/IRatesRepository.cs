@@ -2,8 +2,8 @@
 {
     public interface IRatesRepository
     {
-        void AddRate(Rate rate);
-        void UpdateRate(Rate rate);
-        void DeleteRate(Rate rate);
+        Task AddRateAsync(Rate rate);
+        Task UpdateRateAsync(Rate rate);
+        Task DeleteRateAsync(Rate rate);
     }
 }

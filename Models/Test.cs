@@ -57,5 +57,16 @@
                 TimeInfo = new TimeInfo(IsTimeLimited, TimeLimit)
             };
         }
+
+        public void Update(UpdateTestRequestModel model)
+        {
+            TestName = model.TestName;
+            Description = model.Description;
+            IsPrivate = model.IsPrivate;
+
+            var timeInfo = model.TimeInfo;
+            IsTimeLimited = timeInfo.IsTimeLimited;
+            TimeLimit = timeInfo.ConvertToSeconds();
+        }
     }
 }

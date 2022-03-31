@@ -4,17 +4,17 @@
     ViewData["Title"] = "Редактирование теста";
 }
 <h1 class="text-center display-3">Редактирование теста</h1>
-<div id="root"></div>
+<div id="root"><h2 className="display-2">Загрузка</h2></div>
 
 <partial name="_ReactScriptsPartial" />
 <script src="~/js/tests-edit.jsx" asp-append-version="true" type="text/babel"></script>
 <script type="text/babel">
-    const testId = @ViewData["TestId"];
     let isEverythingSaved = true;
-    function onSavedChange(isSaved) {
+    const onSavedChange = isSaved => {
         isEverythingSaved = isSaved
     };
-    ReactDOM.render(<EditableTest testId={testId} onSavedChange={onSavedChange} />, document.getElementById('root'));
+
+    ReactDOM.render(<EditableTest testId={@ViewData["TestId"]} onSavedChange={onSavedChange} />, document.getElementById('root'));
     
     window.addEventListener("beforeunload", e => {
         console.log(`isSaved: ${isEverythingSaved}`);

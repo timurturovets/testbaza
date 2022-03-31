@@ -6,8 +6,8 @@
         Test? GetTest(string testName);
         Test? GetTest(int testId);
         IEnumerable<Test> GetUserTests(User creator);
-        void AddTest(Test test);
-        void RemoveTest(Test test);
-        void UpdateTest(Test test);
+        Task AddTestAsync(Test test);
+        Task RemoveTestAsync(Test test);
+        Task UpdateTestAsync(Test test);
     }
 }

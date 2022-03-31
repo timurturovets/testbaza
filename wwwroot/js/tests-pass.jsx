@@ -14,9 +14,7 @@
                 isEnded: false
             },
             test: null,
-            answeringInfo: {
-                questions: []
-            },
+            answers: [],
             currentQuestion: 0
         };
     }
@@ -35,50 +33,122 @@
 
         return content;
     }
-    
+
     populateData = async () => {
         const testId = this.props.testId;
-        await fetch(`/api/tests/pass-test-info${testId}`).then(async response => {
+        await fetch(`/api/pass/info?id=${testId}`).then(async response => {
 
             if (response.status === 200) {
                 const object = await response.json();
                 console.log(`result`);
                 console.log(object);
-                const test = object.result
-                this.setState({ isLoading: false, test: test });
+                const test = object.result;
+                const answers = [];
+                for (const question of test.questions) {
+                    const answer = new UserAnswer(question.number, null);
+                    answers.push(answer);
+                }
+                this.setState({ isLoading: false, test: test, answers: answers });
 
             } else alert(`status: ${response.status}`);//window.location.replace('/home/index');
         });
     }
 
     renderTest = () => {
-        const { _, passingInfo, test, currentQuestion } = this.state;
-        const question = test.questions[currentQuestion];
+        const { _, passingInfo, test } = this.state;
         const timeInfo = test.timeInfo;
 
-        let timeLimitString = getCompleteTimeString(timeInfo.hours*3600 + timeInfo.minutes * 60 + timeInfo.seconds);
-        console.log(passingInfo);
+        const timeLimitString = getCompleteTimeString(timeInfo.hours * 3600 + timeInfo.minutes * 60 + timeInfo.seconds);
         return (<div>
-            <h3 className="display-3">Тест {test.testName}</h3>
+            <h3 className="text-center display-3">Тест {test.testName}</h3>
+
             {passingInfo.isStarted
                 ? passingInfo.isTimeOut
-                    ? <h1>Время вышло!</h1>
-                    : <div>
-                        <Timer onTimeOut={this.handleTimeout} timeInfo={test.timeInfo} />
-                        <Question info={question} />
+                    ? <h1 className="text-center">Время вышло!</h1>
+                    : this.renderActiveTest()
+                : <div className="text-center">
+                    {timeInfo.isTimeLimited
+                        ? <h5>Ограничение по времени: {timeLimitString}</h5>
+                        : <h5>Ограничения по времени нет</h5>
+                    }
                     </div>
-                : timeInfo.isTimeLimited
-                    ? <h5>Ограничение по времени: {timeLimitString}</h5>
-                    :  <h5>Ограничения по времени нет</h5>
             }
+            <div className="text-center">
             {passingInfo.isStarted
                 ? passingInfo.isEnded
-                    ? <button className="btn btn-outline-success" onClick={e=>this.handleSave(e)}>Отправить решение</button>
+                    ? <button className="btn btn-outline-success" onClick={e => this.handleSave(e)}>Отправить решение</button>
                     : null
-                : <button className="btn btn-outline-primary" onClick={e=>this.handleStart(e)}>Начать</button>
-            }
-            
+                : <button className="btn btn-outline-primary" onClick={e => this.handleStart(e)}>Начать</button>
+                }
+            </div>
+
         </div>);
+    }
+
+    renderActiveTest = () => {
+        const { _, __, test, currentQuestion, answers } = this.state;
+        const question = test.questions[currentQuestion];
+        let answer;
+        for (const a of answers) {
+            if (a.questionNumber === question.number) {
+                answer = a;
+                break;
+            }
+        }
+        console.log(answer);
+        return <div>
+            {test.timeInfo.isTimeLimited
+                ? <Timer onTimeOut={this.handleTimeout} timeInfo={test.timeInfo} />
+                : null} 
+            <Question info={question} onAnswerChanged={this.handleAnswerChange} userAnswer={answer.value}/>
+            <div className="btn-toolbar">
+                <div className="btn-group">
+                    <button className="btn btn-outline-primary" onClick={this.handlePrevQuestion}
+                        disabled={currentQuestion === 0}>Предыдущий вопрос</button>
+
+                    <button className="btn btn-outline-success"
+                        onClick={this.handleSave}>Закончить прохождение теста</button>
+
+                    <button className="btn btn-outline-primary"
+                        onClick={this.handleNextQuestion}
+                        disabled={currentQuestion >= test.questions.length - 1}>Следующий вопрос</button>
+                </div>
+            </div>
+        </div>
+    }
+
+    handleAnswerChange = (questionNumber, value) => {
+        const answers = this.state.answers;
+        for (const answer of answers) {
+            if (answer.questionNumber === questionNumber) {
+                console.log('found');
+                answer.value = value;
+                this.setState({ answers: answers });
+                break;
+            }
+        }
+    }
+
+    handleNextQuestion = event => {
+        event.preventDefault();
+
+        let { _, __, test, currentQuestion } = this.state;
+        console.log(test.questions.length);
+        console.log(currentQuestion);
+        if (test.questions.length - 1 !== currentQuestion) {
+            currentQuestion++;
+            this.setState({ currentQuestion: currentQuestion });
+        }
+    }
+
+    handlePrevQuestion = event => { 
+        event.preventDefault();
+
+        let currentQuestion  = this.state.currentQuestion;
+        if (currentQuestion > 0) {
+            currentQuestion--;
+            this.setState({ currentQuestion: currentQuestion });
+        }
     }
 
     handleStart = async event => {
@@ -101,13 +171,6 @@
         passingInfo.isTimeOut = true;
         passingInfo.isEnded = true;
         this.setState({ passingInfo: passingInfo });
-    }
-}
-
-class Answer {
-    constructor(answer, questionNumber) {
-        this.answer = answer;
-        this.questionNumber = questionNumber;
     }
 }
 
@@ -145,11 +208,26 @@ class Timer extends React.Component {
     render() {
         const timeLeft = this.state.timeLeft;
         const allSeconds = timeLeft / 1000;
-        let timeLeftString = getCompleteTimeString(allSeconds);
+        console.log(allSeconds);
+        const hours = Math.floor(allSeconds / 3600);
+        const hh = hours === 0 ? "00" : Math.floor(hours / 10) === 0 ? `0${hours}` : hours;
+
+        const minutes = Math.floor((allSeconds - hours * 3600) / 60);
+        const mm = minutes === 0 ? "00" : Math.floor(minutes / 10) === 0 ? `0${minutes}` : minutes;
+
+        const seconds = allSeconds - hours * 3600 - minutes * 60;
+        const ss = seconds === 0 ? "00" : Math.floor(seconds / 10) === 0 ? `0${seconds}` : seconds;
+
+        const timeLeftString = `${hh}:${mm}:${ss}`;
         return (<div>
-            {allSeconds < 60
-                ? <p className="text-danger">{timeLeftString}</p>
-                : <p>{timeLeftString}</p>
+            {allSeconds === 0
+                ? null
+                : allSeconds < 60
+                    ? <div className="text-danger">
+                        <b>Осталось меньше минуты!</b>
+                        <p>{timeLeftString}</p>
+                    </div>
+                    : <p>Осталось: {timeLeftString}</p>
             }
         </div>);
     }
@@ -158,27 +236,50 @@ class Timer extends React.Component {
 class Question extends React.Component {
     constructor(props) {
         super(props);
-
     }
 
     render() {
-        const info = this.props.info;
+        const info = this.props.info, userAnswer = this.props.userAnswer;
         return (<div>
             <h3>Вопрос {info.number}</h3>
             <h4>{info.value}</h4>
             {info.answerType === 1
                 ? <div>
-                    <input type="text" className="form-control" placeholder="Ваш ответ" onChange={e=>this.onAnswerChanged(e)} />
+                    <input type="text" className="form-control" placeholder="Ваш ответ"
+                        onChange={this.onAnswerChanged} defaultValue={userAnswer}/>
                 </div>
                 : <div>
-
+                    {info.answers.map(answer =>
+                        <div key={answer.number} className="form-check">
+                            <input className="input-group-prepend form-check-input" type="radio" name={`radio-answer`}
+                                defaultValue={`${answer.number}`}
+                                defaultChecked={userAnswer === answer.number}
+                                onClick={this.onAnswerChanged}
+                            />
+                            <label className="form-check-label">{answer.value}</label>
+                        </div>
+                    )
+                    }
                 </div>
             }
         </div>);
     }
-
+    
     onAnswerChanged = event => {
-        
+        const questionNumber = this.props.info.number;
+
+        let newValue = event.target.value;
+        if (!isNaN(parseInt(newValue))) newValue = parseInt(newValue);
+
+        console.log('qnumber:' + questionNumber + ', newV:' + newValue);
+        this.props.onAnswerChanged(questionNumber, newValue);
+    }
+}
+
+class UserAnswer {
+    constructor(questionNumber, value) {
+        this.questionNumber = questionNumber;
+        this.value = value;
     }
 }
 

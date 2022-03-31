@@ -21,9 +21,7 @@
             if (obj is Question q)
                 return q.QuestionId == QuestionId
                      && q.Value == Value
-                     && q.Answer == Answer
-                     && q.Hint == Hint
-                     && q.MultipleAnswers.SequenceEqual(MultipleAnswers);
+                     && q.Answer == Answer;
             return false;
         }
         public override int GetHashCode() => QuestionId.GetHashCode();
@@ -38,16 +36,10 @@
                 Hint = Hint,
                 HintEnabled = HintEnabled,
                 Answer = includeAnswers ? Answer : string.Empty,
-                Answers = includeAnswers ? MultipleAnswers.Select(a => a.ToJsonModel()) : Array.Empty<AnswerJsonModel>(),
+                Answers = MultipleAnswers.Select(a => a.ToJsonModel()),
                 CorrectAnswerNumber = includeAnswers ? CorrectAnswerNumber : -1,
                 AnswerType = (int)AnswerType,
             };
         }
-    }
-
-    public enum AnswerType
-    {
-        HasToBeTyped = 1,
-        MultipleVariants = 2
     }
 }

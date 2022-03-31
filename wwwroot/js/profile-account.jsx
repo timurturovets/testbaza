@@ -109,8 +109,8 @@
 
             } else if (response.status === 400) {
 
-                const result = await response.json();
-                const errors = result.errors;
+                const object = await response.json();
+                const errors = object.result;
 
                 changeInfo.isSaved = false;
                 changeInfo.isChanged = true;
@@ -447,13 +447,21 @@ class Forms extends React.Component {
                 <hr />
                 <PasswordChangeForm />
                 <hr />
-                <UserTests />
+            <UserTests />
+            <Scroll to="tests" />
             </div>);
     }
 }
 
-ReactDOM.render(<Forms />, document.getElementById("root"));
+class Scroll extends React.Component {
+    constructor(props) {
+        super(props);
+    }
+    render() {
+        const elem = document.getElementById(this.props.to);
+        if (window.location.hash.match(/test/) && !!elem) elem.scrollIntoView();
+        return null;
+    }
+}
 
-setTimeout(() => {
-    if (window.location.hash.match(/test/)) document.getElementById("tests").scrollIntoView();
-}, 1500)
+ReactDOM.render(<Forms />, document.getElementById("root"));
