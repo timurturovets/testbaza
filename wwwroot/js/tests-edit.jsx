@@ -330,7 +330,16 @@ class EditableQuestion extends React.Component {
     }
 
     render() {
-        const { changed, success, saved, value, hint, hintEnabled, answer, answers, correctAnswer, answerType } = this.state;
+        const { changed,
+            success,
+            saved,
+            value,
+            hint,
+            hintEnabled,
+            answer,
+            answers,
+            correctAnswer,
+            answerType } = this.state;
         return <div>
             <hr />
 

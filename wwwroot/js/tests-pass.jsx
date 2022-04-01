@@ -11,7 +11,8 @@
                 timeLeft: null,
                 isTimeOut: false,
                 interval: null,
-                isEnded: false
+                isEnded: false,
+                isCheckingAnswers: false
             },
             test: null,
             answers: [],
@@ -65,7 +66,9 @@
             {passingInfo.isStarted
                 ? passingInfo.isTimeOut
                     ? <h1 className="text-center">Время вышло!</h1>
-                    : this.renderActiveTest()
+                    : passingInfo.isEnded
+                        ? null
+                        : this.renderActiveTest()
                 : <div className="text-center">
                     {timeInfo.isTimeLimited
                         ? <h5>Ограничение по времени: {timeLimitString}</h5>
@@ -73,12 +76,16 @@
                     }
                     </div>
             }
+            {passingInfo.isEnded
+                ? this.renderAfterTestInfo()
+                : null
+            }
             <div className="text-center">
             {passingInfo.isStarted
                 ? passingInfo.isEnded
-                    ? <button className="btn btn-outline-success" onClick={e => this.handleSave(e)}>Отправить решение</button>
+                    ? <button className="btn btn-outline-success" onClick={this.handleSubmit}>Отправить решение</button>
                     : null
-                : <button className="btn btn-outline-primary" onClick={e => this.handleStart(e)}>Начать</button>
+                : <button className="btn btn-outline-primary" onClick={this.handleStart}>Начать</button>
                 }
             </div>
 
@@ -95,25 +102,58 @@
                 break;
             }
         }
-        console.log(answer);
         return <div>
             {test.timeInfo.isTimeLimited
                 ? <Timer onTimeOut={this.handleTimeout} timeInfo={test.timeInfo} />
                 : null} 
-            <Question info={question} onAnswerChanged={this.handleAnswerChange} userAnswer={answer.value}/>
-            <div className="btn-toolbar">
-                <div className="btn-group">
-                    <button className="btn btn-outline-primary" onClick={this.handlePrevQuestion}
-                        disabled={currentQuestion === 0}>Предыдущий вопрос</button>
+            <Question info={question} onAnswerChanged={this.handleAnswerChange} userAnswer={answer.value} isBrowsing={false} />
+            {this.renderQuestionsNavigation()}
+            <button className="btn btn-outline-success"
+                onClick={this.handleSave}>Закончить прохождение теста</button>
+        </div>
+    }
+    renderQuestionsNavigation = () => {
+        const test = this.state.test,
+            currentQuestion = this.state.currentQuestion;
 
-                    <button className="btn btn-outline-success"
-                        onClick={this.handleSave}>Закончить прохождение теста</button>
+        return <div className="btn-toolbar">
+            <div className="btn-group">
+                <button className="btn btn-outline-primary" onClick={this.handlePrevQuestion}
+                    disabled={currentQuestion === 0}>Предыдущий вопрос</button>
 
-                    <button className="btn btn-outline-primary"
-                        onClick={this.handleNextQuestion}
-                        disabled={currentQuestion >= test.questions.length - 1}>Следующий вопрос</button>
-                </div>
+                <button className="btn btn-outline-primary"
+                    onClick={this.handleNextQuestion}
+                    disabled={currentQuestion >= test.questions.length - 1}>Следующий вопрос</button>
             </div>
+        </div>
+    }
+    renderAfterTestInfo = () => {
+        const { _, passingInfo, test, answers, currentQuestion } = this.state;
+        const question = test.questions[currentQuestion];
+        let answer;
+        for (const a of answers) {
+            if (a.questionNumber === question.number) {
+                answer = a;
+                break;
+            }
+        }
+        console.log(`answer`); console.log(answer);
+        const isCheckingAnswers = passingInfo.isCheckingAnswers;
+        return <div>
+            {isCheckingAnswers
+                ? <div>
+                    <Question info={question} isBrowsing={true} userAnswer={answer.value} />
+                    {this.renderQuestionsNavigation()}
+                    </div>
+                : null
+            }
+            <button className="btn btn-outline-success"
+                onClick={e=>this.setState({ passingInfo: { ...passingInfo, isCheckingAnswers: !isCheckingAnswers } })}>
+                {isCheckingAnswers
+                    ? "Закончить просматривать ответы"
+                    : "Просмотреть свои ответы"
+                    }
+            </button>
         </div>
     }
 
@@ -155,22 +195,22 @@
         event.preventDefault();
 
         const passingInfo = this.state.passingInfo;
-        passingInfo.isStarted = true;
-
-        this.setState({ passingInfo: passingInfo });
+        this.setState({ passingInfo: { ...passingInfo, isStarted: true } });
     }
 
-    handleSave = async event => {
+    handleSave = event => {
         event.preventDefault();
+        if (confirm("Вы уверены, что хотите закончить прохождение теста?"))
+            this.setState({ passingInfo: { ...this.state.passingInfo, isEnded: true }, currentQuestion: 0 });
+    }
 
-
+    handleSubmit = async event => {
+        //todo
     }
 
     handleTimeout = () => {
         const passingInfo = this.state.passingInfo;
-        passingInfo.isTimeOut = true;
-        passingInfo.isEnded = true;
-        this.setState({ passingInfo: passingInfo });
+        this.setState({ passingInfo: { ...passingInfo, isTimeOut: true, isEnded: true } });
     }
 }
 
@@ -239,22 +279,30 @@ class Question extends React.Component {
     }
 
     render() {
-        const info = this.props.info, userAnswer = this.props.userAnswer;
+        const info = this.props.info, userAnswer = this.props.userAnswer, isBrowsing = this.props.isBrowsing;
+        console.log(isBrowsing);
         return (<div>
             <h3>Вопрос {info.number}</h3>
-            <h4>{info.value}</h4>
+            <h4 className="display-3">{info.value}</h4>
             {info.answerType === 1
-                ? <div>
+                ? <div className="form-group">
                     <input type="text" className="form-control" placeholder="Ваш ответ"
-                        onChange={this.onAnswerChanged} defaultValue={userAnswer}/>
+                        onChange={this.onAnswerChanged} defaultValue={userAnswer} readOnly={isBrowsing}/>
                 </div>
                 : <div>
                     {info.answers.map(answer =>
                         <div key={answer.number} className="form-check">
-                            <input className="input-group-prepend form-check-input" type="radio" name={`radio-answer`}
+                            {isBrowsing
+                                ? userAnswer === answer.number
+                                    ? <label className="form-check-label">Ваш ответ:</label>
+                                    : null
+                                : null
+                            }
+                            <input className="form-check-input" type="radio" name={`radio-answer`}
                                 defaultValue={`${answer.number}`}
                                 defaultChecked={userAnswer === answer.number}
-                                onClick={this.onAnswerChanged}
+                                onClick={isBrowsing ? e => e.preventDefault() : this.onAnswerChanged}
+                                disabled={isBrowsing}
                             />
                             <label className="form-check-label">{answer.value}</label>
                         </div>

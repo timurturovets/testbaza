@@ -151,9 +151,9 @@ namespace TestBaza.Controllers
 
             string apiKey = HttpContext.GetApiKey();
             ISession session = HttpContext.Session;
-            session.SetString(API_KEY, apiKey);
+            session.SetString(API_KEY_NAME, apiKey);
 
-            _logger.LogError($"String from session: {session.GetString(API_KEY)}");
+            _logger.LogError($"String from session: {session.GetString(API_KEY_NAME)}");
             return _responseFactory.View(this);
         }
 

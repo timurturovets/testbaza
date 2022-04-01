@@ -23,7 +23,7 @@ namespace TestBaza.Controllers
             _testsRepo = testsRepo;
             _responseFactory = responseFactory;
         }
-        
+
         [HttpGet("/api/pass/info")]
         public IActionResult GetInfo([FromQuery] int id)
         {

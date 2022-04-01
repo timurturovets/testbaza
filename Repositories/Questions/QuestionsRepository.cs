@@ -48,15 +48,8 @@ namespace TestBaza.Repositories
             };
             await _context.Answers.AddAsync(answer);
             await _context.SaveChangesAsync();
-            _logger.LogError($"Number: {number}");
 
-            Answer createdAnswer = await _context.Answers
-                .Include(a => a.Question)
-                .Where(a => a.Question!.Equals(question) && a.Number == number)
-                .SingleAsync();
-            int id = createdAnswer.AnswerId;
-
-            return new AnswerInfo(id, number);
+            return new AnswerInfo(answer.AnswerId, number);
         }
         public async Task RemoveAnswerFromQuestionAsync(Question question, Answer answer)
         {
