@@ -286,25 +286,29 @@ class Question extends React.Component {
             <h4 className="display-3">{info.value}</h4>
             {info.answerType === 1
                 ? <div className="form-group">
-                    <input type="text" className="form-control" placeholder="Ваш ответ"
-                        onChange={this.onAnswerChanged} defaultValue={userAnswer} readOnly={isBrowsing}/>
+                    {isBrowsing
+                        ? <label>Ваш ответ:</label>
+                        : null
+                    }
+                    <input id={`q-${info.number}-input`}type="text" className="form-control" placeholder="Ваш ответ"
+                        onChange={this.onAnswerChanged} value={!!usыerAnswer ? userAnswer : ""} readOnly={isBrowsing}/>
                 </div>
                 : <div>
                     {info.answers.map(answer =>
                         <div key={answer.number} className="form-check">
-                            {isBrowsing
-                                ? userAnswer === answer.number
-                                    ? <label className="form-check-label">Ваш ответ:</label>
-                                    : null
-                                : null
-                            }
-                            <input className="form-check-input" type="radio" name={`radio-answer`}
-                                defaultValue={`${answer.number}`}
-                                defaultChecked={userAnswer === answer.number}
+                            <input key={answer.number} className="form-check-input" type="radio" name={`radio-answer`}
+                                value={`${answer.number}`}
+                                checked={userAnswer === answer.number}
                                 onClick={isBrowsing ? e => e.preventDefault() : this.onAnswerChanged}
                                 disabled={isBrowsing}
                             />
-                            <label className="form-check-label">{answer.value}</label>
+                            <label className="form-check-label" disabled={userAnswer !== answer.number}>{answer.value}</label>
+                            {isBrowsing
+                                ? userAnswer === answer.number
+                                    ? <label className="form-check-label">(ваш ответ)</label>
+                                    : null
+                                : null
+                            }
                         </div>
                     )
                     }

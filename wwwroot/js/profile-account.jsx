@@ -375,18 +375,21 @@ class UserTests extends React.Component {
                         <label className="d-inline">У вас нет созданных тестов. </label>
                         <a className="btn btn-outline-success" href="/tests/create">Создать новый тест</a>
                     </div>
-                    : tests.map(test => {
+                    : <div id="tests">{tests.map(test => {
                         return (<div key={test.testId}>
                             <EditableTestSummary
-                            id={test.testId}
-                            name={test.testName}
-                            timeCreated={test.timeCreated}
-                            isPublished={test.isPublished}
-                            isBrowsable={test.isBrowsable}
-                            ratesCount={test.ratesCount}
-                            averageRate={test.averageRate}
-                        /><hr /></div>)
-                    })
+                                id={test.testId}
+                                name={test.testName}
+                                timeCreated={test.timeCreated}
+                                isPublished={test.isPublished}
+                                isBrowsable={test.isBrowsable}
+                                ratesCount={test.ratesCount}
+                                averageRate={test.averageRate}
+                            /><hr /></div>)
+                    }
+                    )}
+                    </div>
+
             }
             </div>
             );
@@ -448,7 +451,7 @@ class Forms extends React.Component {
                 <PasswordChangeForm />
                 <hr />
             <UserTests />
-            <Scroll to="tests" />
+            <Scroll to="tests"  />
             </div>);
     }
 }
@@ -459,7 +462,15 @@ class Scroll extends React.Component {
     }
     render() {
         const elem = document.getElementById(this.props.to);
-        if (window.location.hash.match(/test/) && !!elem) elem.scrollIntoView();
+        let c = 0;
+        while (c < 1500) {
+            console.log(c);
+            if (window.location.hash.match(/test/) && !!elem) {
+                elem.scrollIntoView();
+                break;
+            }
+            else c++;
+        }
         return null;
     }
 }
