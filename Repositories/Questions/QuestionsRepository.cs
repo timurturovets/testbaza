@@ -16,13 +16,13 @@ namespace TestBaza.Repositories
             _testsRepo = testsRepo;
         }
 
-        public Question? GetQuestion(int id)
+        public async Task<Question?> GetQuestion(int id)
         {
-            return _context.Questions
+            return await _context.Questions
                 .Where(q => q.QuestionId == id)
                 .Include(q=>q.Test).ThenInclude(t=>t!.Creator)
                 .Include(q=>q.MultipleAnswers)
-                .SingleOrDefault();
+                .SingleOrDefaultAsync();
         }
 
         public Question? GetQuestionByTestAndNumber(Test test, int number)

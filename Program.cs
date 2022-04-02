@@ -23,7 +23,7 @@ IServiceCollection services = builder.Services;
     services.AddDatabaseDeveloperPageExceptionFilter();
 
     services.AddDefaultIdentity<User>(options => {
-        //Валидация всего этого дела происходит непосредственно через ModelState.IsValid и атрибуты валидации в модели
+        // Валидация всего этого дела происходит непосредственно через ModelState.IsValid и атрибуты валидации в модели
         options.Password.RequireNonAlphanumeric = false;
         options.Password.RequireLowercase = false;
         options.Password.RequireUppercase = false;

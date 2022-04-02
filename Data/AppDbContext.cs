@@ -43,5 +43,6 @@ namespace TestBaza.Data
         public DbSet<Question> Questions { get; set; }
         public DbSet<Answer> Answers { get; set; }
         public DbSet<Rate> Rates { get; set; }
+        public DbSet<PassingInfo> PassingInfos { get; set; }
     }
 }

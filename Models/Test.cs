@@ -7,15 +7,20 @@
         public string? TestName { get; set; }
         public string? Description { get; set; }
         public DateTime TimeCreated { get; set; }
+        public int AllowedAttempts { get; set; }
         public bool IsPrivate { get; set; }
         public string? Link { get; set;}
         public bool IsTimeLimited { get; set; }
-        public int TimeLimit { get; set; } // В секундах
+        /// <summary>
+        /// Временное ограничение на прохождение теста, выраженное в секундах
+        /// </summary>
+        public int TimeLimit { get; set; }
         public bool IsPublished { get; set; }
         public bool IsBrowsable { get => IsPublished && !IsPrivate; set { return; } }
 
         public IEnumerable<Question> Questions { get; set; } = new List<Question>();
         public IEnumerable<Rate> Rates { get; set; } = new List<Rate>();
+        public IEnumerable<PassingInfo> PassingInfos { get; set; } = new List<PassingInfo>();
         public string? CreatorId { get; set; }
         public User? Creator { get; set; }
 

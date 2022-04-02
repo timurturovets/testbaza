@@ -250,13 +250,24 @@ class Timer extends React.Component {
         const allSeconds = timeLeft / 1000;
         console.log(allSeconds);
         const hours = Math.floor(allSeconds / 3600);
-        const hh = hours === 0 ? "00" : Math.floor(hours / 10) === 0 ? `0${hours}` : hours;
+        const hh = hours === 0
+            ? "00"
+            : Math.floor(hours / 10) === 0
+                ? `0${hours}`
+                : hours;
 
         const minutes = Math.floor((allSeconds - hours * 3600) / 60);
-        const mm = minutes === 0 ? "00" : Math.floor(minutes / 10) === 0 ? `0${minutes}` : minutes;
+        const mm = minutes === 0
+            ? "00"
+            : Math.floor(minutes / 10) === 0
+                ? `0${minutes}`
+                : minutes;
 
         const seconds = allSeconds - hours * 3600 - minutes * 60;
-        const ss = seconds === 0 ? "00" : Math.floor(seconds / 10) === 0 ? `0${seconds}` : seconds;
+        const ss = seconds === 0
+            ? "00" : Math.floor(seconds / 10) === 0
+                ? `0${seconds}`
+                : seconds;
 
         const timeLeftString = `${hh}:${mm}:${ss}`;
         return (<div>
@@ -303,10 +314,8 @@ class Question extends React.Component {
                                 disabled={isBrowsing}
                             />
                             <label className="form-check-label" disabled={userAnswer !== answer.number}>{answer.value}</label>
-                            {isBrowsing
-                                ? userAnswer === answer.number
-                                    ? <label className="form-check-label">(ваш ответ)</label>
-                                    : null
+                            {isBrowsing && userAnswer === answer.number
+                                ? <label className="form-check-label">(ваш ответ)</label>
                                 : null
                             }
                         </div>

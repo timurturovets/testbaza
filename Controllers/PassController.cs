@@ -34,5 +34,13 @@ namespace TestBaza.Controllers
             TestJsonModel model = test.ToJsonModel(includeAnswers: false);
             return _responseFactory.Ok(this, result: model);
         }
+        [HttpPost("/api/pass/start-passing")]
+        public async Task<IActionResult> StartPassing([FromForm] StartPassingRequestModel model)
+        {
+            Test? test = _testsRepo.GetTest(model.TestId);
+            if (test is null) return _responseFactory.NotFound(this);
+
+            User user = await  _userManager.GetUserAsync(User);
+        }
     }
 }
