@@ -61,9 +61,9 @@ namespace TestBaza.Controllers
         }
 
         [HttpGet]
-        public IActionResult Pass([FromQuery] int id)
+        public async Task<IActionResult> Pass([FromQuery] int id)
         {
-            Test? test = _testsRepo.GetTest(id);
+            Test? test = await _testsRepo.GetTestAsync(id);
 
             if (test is null) return _responseFactory.NotFound(this);
 
@@ -77,7 +77,7 @@ namespace TestBaza.Controllers
         [HttpGet("/api/tests/wq/get-test{id}")]
         public async Task<IActionResult> GetTest([FromRoute] int id)
         {
-            Test? test = _testsRepo.GetTest(id);
+            Test? test = await _testsRepo.GetTestAsync(id);
             User creator = await _userManager.GetUserAsync(User);
 
             if (test is null) return _responseFactory.NotFound(this);
@@ -100,7 +100,7 @@ namespace TestBaza.Controllers
                 if (ModelState.IsValid)
                 {
                     User creator = await _userManager.GetUserAsync(User);
-                    if (_testsRepo.GetTest(model.TestName!) is not null)
+                    if (await _testsRepo.GetTestAsync(model.TestName!) is not null)
                     {
                         ViewData["Error"] = "Тест с таким названием уже существует.";
                         return _responseFactory.View(this);
@@ -117,7 +117,7 @@ namespace TestBaza.Controllers
                     await _testsRepo.AddTestAsync(test);
 
                     await _userManager.UpdateAsync(creator);
-                    int id = _testsRepo.GetTest(test.TestName!)!.TestId;
+                    int id = test.TestId;
 
                     return _responseFactory.RedirectToAction(this, actionName: "edit", controllerName: "tests", new { id });
                 }
@@ -134,7 +134,7 @@ namespace TestBaza.Controllers
         [Route("/tests/edit{id}")]
         public async Task<IActionResult> Edit([FromRoute] int id)
         {
-            Test? test = _testsRepo.GetTest(testId: id);
+            Test? test = await _testsRepo.GetTestAsync(testId: id);
             User creator = await _userManager.GetUserAsync(User);
             if (test is null)
             {
@@ -164,7 +164,7 @@ namespace TestBaza.Controllers
                 $"IsPrivate: {model.IsPrivate}");
             if (ModelState.IsValid)
             {
-                Test? test = _testsRepo.GetTest(model.TestId);
+                Test? test = await _testsRepo.GetTestAsync(model.TestId);
                 if (test is null) return _responseFactory.NotFound(this);
 
                 User creator = await _userManager.GetUserAsync(User);
@@ -185,7 +185,7 @@ namespace TestBaza.Controllers
         {
             User creator = await _userManager.GetUserAsync(User);
 
-            Test? test = _testsRepo.GetTest(testId);
+            Test? test = await _testsRepo.GetTestAsync(testId);
             if (test is null) return _responseFactory.NotFound(this);
 
             if (!test.Creator!.Equals(creator)) return _responseFactory.Forbid(this);
@@ -199,7 +199,7 @@ namespace TestBaza.Controllers
         public async Task<IActionResult> AddQuestion([FromForm] int testId)
         {
             _logger.LogInformation($"New add question request, testId: {testId}");
-            Test? test = _testsRepo.GetTest(testId);
+            Test? test = await _testsRepo.GetTestAsync(testId);
             if (test is null) return _responseFactory.NotFound(this);
 
             User creator = await _userManager.GetUserAsync(User);
@@ -214,7 +214,7 @@ namespace TestBaza.Controllers
             };
 
             await _qsRepo.AddQuestionAsync(newQuestion);
-            Question? createdQuestion = _qsRepo.GetQuestionByTestAndNumber(test, number);
+            Question? createdQuestion = await _qsRepo.GetQuestionByTestAndNumberAsync(test, number);
             int questionId = createdQuestion!.QuestionId;
 
             return _responseFactory.Ok(this, result: new { questionId, number });
@@ -225,7 +225,7 @@ namespace TestBaza.Controllers
         {
             _logger.LogError($"New change question request, value: {model.Value}, answer: {model.Answer}, aType: {model.AnswerType}");
 
-            Question? question = _qsRepo.GetQuestion(model.QuestionId);
+            Question? question = await _qsRepo.GetQuestionAsync(model.QuestionId);
             if (question is null) return _responseFactory.NotFound(this);
 
             User creator = await _userManager.GetUserAsync(User);
@@ -256,7 +256,7 @@ namespace TestBaza.Controllers
         {
             _logger.LogInformation($"New delete question request, questionId: {questionId}");
 
-            Question? question = _qsRepo.GetQuestion(questionId);
+            Question? question = await _qsRepo.GetQuestionAsync(questionId);
             if (question is null) return _responseFactory.NotFound(this);
 
             User creator = await _userManager.GetUserAsync(User);
@@ -269,7 +269,7 @@ namespace TestBaza.Controllers
         public async Task<IActionResult> AddAnswer(int questionId)
         {
             _logger.LogError($"QuestionId: {questionId}");
-            Question? question = _qsRepo.GetQuestion(questionId);
+            Question? question = await _qsRepo.GetQuestionAsync(questionId);
             User creator = await _userManager.GetUserAsync(User);
 
             if (question is null) return _responseFactory.NotFound(this);
@@ -283,7 +283,7 @@ namespace TestBaza.Controllers
         public async Task<IActionResult> DeleteAnswer(int answerId, int questionId)
         {
             _logger.LogError($"AnswerID: {answerId}");
-            Question? question = _qsRepo.GetQuestion(questionId);
+            Question? question = await _qsRepo.GetQuestionAsync(questionId);
             if (question is null) return _responseFactory.NotFound(this);
 
             User creator = await _userManager.GetUserAsync(User);
@@ -299,7 +299,7 @@ namespace TestBaza.Controllers
         [HttpGet("/api/tests/publish-test{testId}")]
         public async Task<IActionResult> PublishTest([FromRoute] int testId)
         {
-            Test? test = _testsRepo.GetTest(testId);
+            Test? test = await _testsRepo.GetTestAsync(testId);
             List<string> errors = new();
 
             if (test is null)
@@ -495,7 +495,7 @@ namespace TestBaza.Controllers
         {
             User rater = await _userManager.GetUserAsync(User);
 
-            Test? test = _testsRepo.GetTest(model.TestId);
+            Test? test = await _testsRepo.GetTestAsync(model.TestId);
             if (test is null) return _responseFactory.NotFound(this);
 
             Rate rate = new() { Value = model.Rate, Test = test, User = rater };

@@ -18,32 +18,31 @@ namespace TestBaza.Repositories
             .Include(t => t.Creator)
             .Include(t=>t.Rates);
 
-        public Test? GetTest(string testName)
+        public async Task<Test?> GetTestAsync(string testName)
         {
-            if (!_context.Tests.Any(t => t.TestName == testName)) return null;
-            return _context.Tests
+            return await _context.Tests
                 .Where(t => t.TestName == testName)
                 .Include(t => t.Questions).ThenInclude(q => q.MultipleAnswers)
                 .Include(t => t.Creator)
                 .Include(t=>t.Rates)
-                .Single();
+                .SingleOrDefaultAsync();
         }
 
-        public Test? GetTest(int testId)
+        public async Task<Test?> GetTestAsync(int testId)
         {
-            if (!_context.Tests.Any(t => t.TestId == testId)) return null;
-            return _context.Tests
+            return await _context.Tests
                 .Where(t => t.TestId == testId)
                 .Include(t => t.Questions).ThenInclude(q => q.MultipleAnswers)
                 .Include(t => t.Creator)
                 .Include(t => t.Rates)
-                .Single();
+                .SingleOrDefaultAsync();
         }
 
         public IEnumerable<Test> GetUserTests(User user)
         {
-            return _context.Tests.Include(t => t.Creator)
-                .Where(t => t.Creator!.Equals(user))
+            return _context.Tests
+                .Where(t => t.CreatorId == user.Id)
+                .Include(t=>t.Creator)
                 .Include(t => t.Questions).ThenInclude(q => q.MultipleAnswers)
                 .Include(t => t.Rates);
         }

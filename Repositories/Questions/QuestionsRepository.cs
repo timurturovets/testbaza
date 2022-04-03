@@ -16,7 +16,7 @@ namespace TestBaza.Repositories
             _testsRepo = testsRepo;
         }
 
-        public async Task<Question?> GetQuestion(int id)
+        public async Task<Question?> GetQuestionAsync(int id)
         {
             return await _context.Questions
                 .Where(q => q.QuestionId == id)
@@ -25,13 +25,13 @@ namespace TestBaza.Repositories
                 .SingleOrDefaultAsync();
         }
 
-        public Question? GetQuestionByTestAndNumber(Test test, int number)
+        public async Task<Question?> GetQuestionByTestAndNumberAsync(Test test, int number)
         {
-            return test.Questions
+            return await test.Questions
                 .Where(q => q.Number == number).AsQueryable()
                 .Include(q => q.Test).ThenInclude(t => t!.Creator)
                 .Include(q => q.MultipleAnswers)
-                .SingleOrDefault();
+                .SingleOrDefaultAsync();
         }
         public async Task AddQuestionAsync(Question question)
         {
@@ -57,7 +57,7 @@ namespace TestBaza.Repositories
             _context.Answers.Remove(answer);
             await _context.SaveChangesAsync();
 
-            question = GetQuestion(question.QuestionId)!;
+            question = (await GetQuestionAsync(question.QuestionId))!;
 
             foreach(Answer a in question.MultipleAnswers)
             {
@@ -82,7 +82,7 @@ namespace TestBaza.Repositories
             _context.Questions.Remove(question);
             await _context.SaveChangesAsync();
 
-            Test test = _testsRepo.GetTest(testId)!;
+            Test test = (await _testsRepo.GetTestAsync(testId))!;
 
             foreach(Question q in test.Questions)
             {
