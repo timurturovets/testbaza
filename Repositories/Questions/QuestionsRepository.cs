@@ -16,19 +16,19 @@ namespace TestBaza.Repositories
             _testsRepo = testsRepo;
         }
 
-        public Question? GetQuestion(int id)
+        public async Task<Question?> GetQuestionAsync(int id)
         {
-            return _context.Questions
+            return await _context.Questions
                 .Where(q => q.QuestionId == id)
                 .Include(q=>q.Test).ThenInclude(t=>t!.Creator)
                 .Include(q=>q.MultipleAnswers)
-                .SingleOrDefault();
+                .SingleOrDefaultAsync();
         }
 
-        public Question? GetQuestionByTestAndNumber(Test test, int number)
+        public Question? GetQuestion(Test test, int questionNumber)
         {
             return test.Questions
-                .Where(q => q.Number == number).AsQueryable()
+                .Where(q => q.Number == questionNumber).AsQueryable()
                 .Include(q => q.Test).ThenInclude(t => t!.Creator)
                 .Include(q => q.MultipleAnswers)
                 .SingleOrDefault();
@@ -48,15 +48,8 @@ namespace TestBaza.Repositories
             };
             await _context.Answers.AddAsync(answer);
             await _context.SaveChangesAsync();
-            _logger.LogError($"Number: {number}");
 
-            Answer createdAnswer = await _context.Answers
-                .Include(a => a.Question)
-                .Where(a => a.Question!.Equals(question) && a.Number == number)
-                .SingleAsync();
-            int id = createdAnswer.AnswerId;
-
-            return new AnswerInfo(id, number);
+            return new AnswerInfo(answer.AnswerId, number);
         }
         public async Task RemoveAnswerFromQuestionAsync(Question question, Answer answer)
         {
@@ -64,7 +57,7 @@ namespace TestBaza.Repositories
             _context.Answers.Remove(answer);
             await _context.SaveChangesAsync();
 
-            question = GetQuestion(question.QuestionId)!;
+            question = (await GetQuestionAsync(question.QuestionId))!;
 
             foreach(Answer a in question.MultipleAnswers)
             {
@@ -89,7 +82,7 @@ namespace TestBaza.Repositories
             _context.Questions.Remove(question);
             await _context.SaveChangesAsync();
 
-            Test test = _testsRepo.GetTest(testId)!;
+            Test test = (await _testsRepo.GetTestAsync(testId))!;
 
             foreach(Question q in test.Questions)
             {

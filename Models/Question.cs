@@ -16,6 +16,8 @@
         public int TestId { get; set; }
         public Test? Test { get; set; }
 
+        public IEnumerable<UserAnswer> UserAnswers { get; set; } = new List<UserAnswer>();
+
         public override bool Equals(object? obj)
         {
             if (obj is Question q)

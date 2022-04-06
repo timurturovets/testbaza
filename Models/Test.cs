@@ -7,15 +7,21 @@
         public string? TestName { get; set; }
         public string? Description { get; set; }
         public DateTime TimeCreated { get; set; }
+        public bool AreAttemptsLimited { get; set; }
+        public int AllowedAttempts { get; set; } = 1;
         public bool IsPrivate { get; set; }
         public string? Link { get; set;}
         public bool IsTimeLimited { get; set; }
-        public int TimeLimit { get; set; } // В секундах
+        /// <summary>
+        /// Временное ограничение на прохождение теста, выраженное в секундах
+        /// </summary>
+        public int TimeLimit { get; set; }
         public bool IsPublished { get; set; }
         public bool IsBrowsable { get => IsPublished && !IsPrivate; set { return; } }
 
         public IEnumerable<Question> Questions { get; set; } = new List<Question>();
         public IEnumerable<Rate> Rates { get; set; } = new List<Rate>();
+        public IEnumerable<PassingInfo> PassingInfos { get; set; } = new List<PassingInfo>();
         public string? CreatorId { get; set; }
         public User? Creator { get; set; }
 
@@ -24,7 +30,7 @@
             if (obj is Test test)
                 return test.TestId == TestId
                      && test.TestName == TestName
-                     && test.Questions.SequenceEqual(Questions);
+                     && test.TimeCreated == TimeCreated;
             return false;
         }
         public override int GetHashCode() => TestId.GetHashCode();
@@ -38,7 +44,9 @@
                 Description = Description,
                 AuthorName = Creator!.UserName,
                 TimeInfo = new TimeInfo(IsTimeLimited, TimeLimit),
-                Questions = Questions.Select(q => q.ToJsonModel(includeAnswers))
+                Questions = Questions.Select(q => q.ToJsonModel(includeAnswers)),
+                AllowedAttempts = AllowedAttempts,
+                AreAttemptsLimited = AreAttemptsLimited
             };
         }
         public TestSummary ToSummary()
@@ -54,7 +62,9 @@
                 AverageRate = Rates.Any() ? Rates.Select(r => r.Value).Average() : 0,
                 IsBrowsable = IsBrowsable,
                 IsPublished = IsPublished,
-                TimeInfo = new TimeInfo(IsTimeLimited, TimeLimit)
+                TimeInfo = new TimeInfo(IsTimeLimited, TimeLimit),
+                AllowedAttempts = AllowedAttempts,
+                AreAttemptsLimited = AreAttemptsLimited
             };
         }
 
@@ -63,8 +73,10 @@
             TestName = model.TestName;
             Description = model.Description;
             IsPrivate = model.IsPrivate;
+            AllowedAttempts = model.AllowedAttempts;
+            AreAttemptsLimited = model.AreAttemptsLimited;
 
-            var timeInfo = model.TimeInfo;
+            TimeInfo timeInfo = model.TimeInfo;
             IsTimeLimited = timeInfo.IsTimeLimited;
             TimeLimit = timeInfo.ConvertToSeconds();
         }

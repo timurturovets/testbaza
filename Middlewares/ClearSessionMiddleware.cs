@@ -11,7 +11,7 @@
         {
             var logger = context.RequestServices.GetRequiredService<ILogger<ClearSessionMiddleware>>();
             string path = context.Request.Path;
-            if (NON_API_ROUTES.Any(r=>path.StartsWith(r))) context.Session.SetString(API_KEY, string.Empty);
+            if (NON_API_ROUTES.Any(r=>path.StartsWith(r))) context.Session.Clear();
             await _next(context);
         }
     }

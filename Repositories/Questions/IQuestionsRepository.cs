@@ -2,8 +2,8 @@
 {
     public interface IQuestionsRepository
     {
-        Question? GetQuestion(int id);
-        Question? GetQuestionByTestAndNumber(Test test, int number);
+        Task<Question?> GetQuestionAsync(int id);
+        Question? GetQuestion(Test test, int questionNumber);
         Task AddQuestionAsync(Question question);
         Task<AnswerInfo> AddAnswerToQuestionAsync(Question question);
         Task RemoveAnswerFromQuestionAsync(Question question, Answer answer);

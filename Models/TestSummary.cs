@@ -1,5 +1,8 @@
 ﻿namespace TestBaza.Models
 {
+    /// <summary>
+    /// Общая информация о тесте
+    /// </summary>
     public class TestSummary
     {
         public int TestId { get; set; }
@@ -12,5 +15,7 @@
         public int QuestionsCount { get; set; }
         public int RatesCount { get; set; }
         public double AverageRate { get; set; }
+        public int AllowedAttempts { get; set; }
+        public bool AreAttemptsLimited { get; set; }
     }
 }

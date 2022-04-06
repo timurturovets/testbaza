@@ -8,6 +8,8 @@ namespace TestBaza.Factories
         BadRequestObjectResult BadRequest(Controller controller, object result);
         OkResult Ok(Controller controller);
         OkObjectResult Ok(Controller controller, object result);
+        StatusCodeResult StatusCode(Controller controller, int statusCode);
+        ObjectResult StatusCode(Controller controller, int statusCode, object result);
         ForbidResult Forbid(Controller controller);
         NotFoundResult NotFound(Controller controller);
         ConflictResult Conflict(Controller controller);
