@@ -34,13 +34,46 @@ namespace TestBaza.Controllers
             if (test is null) return _responseFactory.NotFound(this);
             if (!test.IsBrowsable) return _responseFactory.Forbid(this);
 
-            TestJsonModel model = test.ToJsonModel(includeAnswers: false);
-            return _responseFactory.Ok(this, result: model);
+            User user = await _userManager.GetUserAsync(User);
+            PassingInfo? info = (await _passingInfoRepo.GetInfoAsync(user, test))!;
+            TestJsonModel testModel = test.ToJsonModel(includeAnswers: false);
+
+            if(info is null)
+            {
+                info = new() { User = user, Test = test };
+                await _passingInfoRepo.AddInfoAsync(info);
+                return _responseFactory.StatusCode(this, 100, result: testModel);
+            }
+            if(test.AreAttemptsLimited && info!.Attempts.Count() >= test.AllowedAttempts)
+            {
+                return _responseFactory.Conflict(this);
+            }
+
+            Attempt? currentAttempt = info.Attempts.SingleOrDefault(a => a.TimeEnded == default);
+            if (currentAttempt is not null)
+            {
+                AttemptJsonModel attemptModel = currentAttempt.ToJsonModel();
+                if (test.IsTimeLimited)
+                {
+                    DateTime end = currentAttempt.TimeStarted + TimeSpan.FromSeconds(test.TimeLimit);
+                    if (end < DateTime.Now)
+                    {
+                        currentAttempt.TimeEnded = end;
+                        await _passingInfoRepo.UpdateInfoAsync(info);
+                        return _responseFactory.StatusCode(this, 100, result: attemptModel);
+                    }
+                }
+                return _responseFactory.Ok(this, result: attemptModel);
+            }
+
+            return _responseFactory.Ok(this, result: testModel);
+
         }
+
         [HttpPost("/api/pass/start-passing")]
-        public async Task<IActionResult> StartPassing([FromForm] StartPassingRequestModel model)
+        public async Task<IActionResult> StartPassing([FromForm] int testId)
         {
-            Test? test = await _testsRepo.GetTestAsync(model.TestId);
+            Test? test = await _testsRepo.GetTestAsync(testId);
             if (test is null) return _responseFactory.NotFound(this);
 
             User user = await _userManager.GetUserAsync(User);
@@ -54,17 +87,21 @@ namespace TestBaza.Controllers
                     Test = test,
                     User = user,
                 };
-                info.Attempts.ToList().Add(new Attempt
+
+                var attempts = info.Attempts.ToList();
+                attempts.Add(new Attempt
                 {
                     PassingInfo = info,
                     TimeStarted = DateTime.Now
                 });
+                info.Attempts = attempts;
+
                 await _passingInfoRepo.AddInfoAsync(info);
                 return _responseFactory.Ok(this);
             }
             else
             {
-                if(test.AllowedAttempts >= info.Attempts.Count())
+                if(test.AllowedAttempts <= info.Attempts.Count())
                 {
                     return _responseFactory.Conflict(this);
                 }

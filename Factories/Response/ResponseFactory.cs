@@ -13,6 +13,9 @@ namespace TestBaza.Factories
         public NoContentResult NoContent(Controller controller) => controller.NoContent();
         public OkResult Ok(Controller controller) => controller.Ok();
         public OkObjectResult Ok(Controller controller, object result) => controller.Ok(new { result });
+        public StatusCodeResult StatusCode(Controller controller, int statusCode) => controller.StatusCode(statusCode);
+        public ObjectResult StatusCode(Controller controller, int statusCode, object result)
+            => controller.StatusCode(statusCode, new { result });
         public ViewResult View(Controller controller) => controller.View();
         public ViewResult View(Controller controller, object model) => controller.View(model: model);
         public ViewResult View(Controller controller, string viewName) => controller.View(viewName);

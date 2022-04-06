@@ -16,7 +16,8 @@
             },
             test: null,
             answers: [],
-            currentQuestion: 0
+            currentQuestion: 0,
+            exceededAttempts: false
         };
     }
 
@@ -30,7 +31,12 @@
                 <h2>Прохождение теста</h2>
                 <h4>Загрузка...</h4>
             </div >)
-            : this.renderTest();
+            : this.state.exceededAttempts
+                ? <div>
+                    <h2 className="display-2">У вас не осталось попыток для прохождения этого теста.</h2>
+                    <a className="btn btn-outline-primary" href={``/*TODO*/}>Просмотреть своё решение</a>
+                </div>
+                : this.renderTest();
 
         return content;
     }
@@ -39,9 +45,9 @@
         const testId = this.props.testId;
         await fetch(`/api/pass/info?id=${testId}`).then(async response => {
 
-            if (response.status === 200) {
+            if (response.status === 100) {
                 const object = await response.json();
-                console.log(`result`);
+                console.log(`objects`);
                 console.log(object);
                 const test = object.result;
                 const answers = [];
@@ -51,7 +57,29 @@
                 }
                 this.setState({ isLoading: false, test: test, answers: answers });
 
-            } else alert(`status: ${response.status}`);//window.location.replace('/home/index');
+            } else if (response.status === 200) {
+                const object = await response.json();
+                console.log(`object`);
+                console.log(object);
+                const result = object.result;
+                const timeLeft = result.timeLeft,
+                    test = result.test,
+                    answers = result.userAnswers;
+                const userAnswers = answers.map(answer => new UserAnswer(answer.questionNumber, answer.value));
+
+                this.setState({
+                    isLoading: false,
+                    test: test,
+                    answers: userAnswers,
+                    passingInfo: {
+                        ...passingInfo,
+                        isStarted: true,
+                        timeLeft: timeLeft
+                    }
+                });
+            } else if (response.status === 409) {
+                this.setState({ exceededAttempts: true });
+            } else alert(`status: ${response.status}`);
         });
     }
 
@@ -228,17 +256,20 @@ class Timer extends React.Component {
         let { interval, timeLeft } = this.state;
         const { onTimeOut, timeInfo } = this.props;
         const now = new Date().getTime();
-        const end = now + timeInfo.hours * 3600 * 1000 + timeInfo.minutes * 60 * 1000 + timeInfo.seconds * 1000;
+        const end = now
+            + timeInfo.hours * 3600 * 1000
+            + timeInfo.minutes * 60 * 1000 +
+            timeInfo.seconds * 1000;
+
         timeLeft = end - now;
 
         interval = setInterval(() => {
-
+            timeLeft -= 1000;
             if (timeLeft <= 0) {
                 onTimeOut();
                 clearInterval(interval);
                 return;
             }
-            timeLeft -= 1000;
             this.setState({ timeLeft: timeLeft });
         }, 1000);
 
@@ -302,7 +333,7 @@ class Question extends React.Component {
                         : null
                     }
                     <input id={`q-${info.number}-input`}type="text" className="form-control" placeholder="Ваш ответ"
-                        onChange={this.onAnswerChanged} value={!!usыerAnswer ? userAnswer : ""} readOnly={isBrowsing}/>
+                        onChange={this.onAnswerChanged} value={!!userAnswer ? userAnswer : ""} readOnly={isBrowsing}/>
                 </div>
                 : <div>
                     {info.answers.map(answer =>

@@ -15,8 +15,6 @@
     }
 
     componentDidMount() {
-        console.log('func is');
-        console.log(this.props.onSavedChange);
         this.populateData();
     }
 
@@ -24,10 +22,7 @@
         const content = this.state.isLoading
             ? <h1 className="display-6">Загрузка...</h1>
             : this.renderTest()
-        return (<div>
-
-            {content}
-        </div>);
+        return content;
     }
 
     populateData = async () => {
@@ -50,15 +45,17 @@
     }
 
     renderTest = () => {
-        const { _, __, isChanged, success, ___, isSaved } = this.state;
-        const test = this.state.test;
+        const { _, test, isChanged, success, ___, isSaved } = this.state;
+
         const name = test.testName,
             description = test.description,
             questions = test.questions,
             isPrivate = test.isPrivate,
             timeInfo = test.timeInfo,
+            allowedAttempts = test.allowedAttempts,
             hasQuestions = this.state.hasQuestions,
             publishingErrors = this.state.publishingErrors;
+            
         console.log('rendering test! test is');
         console.log(test);
         return (<div>
@@ -81,16 +78,28 @@
                     </div>
                     <div className="form-check form-switch">
                         <label className="form-check-label">Ограничен по времени</label>
-                        {timeInfo.isTimeLimited
-                            ? (<div>
-                                <input className="form-check-input" type="checkbox" name="timeinfo.istimelimited"
-                                    onClick={e=>this.handleTimeInfoChange(e)} defaultChecked />
-                                {this.renderTimeInputs(timeInfo.hours, timeInfo.minutes, timeInfo.seconds)}
-                            </div>)
-                            : <input className="form-check-input" type="checkbox" name="timeinfo.istimelimited"
-                                onClick={e => this.handleTimeInfoChange(e)} />}
+                            <input className="form-check-input" type="checkbox" name="timeinfo.istimelimited"
+                                onClick={e => this.handleTimeInfoChange(e)} defaultChecked={timeInfo.isTimeLimited} />
+                            {timeInfo.isTimeLimited
+                                ? this.renderTimeInputs(timeInfo.hours, timeInfo.minutes, timeInfo.seconds)
+                                :null}
+                    </div>
+                    <div className="form-check form-switch">
+                        <label className="form-check-label">
+                            {test.areAttemptsLimited
+                                ? "Разрешённое количество попыток: "
+                                : "Ограничить количество попыток"
+                            }
+                        </label>
+                        <input className="form-check-input" type="checkbox" name="areattemptslimited"
+                            onClick={e => this.handleAttemptsInfoChange(e)} defaultChecked={test.areAttemptsLimited} />
+                        {test.areAttemptsLimited
+                            ? <input type="number" name="allowedattempts" min={1} max={25} defaultValue={allowedAttempts}
+                                onChange={e => this.handleAttemptsInfoChange(e)} />
+                            : null }
                     </div>
                 </div>
+
                 <button className="btn btn-outline-success" onClick={e => this.handleSubmit(e)} disabled={isSaved}>Сохранить изменения</button>
                 {isChanged
                     ? isSaved
@@ -164,7 +173,6 @@
     }
 
     handleTimeInfoChange = event => {
-        event.preventDefault();
         console.log('handling timeinfochange');
         const name = event.target.name.toLowerCase(),
             test = this.state.test,
@@ -192,6 +200,32 @@
 
         }
     }
+
+    handleAttemptsInfoChange = event => {
+        console.log(event.target.name);
+        const name = event.target.name,
+            test = this.state.test;
+        if (name === 'areattemptslimited') {
+            console.log('setting areAttemptsLimited to ' + event.target.checked);
+            this.setState({
+                test: {
+                    ...test,
+                    areAttemptsLimited: event.target.checked
+                },
+                isSaved: false
+            });
+        }
+        if (name === 'allowedattempts') {
+            this.setState({
+                test: {
+                    ...test,
+                    allowedAttempts: event.target.value
+                },
+                isSaved: false
+            });
+        }
+    }
+
     handleSubmit = async () => {
         event.preventDefault();
         const id = this.props.testId;
@@ -202,10 +236,14 @@
         }
         const isPrivate = form.elements["isprivate"].checked;
         const isTimeLimited = form.elements["timeinfo.istimelimited"].checked;
+        const areAttemptsLimited = form.elements["areattemptslimited"].checked;
+
         const formData = new FormData(form);
         formData.append('testid', id);
         formData.set('isprivate', isPrivate);
         formData.set('timeinfo.istimelimited', isTimeLimited);
+        formData.set('areattemptslimited', areAttemptsLimited);
+
         await fetch('/api/tests/wq/update-test', {
             method: 'PUT',
             body: formData

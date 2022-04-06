@@ -214,7 +214,7 @@ namespace TestBaza.Controllers
             };
 
             await _qsRepo.AddQuestionAsync(newQuestion);
-            Question? createdQuestion = await _qsRepo.GetQuestionByTestAndNumberAsync(test, number);
+            Question? createdQuestion = _qsRepo.GetQuestion(test, number);
             int questionId = createdQuestion!.QuestionId;
 
             return _responseFactory.Ok(this, result: new { questionId, number });

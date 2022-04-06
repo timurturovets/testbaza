@@ -3,7 +3,7 @@
     public interface IQuestionsRepository
     {
         Task<Question?> GetQuestionAsync(int id);
-        Task<Question?> GetQuestionByTestAndNumberAsync(Test test, int number);
+        Question? GetQuestion(Test test, int questionNumber);
         Task AddQuestionAsync(Question question);
         Task<AnswerInfo> AddAnswerToQuestionAsync(Question question);
         Task RemoveAnswerFromQuestionAsync(Question question, Answer answer);

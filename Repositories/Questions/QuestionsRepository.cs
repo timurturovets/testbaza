@@ -25,13 +25,13 @@ namespace TestBaza.Repositories
                 .SingleOrDefaultAsync();
         }
 
-        public async Task<Question?> GetQuestionByTestAndNumberAsync(Test test, int number)
+        public Question? GetQuestion(Test test, int questionNumber)
         {
-            return await test.Questions
-                .Where(q => q.Number == number).AsQueryable()
+            return test.Questions
+                .Where(q => q.Number == questionNumber).AsQueryable()
                 .Include(q => q.Test).ThenInclude(t => t!.Creator)
                 .Include(q => q.MultipleAnswers)
-                .SingleOrDefaultAsync();
+                .SingleOrDefault();
         }
         public async Task AddQuestionAsync(Question question)
         {
