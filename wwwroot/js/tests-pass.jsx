@@ -12,7 +12,9 @@
                 isTimeOut: false,
                 interval: null,
                 isEnded: false,
-                isCheckingAnswers: false
+                isCheckingAnswers: false,
+                attemptsLeft: 0,
+                isContinuing: false
             },
             test: null,
             answers: [],
@@ -44,41 +46,55 @@
     populateData = async () => {
         const testId = this.props.testId;
         await fetch(`/api/pass/info?id=${testId}`).then(async response => {
-
-            if (response.status === 100) {
+            console.log(response.status);
+            if (response.status === 201) {
+                //Нет текущей попытки
                 const object = await response.json();
-                console.log(`objects`);
+                console.log(`object`);
                 console.log(object);
-                const test = object.result;
-                const answers = [];
-                for (const question of test.questions) {
-                    const answer = new UserAnswer(question.number, null);
-                    answers.push(answer);
-                }
-                this.setState({ isLoading: false, test: test, answers: answers });
+                const test = object.result.test;
+                const answers = test.questions.map(q => new UserAnswer(q.number, null));
+
+                this.setState({
+                    isLoading: false,
+                    test: test,
+                    answers: answers,
+                    passingInfo: {
+                        ...this.state.passingInfo,
+                        attemptsLeft: object.result.attemptsLeft
+                    }
+                });
 
             } else if (response.status === 200) {
+                //Есть текущая попытка
                 const object = await response.json();
                 console.log(`object`);
                 console.log(object);
                 const result = object.result;
-                const timeLeft = result.timeLeft,
+                const timeLeft = result.timeLeft * 1000,
                     test = result.test,
                     answers = result.userAnswers;
                 const userAnswers = answers.map(answer => new UserAnswer(answer.questionNumber, answer.value));
+
+                for (const question of test.questions) {
+                    const number = question.number;
+                    let answered = userAnswers.some(a => a.questionNumber === number);
+                    if (!answered) userAnswers.push(new UserAnswer(number, null));
+                }
 
                 this.setState({
                     isLoading: false,
                     test: test,
                     answers: userAnswers,
                     passingInfo: {
-                        ...passingInfo,
+                        ...this.state.passingInfo,
                         isStarted: true,
-                        timeLeft: timeLeft
+                        timeLeft: timeLeft,
+                        isContinuing: true
                     }
                 });
             } else if (response.status === 409) {
-                this.setState({ exceededAttempts: true });
+                this.setState({ isLoading: false, exceededAttempts: true });
             } else alert(`status: ${response.status}`);
         });
     }
@@ -102,6 +118,10 @@
                         ? <h5>Ограничение по времени: {timeLimitString}</h5>
                         : <h5>Ограничения по времени нет</h5>
                     }
+                    {test.areAttemptsLimited
+                        ? <h5>Осталось попыток: {passingInfo.attemptsLeft}</h5>
+                        : <h5>Количество попыток неограничено</h5>
+                    }
                     </div>
             }
             {passingInfo.isEnded
@@ -121,25 +141,35 @@
     }
 
     renderActiveTest = () => {
-        const { _, __, test, currentQuestion, answers } = this.state;
+        const { _, passingInfo, test, currentQuestion, answers } = this.state;
         const question = test.questions[currentQuestion];
-        let answer;
-        for (const a of answers) {
-            if (a.questionNumber === question.number) {
-                answer = a;
-                break;
-            }
-        }
+        console.log(`------------state updated-------------`);
+        console.log('All user answers:');
+        console.log(answers);
+        const answer = answers.find(a => a.questionNumber === question.number);
+        console.log('Current question: ');
+        console.log(question);
+        console.log('User answer to that question: ');
+        console.log(answer);
         return <div>
             {test.timeInfo.isTimeLimited
-                ? <Timer onTimeOut={this.handleTimeout} timeInfo={test.timeInfo} />
-                : null} 
-            <Question info={question} onAnswerChanged={this.handleAnswerChange} userAnswer={answer.value} isBrowsing={false} />
+                ? <Timer onTimeOut={this.handleTimeout} timeInfo={test.timeInfo}
+                    isContinuing={passingInfo.isContinuing} timeLeft={passingInfo.isContinuing ? passingInfo.timeLeft : null}
+                />
+                : null}
+            
+            <Question key={question.number}
+                info={question}
+                onAnswerChanged={this.handleAnswerChange}
+                onAnswerSaved={this.handleAnswerSave}
+                userAnswer={answer.value}
+                isBrowsing={false} />
             {this.renderQuestionsNavigation()}
             <button className="btn btn-outline-success"
                 onClick={this.handleSave}>Закончить прохождение теста</button>
         </div>
     }
+
     renderQuestionsNavigation = () => {
         const test = this.state.test,
             currentQuestion = this.state.currentQuestion;
@@ -155,22 +185,17 @@
             </div>
         </div>
     }
+
     renderAfterTestInfo = () => {
-        const { _, passingInfo, test, answers, currentQuestion } = this.state;
+        const { passingInfo, test, answers, currentQuestion } = this.state;
         const question = test.questions[currentQuestion];
-        let answer;
-        for (const a of answers) {
-            if (a.questionNumber === question.number) {
-                answer = a;
-                break;
-            }
-        }
+        const answer = answers.find(a => a.questionNumber === question.number);
         console.log(`answer`); console.log(answer);
         const isCheckingAnswers = passingInfo.isCheckingAnswers;
         return <div>
             {isCheckingAnswers
                 ? <div>
-                    <Question info={question} isBrowsing={true} userAnswer={answer.value} />
+                    <Question key={question.number} info={question} isBrowsing={true} userAnswer={answer.value} />
                     {this.renderQuestionsNavigation()}
                     </div>
                 : null
@@ -180,50 +205,123 @@
                 {isCheckingAnswers
                     ? "Закончить просматривать ответы"
                     : "Просмотреть свои ответы"
-                    }
+                }
             </button>
         </div>
     }
 
     handleAnswerChange = (questionNumber, value) => {
-        const answers = this.state.answers;
-        for (const answer of answers) {
-            if (answer.questionNumber === questionNumber) {
-                console.log('found');
-                answer.value = value;
-                this.setState({ answers: answers });
-                break;
-            }
-        }
+        const { answers } = this.state;
+        const answer = answers.find(a => a.questionNumber === questionNumber);
+        answer.value = value;
+        this.setState({ answers: answers });
     }
 
-    handleNextQuestion = event => {
+    handleAnswerSave = async (questionNumber, value) => {
+        const testId = this.props.testId;
+
+        const formData = new FormData();
+        formData.append('testId', testId);
+        formData.append('questionNumber', questionNumber);
+        formData.append('value', value);
+
+        this.fetchAndSaveAnswer(formData).then(async response => {
+            if (response.status === 200) {
+                const answers = this.state.answers;
+                for (const answer of answers) {
+                    if (answer.questionNumber === questionNumber) {
+                        answer.value = value;
+                        this.setState({ answers: answers });
+                        break;
+                    }
+                }
+            } else alert(`status ${response.status}`);
+        });
+
+    }
+
+    fetchAndSaveAnswer = async (formData = new FormData()) => {
+        return await fetch('/api/pass/save-answer', {
+            method: 'POST',
+            body: formData
+        })
+    }
+
+    handleNextQuestion = async event => {
         event.preventDefault();
 
-        let { _, __, test, currentQuestion } = this.state;
-        console.log(test.questions.length);
-        console.log(currentQuestion);
+        let { test, answers, currentQuestion } = this.state;
+        console.log(test);
+        const question = test.questions[currentQuestion];
+        const userAnswer = answers.find(a => a.questionNumber === question.number);
+        console.log(`user answer is` + userAnswer);
         if (test.questions.length - 1 !== currentQuestion) {
             currentQuestion++;
             this.setState({ currentQuestion: currentQuestion });
+
+            const testId = this.props.testId;
+
+            const formData = new FormData();
+            formData.append('testId', testId);
+            formData.append('questionNumber', question.number);
+            formData.append('value', userAnswer.value);
+            await this.fetchAndSaveAnswer(formData).then(async response => {
+                if (response.status === 200) {
+                    const answers = this.state.answers;
+                    for (const answer of answers) {
+                        if (answer.questionNumber === question.number) {
+                            answer.value = userAnswer.value;
+                            this.setState({ answers: answers });
+                            break;
+                        }
+                    }
+                } else alert(`status ${response.status}`);
+            });
         }
     }
 
-    handlePrevQuestion = event => { 
+    handlePrevQuestion = async event => {
         event.preventDefault();
 
-        let currentQuestion  = this.state.currentQuestion;
+        let { test, answers, currentQuestion } = this.state;
+        const question = test.questions[currentQuestion];
+        const userAnswer = answers.find(a => a.questionNumber === question.number);
         if (currentQuestion > 0) {
             currentQuestion--;
             this.setState({ currentQuestion: currentQuestion });
+
+            const testId = this.props.testId;
+
+            const formData = new FormData();
+            formData.append('testId', testId);
+            formData.append('questionNumber', question.number);
+            formData.append('value', userAnswer.value);
+            await this.fetchAndSaveAnswer(formData).then(async response => {
+                if (response.status === 200) {
+                    const answers = this.state.answers;
+                    for (const answer of answers) {
+                        if (answer.questionNumber === question.number) {
+                            answers[answers.indexOf(answer)].value = userAnswer.value;
+                            this.setState({ answers: answers });
+                            break;
+                        }
+                    }
+                } else alert(`status ${response.status}`);
+            });
         }
     }
 
     handleStart = async event => {
         event.preventDefault();
 
-        const passingInfo = this.state.passingInfo;
-        this.setState({ passingInfo: { ...passingInfo, isStarted: true } });
+        await fetch(`/api/pass/start-passing?testId=${this.props.testId}`).then(response => {
+            if (response.status === 409) {
+                this.setState({ exceededAttempts: true });
+            } else if (response.status === 200) {
+                const passingInfo = this.state.passingInfo;
+                this.setState({ passingInfo: { ...passingInfo, isStarted: true } });
+            }
+        })
     }
 
     handleSave = event => {
@@ -248,20 +346,22 @@ class Timer extends React.Component {
 
         this.state = {
             interval: null,
-            timeLeft: 0
+            timeLeft: props.isContinuing
+                ? props.timeLeft
+                : 0
         };
     }
 
     componentDidMount() {
         let { interval, timeLeft } = this.state;
-        const { onTimeOut, timeInfo } = this.props;
+        const { onTimeOut, timeInfo, isContinuing } = this.props;
         const now = new Date().getTime();
         const end = now
             + timeInfo.hours * 3600 * 1000
             + timeInfo.minutes * 60 * 1000 +
             timeInfo.seconds * 1000;
-
-        timeLeft = end - now;
+        
+        if (!isContinuing) timeLeft = end - now;
 
         interval = setInterval(() => {
             timeLeft -= 1000;
@@ -276,10 +376,14 @@ class Timer extends React.Component {
         this.setState({ interval: interval });
     }
 
+    componentWillUnmount() {
+        clearInterval(this.state.interval);
+    }
+
     render() {
         const timeLeft = this.state.timeLeft;
         const allSeconds = timeLeft / 1000;
-        console.log(allSeconds);
+
         const hours = Math.floor(allSeconds / 3600);
         const hh = hours === 0
             ? "00"
@@ -318,11 +422,17 @@ class Timer extends React.Component {
 class Question extends React.Component {
     constructor(props) {
         super(props);
+
+        this.state = {
+            isSaved: true,
+            userAnswer: this.props.userAnswer
+        };
     }
 
     render() {
-        const info = this.props.info, userAnswer = this.props.userAnswer, isBrowsing = this.props.isBrowsing;
-        console.log(isBrowsing);
+        const { info, isBrowsing } = this.props,
+            { isSaved, userAnswer } = this.state;
+        console.log(`User answer when rendering question: ${userAnswer}`);
         return (<div>
             <h3>Вопрос {info.number}</h3>
             <h4 className="display-3">{info.value}</h4>
@@ -332,16 +442,16 @@ class Question extends React.Component {
                         ? <label>Ваш ответ:</label>
                         : null
                     }
-                    <input id={`q-${info.number}-input`}type="text" className="form-control" placeholder="Ваш ответ"
-                        onChange={this.onAnswerChanged} value={!!userAnswer ? userAnswer : ""} readOnly={isBrowsing}/>
+                    <input key={`q-${info.number}`} type="text" className="form-control" placeholder="Ваш ответ"
+                        onChange={this.onAnswerChanged} defaultValue={!!userAnswer ? userAnswer : ""} readOnly={isBrowsing} />
                 </div>
                 : <div>
                     {info.answers.map(answer =>
                         <div key={answer.number} className="form-check">
                             <input key={answer.number} className="form-check-input" type="radio" name={`radio-answer`}
-                                value={`${answer.number}`}
+                                defaultValue={`${answer.number}`}
                                 checked={userAnswer === answer.number}
-                                onClick={isBrowsing ? e => e.preventDefault() : this.onAnswerChanged}
+                                onChange={this.onAnswerChanged}
                                 disabled={isBrowsing}
                             />
                             <label className="form-check-label" disabled={userAnswer !== answer.number}>{answer.value}</label>
@@ -354,17 +464,23 @@ class Question extends React.Component {
                     }
                 </div>
             }
+            <button className="btn btn-outline-success" onClick={this.onAnswerSaved}
+                disabled={isSaved}>Сохранить ответ</button>
         </div>);
     }
     
     onAnswerChanged = event => {
-        const questionNumber = this.props.info.number;
-
         let newValue = event.target.value;
         if (!isNaN(parseInt(newValue))) newValue = parseInt(newValue);
+        this.setState({ isSaved: false, userAnswer: newValue });
+        this.props.onAnswerChanged(this.props.info.number, newValue);
+    }
 
-        console.log('qnumber:' + questionNumber + ', newV:' + newValue);
-        this.props.onAnswerChanged(questionNumber, newValue);
+    onAnswerSaved = () => {
+        const questionNumber = this.props.info.number;
+        const answer = this.state.userAnswer;
+        this.props.onAnswerSaved(questionNumber, answer);
+        this.setState({ isSaved: true });
     }
 }
 

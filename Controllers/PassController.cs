@@ -14,16 +14,19 @@ namespace TestBaza.Controllers
         private readonly ITestsRepository _testsRepo;
         private readonly IPassingInfoRepository _passingInfoRepo;
         private readonly IResponseFactory _responseFactory;
+        private readonly ILogger<PassController> _logger;
         public PassController(
             UserManager<User> userManager,
             ITestsRepository testsRepo,
             IPassingInfoRepository passingInfoRepo,
+            ILogger<PassController> logger,
             IResponseFactory responseFactory
             )
         {
             _userManager = userManager;
-            _testsRepo = testsRepo;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   _testsRepo = testsRepo;
             _passingInfoRepo = passingInfoRepo;
+            _logger = logger;
             _responseFactory = responseFactory;
         }
 
@@ -42,16 +45,26 @@ namespace TestBaza.Controllers
             {
                 info = new() { User = user, Test = test };
                 await _passingInfoRepo.AddInfoAsync(info);
-                return _responseFactory.StatusCode(this, 100, result: testModel);
+                return _responseFactory.StatusCode(this, 201, 
+                    result: new { test = testModel, attemptsLeft = test.AllowedAttempts });
             }
-            if(test.AreAttemptsLimited && info!.Attempts.Count() >= test.AllowedAttempts)
+
+            Attempt? currentAttempt = info.Attempts.SingleOrDefault(a => !a.IsEnded);
+            _logger.LogError($"Attempt is null: {currentAttempt is null}");
+
+            if (test.AreAttemptsLimited 
+                && info.Attempts.Count() >= test.AllowedAttempts
+                && currentAttempt is null)
             {
                 return _responseFactory.Conflict(this);
             }
 
-            Attempt? currentAttempt = info.Attempts.SingleOrDefault(a => a.TimeEnded == default);
+            int attemptsLeft = test.AreAttemptsLimited
+           ? test.AllowedAttempts - info.Attempts.Count()
+           : -1;
+
             if (currentAttempt is not null)
-            {
+            {                                
                 AttemptJsonModel attemptModel = currentAttempt.ToJsonModel();
                 if (test.IsTimeLimited)
                 {
@@ -59,19 +72,19 @@ namespace TestBaza.Controllers
                     if (end < DateTime.Now)
                     {
                         currentAttempt.TimeEnded = end;
+                        currentAttempt.IsEnded = true;
                         await _passingInfoRepo.UpdateInfoAsync(info);
-                        return _responseFactory.StatusCode(this, 100, result: attemptModel);
+
+                        return _responseFactory.StatusCode(this, 201, result: new { test = testModel, attemptsLeft});
                     }
                 }
                 return _responseFactory.Ok(this, result: attemptModel);
             }
-
-            return _responseFactory.Ok(this, result: testModel);
-
+            return _responseFactory.StatusCode(this, 201, result: new { test = testModel, attemptsLeft });
         }
 
-        [HttpPost("/api/pass/start-passing")]
-        public async Task<IActionResult> StartPassing([FromForm] int testId)
+        [HttpGet("/api/pass/start-passing")]
+        public async Task<IActionResult> StartPassing([FromQuery] int testId)
         {
             Test? test = await _testsRepo.GetTestAsync(testId);
             if (test is null) return _responseFactory.NotFound(this);
@@ -101,21 +114,58 @@ namespace TestBaza.Controllers
             }
             else
             {
-                if(test.AllowedAttempts <= info.Attempts.Count())
+                if (test.AllowedAttempts <= info.Attempts.Count())
                 {
                     return _responseFactory.Conflict(this);
                 }
                 else
                 {
-                    info.Attempts.ToList().Add(new Attempt
+                    var attempts = info.Attempts.ToList();
+                    attempts.Add(new Attempt
                     {
                         PassingInfo = info,
                         TimeStarted = DateTime.Now
                     });
+                    info.Attempts = attempts;
                     await _passingInfoRepo.UpdateInfoAsync(info);
                     return _responseFactory.Ok(this);
                 }
             }
+        }
+
+        [HttpPost("/api/pass/save-answer")]
+        public async Task<IActionResult> SaveAnswer([FromForm] SaveAnswerRequestModel model)
+        {
+            Test? test = await _testsRepo.GetTestAsync(model.TestId);
+            if (test is null) return _responseFactory.NotFound(this);
+
+            User user = await _userManager.GetUserAsync(User);
+
+            PassingInfo? info = await _passingInfoRepo.GetInfoAsync(user, test);
+            if (info is null) return _responseFactory.BadRequest(this);
+
+            Attempt? currentAttempt = info.Attempts.SingleOrDefault(a => !a.IsEnded);
+            if (currentAttempt is null) return _responseFactory.Conflict(this);
+
+            UserAnswer? answer = currentAttempt.UserAnswers
+                .SingleOrDefault(a => a.QuestionNumber == model.QuestionNumber);
+            if (answer is null)
+            {
+                answer = new()
+                {
+                    Attempt = currentAttempt,
+                    QuestionNumber = model.QuestionNumber,
+                    Value = model.Value
+                };
+                var answers = currentAttempt.UserAnswers.ToList();
+                answers.Add(answer);
+                currentAttempt.UserAnswers = answers;
+            }
+            else answer.Value = model.Value;
+
+            await _passingInfoRepo.UpdateInfoAsync(info);
+
+            return _responseFactory.Ok(this);
         }
     }
 }

@@ -6,6 +6,7 @@
 
         public DateTime TimeStarted { get; set; }
         public DateTime TimeEnded { get; set; }
+        public bool IsEnded { get; set; }
         public IEnumerable<UserAnswer> UserAnswers { get; set; } = new List<UserAnswer>();
         public int PassingInfoId { get; set; }
         public PassingInfo? PassingInfo { get; set; }
@@ -14,7 +15,7 @@
         {
             return new AttemptJsonModel
             {
-                TimeLeft = (int)(DateTime.Now - TimeStarted).TotalSeconds,
+                TimeLeft = PassingInfo!.Test!.TimeLimit - (int)(DateTime.Now - TimeStarted).TotalSeconds,
                 UserAnswers = UserAnswers.Select(a => a.ToJsonModel()),
                 Test = PassingInfo?.Test?.ToJsonModel(includeAnswers: false)
             };
