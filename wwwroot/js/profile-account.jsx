@@ -451,34 +451,8 @@ class Forms extends React.Component {
                 <PasswordChangeForm />
                 <hr />
             <UserTests />
-<<<<<<< HEAD
-=======
-            <Scroll to="tests"  />
->>>>>>> ca62367c9f4b2f3c7308104534a66a579eb725de
             </div>);
     }
 }
 
-<<<<<<< HEAD
-=======
-class Scroll extends React.Component {
-    constructor(props) {
-        super(props);
-    }
-    render() {
-        const elem = document.getElementById(this.props.to);
-        let c = 0;
-        while (c < 1500) {
-            console.log(c);
-            if (window.location.hash.match(/test/) && !!elem) {
-                elem.scrollIntoView();
-                break;
-            }
-            else c++;
-        }
-        return null;
-    }
-}
-
->>>>>>> ca62367c9f4b2f3c7308104534a66a579eb725de
 ReactDOM.render(<Forms />, document.getElementById("root"));
