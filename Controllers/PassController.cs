@@ -167,5 +167,23 @@ namespace TestBaza.Controllers
 
             return _responseFactory.Ok(this);
         }
+
+        [HttpGet("/api/pass/end-passing")]
+        public async Task<IActionResult> EndPassing([FromQuery] int testId)
+        {
+            Test? test = await _testsRepo.GetTestAsync(testId);
+            if (test is null) return _responseFactory.NotFound(this);
+
+            User user = await _userManager.GetUserAsync(User);
+
+            PassingInfo? info = await _passingInfoRepo.GetInfoAsync(user, test);
+            if (info is null) return _responseFactory.Conflict(this);
+
+            Attempt? currentAttempt = info.Attempts.SingleOrDefault(a => !a.IsEnded);
+            if (currentAttempt is null) return _responseFactory.Conflict(this);
+
+            currentAttempt.IsEnded = true;
+            return _responseFactory.Ok(this);
+        }
     }
 }

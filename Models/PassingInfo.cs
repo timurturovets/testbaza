@@ -10,5 +10,17 @@
         public User? User { get; set; }
         public int TestId { get; set; }
         public Test? Test { get; set; }
+
+        public PassedTestSummary ToPassedTestSummary()
+        {
+            DateTime? time = Attempts.MaxBy(a => a.TimeEnded)?.TimeEnded;
+            return new PassedTestSummary
+            {
+                TestId = TestId,
+                TestName = Test!.TestName,
+                AttemptsUsed = Attempts.Count(),
+                LastTimePassed = $"{time?.ToShortDateString() ?? "--" } {time?.ToShortTimeString() ?? "--"}"
+            };
+        }
     }
 }

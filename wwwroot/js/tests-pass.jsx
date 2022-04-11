@@ -11,7 +11,6 @@
                 timeLeft: null,
                 isTimeOut: false,
                 interval: null,
-                isEnded: false,
                 isCheckingAnswers: false,
                 attemptsLeft: 0,
                 isContinuing: false
@@ -36,7 +35,7 @@
             : this.state.exceededAttempts
                 ? <div>
                     <h2 className="display-2">У вас не осталось попыток для прохождения этого теста.</h2>
-                    <a className="btn btn-outline-primary" href={``/*TODO*/}>Просмотреть своё решение</a>
+                    <a className="btn btn-outline-primary" href="/profile/user-tests">Просмотреть своё решение</a>
                 </div>
                 : this.renderTest();
 
@@ -110,9 +109,7 @@
             {passingInfo.isStarted
                 ? passingInfo.isTimeOut
                     ? <h1 className="text-center">Время вышло!</h1>
-                    : passingInfo.isEnded
-                        ? null
-                        : this.renderActiveTest()
+                    : this.renderActiveTest()
                 : <div className="text-center">
                     {timeInfo.isTimeLimited
                         ? <h5>Ограничение по времени: {timeLimitString}</h5>
@@ -124,15 +121,10 @@
                     }
                     </div>
             }
-            {passingInfo.isEnded
-                ? this.renderAfterTestInfo()
-                : null
-            }
+   
             <div className="text-center">
             {passingInfo.isStarted
-                ? passingInfo.isEnded
-                    ? <button className="btn btn-outline-success" onClick={this.handleSubmit}>Отправить решение</button>
-                    : null
+                ? <button className="btn btn-outline-success" onClick={this.handleSubmit}>Отправить решение</button>
                 : <button className="btn btn-outline-primary" onClick={this.handleStart}>Начать</button>
                 }
             </div>
@@ -166,7 +158,7 @@
                 isBrowsing={false} />
             {this.renderQuestionsNavigation()}
             <button className="btn btn-outline-success"
-                onClick={this.handleSave}>Закончить прохождение теста</button>
+                onClick={this.handleSubmit}>Закончить прохождение теста</button>
         </div>
     }
 
@@ -186,29 +178,29 @@
         </div>
     }
 
-    renderAfterTestInfo = () => {
-        const { passingInfo, test, answers, currentQuestion } = this.state;
-        const question = test.questions[currentQuestion];
-        const answer = answers.find(a => a.questionNumber === question.number);
-        console.log(`answer`); console.log(answer);
-        const isCheckingAnswers = passingInfo.isCheckingAnswers;
-        return <div>
-            {isCheckingAnswers
-                ? <div>
-                    <Question key={question.number} info={question} isBrowsing={true} userAnswer={answer.value} />
-                    {this.renderQuestionsNavigation()}
-                    </div>
-                : null
-            }
-            <button className="btn btn-outline-success"
-                onClick={e=>this.setState({ passingInfo: { ...passingInfo, isCheckingAnswers: !isCheckingAnswers } })}>
-                {isCheckingAnswers
-                    ? "Закончить просматривать ответы"
-                    : "Просмотреть свои ответы"
-                }
-            </button>
-        </div>
-    }
+    //renderAfterTestInfo = () => {
+    //    const { passingInfo, test, answers, currentQuestion } = this.state;
+    //    const question = test.questions[currentQuestion];
+    //    const answer = answers.find(a => a.questionNumber === question.number);
+    //    console.log(`answer`); console.log(answer);
+    //    const isCheckingAnswers = passingInfo.isCheckingAnswers;
+    //    return <div>
+    //        {isCheckingAnswers
+    //            ? <div>
+    //                <Question key={question.number} info={question} isBrowsing={true} userAnswer={answer.value} />
+    //                {this.renderQuestionsNavigation()}
+    //                </div>
+    //            : null
+    //        }
+    //        <button className="btn btn-outline-success"
+    //            onClick={e=>this.setState({ passingInfo: { ...passingInfo, isCheckingAnswers: !isCheckingAnswers } })}>
+    //            {isCheckingAnswers
+    //                ? "Закончить просматривать ответы"
+    //                : "Просмотреть свои ответы"
+    //            }
+    //        </button>
+    //    </div>
+    //}
 
     handleAnswerChange = (questionNumber, value) => {
         const { answers } = this.state;
@@ -324,19 +316,23 @@
         })
     }
 
-    handleSave = event => {
-        event.preventDefault();
-        if (confirm("Вы уверены, что хотите закончить прохождение теста?"))
-            this.setState({ passingInfo: { ...this.state.passingInfo, isEnded: true }, currentQuestion: 0 });
-    }
-
     handleSubmit = async event => {
-        //todo
+        event.preventDefault();
+
+        const testId = this.props.testId;
+
+        await fetch(`/api/pass/end-passing?testId=${testId}`)
+            .then(async response => {
+                if (response.status === 200) {
+                    window.location.href = "/profile/user-tests"
+                } else alert(`Произошла ошибка при попытке сохранить прохождение теста. ${response.status}`);
+            });
     }
 
     handleTimeout = () => {
         const passingInfo = this.state.passingInfo;
-        this.setState({ passingInfo: { ...passingInfo, isTimeOut: true, isEnded: true } });
+        alert('Время вышло!');
+        this.setState({ passingInfo: { ...passingInfo, isTimeOut: true } });
     }
 }
 

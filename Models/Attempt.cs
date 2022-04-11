@@ -20,5 +20,15 @@
                 Test = PassingInfo?.Test?.ToJsonModel(includeAnswers: false)
             };
         }
+
+        public DetailedPassedTest ToDetailedTest()
+        {
+            return new DetailedPassedTest
+            {
+                TestName = PassingInfo!.Test!.TestName,
+                UserAnswers = UserAnswers.Select(a => a.ToJsonModel()),
+                Questions = PassingInfo!.Test!.Questions.Select(q => q.ToJsonModel())
+            };
+        }
     }
 }

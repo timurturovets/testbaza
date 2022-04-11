@@ -34,6 +34,8 @@
         const { isChanged, isSaved, isSuccess, noErrors, errors} = this.state.changeInfo;
         return (<div>
             <h2 className="text-center">Информация об аккаунте</h2>
+            <a className="btn btn-outline-success text-center" href="/profile/user-tests">Пройденные вами тесты</a>
+
             {isChanged
                 ? isSuccess
                     ? <h3 className="text-success">Изменения успешно сохранены</h3>
@@ -47,12 +49,8 @@
             <form>
                 {this.renderInputs()}
             </form>
-            {isSaved || !noErrors
-                ? <button className="btn btn-outline-primary"
-                    onClick={e => this.handleSubmit(e)} disabled>Сохранить изменения</button>
-                : <button className="btn btn-outline-primary"
-                    onClick={e => this.handleSubmit(e)}>Сохранить изменения</button>
-            }
+            <button className="btn btn-outline-primary" onClick={e => this.handleSubmit(e)}
+                disabled={isSaved || !noErrors}>Сохранить изменения</button>
         </div>);
     }
     

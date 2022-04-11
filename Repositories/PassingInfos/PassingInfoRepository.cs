@@ -27,7 +27,14 @@ namespace TestBaza.Repositories
                 .Include(i => i.Attempts).ThenInclude(a=>a.UserAnswers)
                 .SingleOrDefaultAsync();
         }
-
+        public IEnumerable<PassingInfo> GetUserInfos(User user)
+        {
+            return _context.PassingInfos
+                .Where(i => i.UserId == user.Id)
+                .Include(i => i.User)
+                .Include(i => i.Attempts)
+                .Include(i => i.Test);
+        }
         public async Task RemoveInfoAsync(PassingInfo info)
         {
             _context.PassingInfos.Remove(info);

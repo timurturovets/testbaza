@@ -3,6 +3,7 @@
     public class Rate
     {
         public int RateId { get; set; }
+
         public int Value { get; set; }
         
         public string? UserId { get; set; }

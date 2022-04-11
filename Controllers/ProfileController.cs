@@ -13,45 +13,37 @@ namespace TestBaza.Controllers
     public class ProfileController : Controller
     {
         private readonly ITestsRepository _testsRepo;
+        private readonly IPassingInfoRepository _passingInfoRepo;
         private readonly IResponseFactory _responseFactory;
         private readonly UserManager<User> _userManager;
         private readonly ILogger<ProfileController> _logger;
         public ProfileController(
             ITestsRepository testsRepo,
+            IPassingInfoRepository passingInfoRepo,
             IResponseFactory responseFactory,
             UserManager<User> userManager,
             ILogger<ProfileController> logger
             )
         {
-            _responseFactory = responseFactory;
             _testsRepo = testsRepo;
+            _passingInfoRepo = passingInfoRepo;
+            _responseFactory = responseFactory;
             _userManager = userManager;
             _logger = logger;
         }
 
         [Route("/profile")]
-        public IActionResult Get()=> _responseFactory.View(this, viewName: "main");
-        
+        public IActionResult Get() => _responseFactory.View(this, viewName: "main");
+
+        [Route("/profile/user-tests")]
+        public IActionResult UserTests() => _responseFactory.View(this);
+       
+
         [HttpGet("/api/profile/user-info")]
         public async Task<IActionResult> GetUserInfo()
         {
             User user = await _userManager.GetUserAsync(User);
             return _responseFactory.Ok(this, result: user.ToJsonModel());
-        }
-        [HttpGet("/api/profile/tests-user{id}")]
-        public async Task<IActionResult> GetUserTests([FromRoute] string id)
-        {
-            User user = await _userManager.GetUserAsync(User);
-            User creator = await _userManager.FindByIdAsync(id);
-
-            if (creator is null) return _responseFactory.NotFound(this);
-
-            if (!user.Equals(creator)) return _responseFactory.Forbid(this);
-
-            if (!user.Tests.Any()) return _responseFactory.NoContent(this);
-
-            IEnumerable<TestSummary> summaries = creator.Tests.Select(t => t.ToSummary());
-            return _responseFactory.Ok(this, result: summaries);
         }
 
         [HttpPost("/api/profile/update-user")]
@@ -95,12 +87,44 @@ namespace TestBaza.Controllers
         {
             User creator = await _userManager.GetUserAsync(User);
 
-            List<TestSummary> tests = _testsRepo.GetUserTests(creator).Select(t => t.ToSummary()).ToList();
+            IEnumerable<TestSummary> tests = _testsRepo.GetUserTests(creator).Select(t => t.ToSummary());
 
-            _logger.LogError($"New user test request, length : {tests.Count}");
             if (!tests.Any()) return _responseFactory.NoContent(this);
 
             return _responseFactory.Ok(this, result: tests );
+        }
+
+        [HttpGet("/api/profile/passed-tests-info")]
+        public async Task<IActionResult> GetPassedTests()
+        {
+            User user = await _userManager.GetUserAsync(User);
+
+            IEnumerable<PassingInfo> infos = _passingInfoRepo.GetUserInfos(user);
+
+            if (!infos.Any()) return _responseFactory.NoContent(this);
+
+            IEnumerable<PassedTestSummary> summaries = infos.Select(i => i.ToPassedTestSummary());
+
+            return _responseFactory.Ok(this, result: summaries);   
+        }
+
+        [HttpGet("/api/profile/detailed-test")]
+        public async Task<IActionResult> GetDetailedTest([FromQuery] int testId)
+        {
+            Test? test = await _testsRepo.GetTestAsync(testId);
+            if (test is null) return _responseFactory.NotFound(this);
+
+            User user = await _userManager.GetUserAsync(User);
+
+            PassingInfo? info = await _passingInfoRepo.GetInfoAsync(user, test);
+            if (info is null) return _responseFactory.Conflict(this);
+
+            Attempt? lastAttempt = info.Attempts.OrderBy(a => a.TimeEnded).LastOrDefault();
+            if (lastAttempt is null) return _responseFactory.Conflict(this);
+
+            DetailedPassedTest model = lastAttempt.ToDetailedTest();
+
+            return _responseFactory.Ok(this, result: model);
         }
     }
 }
