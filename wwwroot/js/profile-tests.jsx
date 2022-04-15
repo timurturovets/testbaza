@@ -21,11 +21,11 @@
         const { isLoading, isEmpty, tests, browsingInfo } = this.state;
         return (<div>
             {isLoading
-                ? <h4>Ваши тесты загружаются...</h4>
+                ? <h4>Пройденные вами тесты загружаются...</h4>
                 : isEmpty
                     ? <div>
                         <h3>Вы ещё не проходили ни одного теста.</h3>
-                        <a className="btn btn-outline-primary" href="/tests/all">Выбрать и пройти тест</a>
+                        <a className="btn btn-outline-primary" href="/tests/index">Выбрать и пройти тест</a>
                     </div>
                     : browsingInfo.isBrowsing
                         ? <DetailedPassedTest
@@ -92,17 +92,67 @@
 class PassedTestSummary extends React.Component {
     constructor(props) {
         super(props);
+
+        this.state = { userRate: this.props.info.userRate };
     }
 
     render() {
         const { testId, testName, lastTimePassed, attemptsUsed } = this.props.info;
+        const { userRate } = this.state;
+        const rates = ["ужасен", "плох", "норм", "хорош", "прекрасен"],
+            colors = ["danger", "warning", "primary", "info", "success"];
         return (<div>
             <h3>Тест {testName}</h3>
             <p>Попыток: {attemptsUsed}</p>
             <p>Время последней попытки: {lastTimePassed}</p>
             <button className="btn btn-outline-success"
                 onClick={e => this.props.onTestBrowsing(e, testId)}>Просмотреть своё последнее решение</button>
+            <h4>Оценить тест</h4>
+            <div className="btn-toolbar">
+                <div className="btn-group">
+                    <button className="btn btn-outline-danger"
+                        disabled={userRate === 1}
+                        onClick={e => this.handleRate(e, 1)}>Ужасен</button>
+                    <button className="btn btn-outline-warning"
+                        disabled={userRate === 2}
+                        onClick={e => this.handleRate(e, 2)}>Плох</button>
+                    <button className="btn btn-outline-primary"
+                        disabled={userRate === 3}
+                        onClick={e => this.handleRate(e, 3)}>Норм</button>
+                    <button className="btn btn-outline-info"
+                        disabled={userRate === 4}
+                        onClick={e => this.handleRate(e, 4)}>Хорош</button>
+                    <button className="btn btn-outline-success"
+                        disabled={userRate === 5}
+                        onClick={e => this.handleRate(e, 5)}>Прекрасен</button>
+                </div>
+            </div>
+            {userRate === -1
+                ? null
+                : <div className="d-flex">
+                    <h6>Ваша оценка: </h6>
+                    <h6 className={`text-${colors[userRate - 1]}`}>{rates[userRate - 1]}</h6>
+                </div>
+            }
         </div>);
+    }
+    handleRate = async (event, rate) => {
+        event.preventDefault();
+
+        const { testId } = this.props.info;
+
+        const formData = new FormData();
+        formData.append('testId', testId);
+        formData.append('rate', rate);
+
+        await fetch('/api/tests/rate-test', {
+            method: 'POST',
+            body: formData
+        }).then(async response => {
+            if (response.status === 200) {
+                this.setState({ userRate: rate });
+            } else alert(`Произошла ошибка при попытке оценить тест. Попробуйте снова. ${response.status}`);
+        });
     }
 }
 
@@ -128,9 +178,14 @@ class DetailedPassedTest extends React.Component {
                 combined.push({
                     id: i,
                     question: question,
-                    answer: userAnswer
+                    answer: {
+                        value: !!userAnswer.value && userAnswer.value !== 'null'
+                            ? userAnswer.value
+                            : "",
+                        questionNumber: question.number 
+                    }
                 });
-
+                console.log(`user answer value: ${userAnswer.value}`)
             } else {
 
                 combined.push({
@@ -151,8 +206,9 @@ class DetailedPassedTest extends React.Component {
             {console.log(combined)}
             {combined.map(c => {
                 return <div key={c.id}>
+                    <hr />
                     <h4>Вопрос {c.question.number}</h4>
-                    <h5>{c.question.value}</h5>
+                    <h5 className="display-5">{c.question.value}</h5>
                     <p>Ваш ответ:</p>
                     {c.question.answerType === 1
                         ? <div>

@@ -20,7 +20,7 @@
 
     render() {
         const content = this.state.isLoading
-            ? <h1 className="display-6">Загрузка...</h1>
+            ? <h1>Информация о тесте загружается...</h1>
             : this.renderTest()
         return content;
     }

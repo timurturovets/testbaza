@@ -71,7 +71,19 @@ namespace TestBaza.Controllers
 
             ViewData["TestId"] = id;
             return _responseFactory.View(this);
+        }
 
+        [Route("/tests/share")]
+        public async Task<IActionResult> PassByLink([FromQuery] string test)
+        {
+            Test? passingTest = await _testsRepo.GetTestByLinkAsync(test);
+
+            if (passingTest is null) return _responseFactory.NotFound(this);
+
+            if (!passingTest.IsPublished) return _responseFactory.Forbid(this);
+
+            ViewData["TestId"] = passingTest.TestId;
+            return _responseFactory.View(this, viewName: "Pass");
         }
 
         [HttpGet("/api/tests/wq/get-test{id}")]
@@ -320,9 +332,9 @@ namespace TestBaza.Controllers
             if (string.IsNullOrEmpty(test.Description)) test.Description = "Без описания.";
             else if (test.Description.Length > 100) errors.Add("Описание теста должно содержать не более 100 символов.");
 
-            if (test.Questions.Count() < 3)
+            if (test.Questions.Count() == 0)
             {
-                errors.Add("В тесте должно быть не менее 3 вопросов. ");
+                errors.Add("В тесте должен быть хотя бы один вопрос. ");
             }
             if (test.IsTimeLimited && test.TimeLimit < 30)
             {
@@ -334,8 +346,8 @@ namespace TestBaza.Controllers
                 notAllAnswersEnteredErrors = "Вы ввели не все варианты ответа ",
                 answerTypeNotDeclaredErrors = "Вы не выбрали вариант ответа для ",
                 notEnoughAnswersErrors = "Вопросы с несколькими вариантами ответа должны иметь минимум 2 ответа. Под этот критерий не проходит ",
-                correctAnswerUnchosenErrors = "Вы не выбрали верный ответ из нескольких вариантов ответа для ";
-
+                correctAnswerUnchosenErrors = "Вы не выбрали верный ответ из нескольких вариантов ответа для ",
+                nullAnswerErrors = "Ответ не может иметь значение null. Под этот критерий не проходит ";
 
             bool hasQuestionsWithoutValue = false,
                 hasHintsWithoutValue = false,
@@ -343,7 +355,8 @@ namespace TestBaza.Controllers
                 hasAnswersWithoutValue = false,
                 hasUndeclaredAnswerTypes = false,
                 hasQuestionsWithNotEnoughAnswers = false,
-                hasUnchosenCorrectAnswers = false;
+                hasUnchosenCorrectAnswers = false,
+                hasNullAnswers = false;
 
             foreach (Question q in test.Questions)
             {
@@ -385,7 +398,12 @@ namespace TestBaza.Controllers
                     hasQuestionsWithoutAnswer = true;
                     noQuestionAnswerErrors += $"на вопрос {n}, ";
                 }
-
+                
+                if(q.AnswerType == AnswerType.HasToBeTyped && q.Answer == "null")
+                {
+                    hasNullAnswers = true;
+                    nullAnswerErrors += $"вопрос {n}, ";
+                }
                 if (q.AnswerType == AnswerType.MultipleVariants)
                 {
                     foreach (Answer a in q.MultipleAnswers)
@@ -481,6 +499,12 @@ namespace TestBaza.Controllers
                 errors.Add(msg);
             }
 
+            if (hasNullAnswers)
+            {
+                msg = replaceLastComma(nullAnswerErrors);
+                errors.Add(msg);
+            }
+
             if (errors.Count > 0) return _responseFactory.BadRequest(this, result: errors);
 
 
@@ -494,13 +518,22 @@ namespace TestBaza.Controllers
         public async Task<IActionResult> RateTest([FromForm] RateTestRequestModel model)
         {
             User rater = await _userManager.GetUserAsync(User);
-
+            _logger.LogCritical($"New rate test request, id is {model.TestId}, value is {model.Rate}");
             Test? test = await _testsRepo.GetTestAsync(model.TestId);
             if (test is null) return _responseFactory.NotFound(this);
 
-            Rate rate = new() { Value = model.Rate, Test = test, User = rater };
-            await _ratesRepo.AddRateAsync(rate);
-            
+            Rate? rate = test.Rates.SingleOrDefault(r => r.User!.Equals(rater));
+
+            if (rate is not null)
+            {
+                rate.Value = model.Rate;
+                await _ratesRepo.UpdateRateAsync(rate);
+            }
+            else
+            {
+                rate = new() { Value = model.Rate, Test = test, User = rater };
+                await _ratesRepo.AddRateAsync(rate);
+            }
             return _responseFactory.Ok(this);
         }
     }

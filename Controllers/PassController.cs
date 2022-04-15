@@ -183,6 +183,9 @@ namespace TestBaza.Controllers
             if (currentAttempt is null) return _responseFactory.Conflict(this);
 
             currentAttempt.IsEnded = true;
+            currentAttempt.TimeEnded = DateTime.Now;
+            await _passingInfoRepo.UpdateInfoAsync(info);
+
             return _responseFactory.Ok(this);
         }
     }

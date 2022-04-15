@@ -23,7 +23,7 @@
         return (
         <div>
             { isLoading
-                ? <h3>Загрузка...</h3>
+                ? <h3>Информация об аккаунте загружается...</h3>
                 : this.renderForm()
             }
         </div>
@@ -379,6 +379,7 @@ class UserTests extends React.Component {
                                 id={test.testId}
                                 name={test.testName}
                                 timeCreated={test.timeCreated}
+                                link={test.link}
                                 isPublished={test.isPublished}
                                 isBrowsable={test.isBrowsable}
                                 ratesCount={test.ratesCount}
@@ -420,7 +421,20 @@ class EditableTestSummary extends React.Component {
     }
 
     render() {
-        const { id, name, timeCreated, isPublished, isBrowsable, ratesCount, averageRate } = this.props;
+        const { id,
+            name,
+            timeCreated,
+            link,
+            isPublished,
+            isBrowsable,
+            ratesCount,
+            averageRate
+        } = this.props;
+        window.navigator.clipboard
+        const anchor = document.createElement("a");
+        anchor.setAttribute("href", `/tests/share?test=${link}`);
+        const href = anchor.href;
+
         return (<div>
             <h3>Тест {name}</h3>
             <p>Создан {timeCreated}</p>
@@ -433,6 +447,7 @@ class EditableTestSummary extends React.Component {
                 : <p className="text-danger">Доступен только по ссылке</p>
             }
             <p>Оценили: <b>{ratesCount}</b>, средняя оценка: <b>{averageRate}</b></p>
+            <p>Ссылка: <b>{href}</b></p>
             <a className="btn btn-outline-success" href={`/tests/edit${id}`}>Редактировать</a>
             </div>);
     }
@@ -443,13 +458,13 @@ class Forms extends React.Component {
         super(props);
     }
     render() {
-        return (<div>
+        return <div>
                 <ManageAccountForm />
                 <hr />
                 <PasswordChangeForm />
                 <hr />
             <UserTests />
-            </div>);
+            </div>
     }
 }
 

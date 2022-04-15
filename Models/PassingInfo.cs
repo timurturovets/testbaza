@@ -13,13 +13,13 @@
 
         public PassedTestSummary ToPassedTestSummary()
         {
-            DateTime? time = Attempts.MaxBy(a => a.TimeEnded)?.TimeEnded;
+            DateTime time = Attempts.OrderBy(a => a.TimeEnded).LastOrDefault()?.TimeEnded ?? default;
             return new PassedTestSummary
             {
                 TestId = TestId,
                 TestName = Test!.TestName,
                 AttemptsUsed = Attempts.Count(),
-                LastTimePassed = $"{time?.ToShortDateString() ?? "--" } {time?.ToShortTimeString() ?? "--"}"
+                LastTimePassed = time.ToUniversalTime().AddHours(3).ToString("dd.MM.yyyy HH:mm:ss")
             };
         }
     }

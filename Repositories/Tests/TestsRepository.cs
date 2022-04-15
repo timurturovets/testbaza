@@ -16,7 +16,7 @@ namespace TestBaza.Repositories
             .Where(t => t.IsBrowsable)
             .Include(t => t.Questions).ThenInclude(q => q.MultipleAnswers)
             .Include(t => t.Creator)
-            .Include(t=>t.Rates);
+            .Include(t => t.Rates);
 
         public async Task<Test?> GetTestAsync(string testName)
         {
@@ -24,7 +24,7 @@ namespace TestBaza.Repositories
                 .Where(t => t.TestName == testName)
                 .Include(t => t.Questions).ThenInclude(q => q.MultipleAnswers)
                 .Include(t => t.Creator)
-                .Include(t=>t.Rates)
+                .Include(t => t.Rates).ThenInclude(r => r.User)
                 .SingleOrDefaultAsync();
         }
 
@@ -34,17 +34,26 @@ namespace TestBaza.Repositories
                 .Where(t => t.TestId == testId)
                 .Include(t => t.Questions).ThenInclude(q => q.MultipleAnswers)
                 .Include(t => t.Creator)
-                .Include(t => t.Rates)
+                .Include(t => t.Rates).ThenInclude(r => r.User)
                 .SingleOrDefaultAsync();
         }
 
+        public async Task<Test?> GetTestByLinkAsync(string link)
+        {
+            return await _context.Tests
+                .Where(t => t.Link == link)
+                .Include(t => t.Questions).ThenInclude(q => q.MultipleAnswers)
+                .Include(t => t.Creator)
+                .Include(t => t.Rates).ThenInclude(r => r.User)
+                .SingleOrDefaultAsync();
+        }
         public IEnumerable<Test> GetUserTests(User user)
         {
             return _context.Tests
                 .Where(t => t.CreatorId == user.Id)
-                .Include(t=>t.Creator)
+                .Include(t => t.Creator)
                 .Include(t => t.Questions).ThenInclude(q => q.MultipleAnswers)
-                .Include(t => t.Rates);
+                .Include(t => t.Rates).ThenInclude(r => r.User);
         }
         public async Task AddTestAsync(Test test)
         {

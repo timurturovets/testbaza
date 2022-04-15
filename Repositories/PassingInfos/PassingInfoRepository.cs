@@ -33,7 +33,9 @@ namespace TestBaza.Repositories
                 .Where(i => i.UserId == user.Id)
                 .Include(i => i.User)
                 .Include(i => i.Attempts)
-                .Include(i => i.Test);
+                .Include(i => i.Test)
+                .ThenInclude(t => t!.Rates)
+                .ThenInclude(r=>r.User);
         }
         public async Task RemoveInfoAsync(PassingInfo info)
         {

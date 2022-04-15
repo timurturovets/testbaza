@@ -56,6 +56,7 @@
                 TestId = TestId,
                 TestName = TestName,
                 AuthorName = Creator!.UserName,
+                Link = Link,
                 QuestionsCount = Questions.Count(),
                 TimeCreated = TimeCreated.ToUniversalTime().AddHours(3).ToString("dd.MM.yyyy HH:mm:ss"),
                 RatesCount = Rates.Count(),

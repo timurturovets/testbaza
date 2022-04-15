@@ -14,12 +14,14 @@ namespace TestBaza.Controllers
     {
         private readonly ITestsRepository _testsRepo;
         private readonly IPassingInfoRepository _passingInfoRepo;
+        private readonly IRatesRepository _ratesRepo;
         private readonly IResponseFactory _responseFactory;
         private readonly UserManager<User> _userManager;
         private readonly ILogger<ProfileController> _logger;
         public ProfileController(
             ITestsRepository testsRepo,
             IPassingInfoRepository passingInfoRepo,
+            IRatesRepository ratesRepo,
             IResponseFactory responseFactory,
             UserManager<User> userManager,
             ILogger<ProfileController> logger
@@ -27,6 +29,7 @@ namespace TestBaza.Controllers
         {
             _testsRepo = testsRepo;
             _passingInfoRepo = passingInfoRepo;
+            _ratesRepo = ratesRepo;
             _responseFactory = responseFactory;
             _userManager = userManager;
             _logger = logger;
@@ -98,12 +101,17 @@ namespace TestBaza.Controllers
         public async Task<IActionResult> GetPassedTests()
         {
             User user = await _userManager.GetUserAsync(User);
-
+            _logger.LogCritical("in method");
             IEnumerable<PassingInfo> infos = _passingInfoRepo.GetUserInfos(user);
 
             if (!infos.Any()) return _responseFactory.NoContent(this);
 
-            IEnumerable<PassedTestSummary> summaries = infos.Select(i => i.ToPassedTestSummary());
+            IEnumerable<PassedTestSummary> summaries = infos.Select(i => {
+                var model = i.ToPassedTestSummary();
+                _logger.LogWarning($"i.test.rates.length: {i.Test!.Rates.Count()}");
+                model.UserRate = i.Test!.Rates.SingleOrDefault(r => r.User!.Equals(user))?.Value ?? -1;
+                return model;
+            });
 
             return _responseFactory.Ok(this, result: summaries);   
         }

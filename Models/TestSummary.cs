@@ -9,6 +9,7 @@
         public string? TestName { get; set; }
         public string? AuthorName { get; set; }
         public string? TimeCreated { get; set; }
+        public string? Link { get; set; }
         public bool IsPublished { get; set; }
         public TimeInfo? TimeInfo { get; set; }
         public bool IsBrowsable { get; set; }

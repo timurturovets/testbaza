@@ -30,7 +30,7 @@
         const content = this.state.isLoading
             ? (<div>
                 <h2>Прохождение теста</h2>
-                <h4>Загрузка...</h4>
+                <h4>Загрузка теста...</h4>
             </div >)
             : this.state.exceededAttempts
                 ? <div>
@@ -135,18 +135,14 @@
     renderActiveTest = () => {
         const { _, passingInfo, test, currentQuestion, answers } = this.state;
         const question = test.questions[currentQuestion];
-        console.log(`------------state updated-------------`);
-        console.log('All user answers:');
-        console.log(answers);
         const answer = answers.find(a => a.questionNumber === question.number);
-        console.log('Current question: ');
-        console.log(question);
-        console.log('User answer to that question: ');
-        console.log(answer);
         return <div>
             {test.timeInfo.isTimeLimited
-                ? <Timer onTimeOut={this.handleTimeout} timeInfo={test.timeInfo}
-                    isContinuing={passingInfo.isContinuing} timeLeft={passingInfo.isContinuing ? passingInfo.timeLeft : null}
+                ? <Timer
+                    onTimeOut={this.handleTimeout} 
+                    timeInfo={test.timeInfo}
+                    isContinuing={passingInfo.isContinuing}
+                    timeLeft={passingInfo.isContinuing ? passingInfo.timeLeft : null}
                 />
                 : null}
             
@@ -157,8 +153,6 @@
                 userAnswer={answer.value}
                 isBrowsing={false} />
             {this.renderQuestionsNavigation()}
-            <button className="btn btn-outline-success"
-                onClick={this.handleSubmit}>Закончить прохождение теста</button>
         </div>
     }
 
@@ -177,30 +171,6 @@
             </div>
         </div>
     }
-
-    //renderAfterTestInfo = () => {
-    //    const { passingInfo, test, answers, currentQuestion } = this.state;
-    //    const question = test.questions[currentQuestion];
-    //    const answer = answers.find(a => a.questionNumber === question.number);
-    //    console.log(`answer`); console.log(answer);
-    //    const isCheckingAnswers = passingInfo.isCheckingAnswers;
-    //    return <div>
-    //        {isCheckingAnswers
-    //            ? <div>
-    //                <Question key={question.number} info={question} isBrowsing={true} userAnswer={answer.value} />
-    //                {this.renderQuestionsNavigation()}
-    //                </div>
-    //            : null
-    //        }
-    //        <button className="btn btn-outline-success"
-    //            onClick={e=>this.setState({ passingInfo: { ...passingInfo, isCheckingAnswers: !isCheckingAnswers } })}>
-    //            {isCheckingAnswers
-    //                ? "Закончить просматривать ответы"
-    //                : "Просмотреть свои ответы"
-    //            }
-    //        </button>
-    //    </div>
-    //}
 
     handleAnswerChange = (questionNumber, value) => {
         const { answers } = this.state;
@@ -318,9 +288,21 @@
 
     handleSubmit = async event => {
         event.preventDefault();
+        const { answers } = this.state;
 
         const testId = this.props.testId;
 
+        for (const answer of answers) {
+            const formData = new FormData();
+            formData.append('testId', testId);
+            formData.append('questionNumber', answer.questionNumber);
+            formData.append('value', answer.value);
+
+            await this.fetchAndSaveAnswer(formData).then(async response => {
+                if(response.status !== 200 )alert(`Произошла непредвиденная ошибка. Попробуйте снова. ${response.status}`);
+            })
+        }
+        
         await fetch(`/api/pass/end-passing?testId=${testId}`)
             .then(async response => {
                 if (response.status === 200) {
@@ -421,23 +403,21 @@ class Question extends React.Component {
 
         this.state = {
             isSaved: true,
+            isHintActive: false,
             userAnswer: this.props.userAnswer
         };
     }
 
     render() {
         const { info, isBrowsing } = this.props,
-            { isSaved, userAnswer } = this.state;
+            { isSaved, isHintActive, userAnswer } = this.state;
         console.log(`User answer when rendering question: ${userAnswer}`);
         return (<div>
             <h3>Вопрос {info.number}</h3>
             <h4 className="display-3">{info.value}</h4>
             {info.answerType === 1
                 ? <div className="form-group">
-                    {isBrowsing
-                        ? <label>Ваш ответ:</label>
-                        : null
-                    }
+                    <label>Ваш ответ:</label>
                     <input key={`q-${info.number}`} type="text" className="form-control" placeholder="Ваш ответ"
                         onChange={this.onAnswerChanged} defaultValue={!!userAnswer ? userAnswer : ""} readOnly={isBrowsing} />
                 </div>
@@ -448,18 +428,22 @@ class Question extends React.Component {
                                 defaultValue={`${answer.number}`}
                                 checked={userAnswer === answer.number}
                                 onChange={this.onAnswerChanged}
-                                disabled={isBrowsing}
                             />
-                            <label className="form-check-label" disabled={userAnswer !== answer.number}>{answer.value}</label>
-                            {isBrowsing && userAnswer === answer.number
-                                ? <label className="form-check-label">(ваш ответ)</label>
-                                : null
-                            }
+                            <label className="form-check-label">{answer.value}</label>
                         </div>
                     )
                     }
                 </div>
             }
+            {info.hintEnabled
+                ? <button className={isHintActive ? "btn btn-outline-secondary" : "btn btn-outline-success"}
+                    onClick={e => this.setState({ isHintActive: !isHintActive })}>
+                    {isHintActive
+                        ? info.hint
+                        : "Показать подсказку"
+                    }
+                    </button>
+                : null}
             <button className="btn btn-outline-success" onClick={this.onAnswerSaved}
                 disabled={isSaved}>Сохранить ответ</button>
         </div>);
