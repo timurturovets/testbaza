@@ -37,7 +37,9 @@
                                 <hr />
                                 <PassedTestSummary key={test.testId}
                                     info={test}
-                                    onTestBrowsing={this.handleTestBrowsing} />
+                                    onTestBrowsing={this.handleTestBrowsing}
+                                    onRateChanged={this.handleRateChange}
+                                />
                                 <hr />
                             </div>;
                     })
@@ -87,18 +89,23 @@
             }
         });
     }
+
+    handleRateChange = (testId, newRate) => {
+        const { tests } = this.state;
+        const test = tests.find(t => t.testId === testId);
+        test.userRate = newRate;
+        this.setState({ tests: tests });
+    }
 }
 
 class PassedTestSummary extends React.Component {
     constructor(props) {
         super(props);
 
-        this.state = { userRate: this.props.info.userRate };
     }
 
     render() {
-        const { testId, testName, lastTimePassed, attemptsUsed } = this.props.info;
-        const { userRate } = this.state;
+        const { testId, testName, lastTimePassed, attemptsUsed, userRate } = this.props.info;
         const rates = ["ужасен", "плох", "норм", "хорош", "прекрасен"],
             colors = ["danger", "warning", "primary", "info", "success"];
         return (<div>
@@ -150,7 +157,7 @@ class PassedTestSummary extends React.Component {
             body: formData
         }).then(async response => {
             if (response.status === 200) {
-                this.setState({ userRate: rate });
+                this.props.onRateChanged(testId, rate);
             } else alert(`Произошла ошибка при попытке оценить тест. Попробуйте снова. ${response.status}`);
         });
     }
