@@ -40,7 +40,15 @@ namespace TestBaza.Controllers
 
         [Route("/profile/user-tests")]
         public IActionResult UserTests() => _responseFactory.View(this);
-       
+        [Route("/profile/test-stats{id}")]
+        public async Task<IActionResult> TestStats([FromQuery] int id)
+        {
+            Test? test = await _testsRepo.GetTestAsync(id);
+            if (test is null) return _responseFactory.NotFound(this);
+
+            ViewData["TestId"] = id;
+            return _responseFactory.View(this);
+        }
 
         [HttpGet("/api/profile/user-info")]
         public async Task<IActionResult> GetUserInfo()

@@ -9,16 +9,16 @@
         public DateTime TimeCreated { get; set; }
         public bool AreAttemptsLimited { get; set; }
         public int AllowedAttempts { get; set; } = 1;
-        public bool IsPrivate { get; set; }
         public string? Link { get; set;}
+        public bool IsPrivate { get; set; }
         public bool IsTimeLimited { get; set; }
+        public bool IsPublished { get; set; }
+        public bool IsBrowsable { get => IsPublished && !IsPrivate; set { return; } }
+        public bool AreAnswersManuallyChecked { get; set; }
         /// <summary>
         /// Временное ограничение на прохождение теста, выраженное в секундах
         /// </summary>
         public int TimeLimit { get; set; }
-        public bool IsPublished { get; set; }
-        public bool IsBrowsable { get => IsPublished && !IsPrivate; set { return; } }
-
         public IEnumerable<Question> Questions { get; set; } = new List<Question>();
         public IEnumerable<Rate> Rates { get; set; } = new List<Rate>();
         public IEnumerable<PassingInfo> PassingInfos { get; set; } = new List<PassingInfo>();
@@ -46,7 +46,8 @@
                 TimeInfo = new TimeInfo(IsTimeLimited, TimeLimit),
                 Questions = Questions.Select(q => q.ToJsonModel(includeAnswers)),
                 AllowedAttempts = AllowedAttempts,
-                AreAttemptsLimited = AreAttemptsLimited
+                AreAttemptsLimited = AreAttemptsLimited,
+                AreAnswersManuallyChecked = AreAnswersManuallyChecked
             };
         }
         public TestSummary ToSummary()

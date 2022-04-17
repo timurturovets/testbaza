@@ -13,6 +13,7 @@ namespace TestBaza.Controllers
         private readonly UserManager<User> _userManager;
         private readonly ITestsRepository _testsRepo;
         private readonly IPassingInfoRepository _passingInfoRepo;
+        private readonly IPassingInfoFactory _passingInfoFactory;
         private readonly IResponseFactory _responseFactory;
         private readonly ILogger<PassController> _logger;
         public PassController(
@@ -20,6 +21,7 @@ namespace TestBaza.Controllers
             ITestsRepository testsRepo,
             IPassingInfoRepository passingInfoRepo,
             ILogger<PassController> logger,
+            IPassingInfoFactory passingInfoFactory,
             IResponseFactory responseFactory
             )
         {
@@ -28,6 +30,7 @@ namespace TestBaza.Controllers
             _passingInfoRepo = passingInfoRepo;
             _logger = logger;
             _responseFactory = responseFactory;
+            _passingInfoFactory = passingInfoFactory;
         }
 
         [HttpGet("/api/pass/info")]
@@ -43,7 +46,7 @@ namespace TestBaza.Controllers
 
             if(info is null)
             {
-                info = new() { User = user, Test = test };
+                info = _passingInfoFactory.Create(user, test);
                 await _passingInfoRepo.AddInfoAsync(info);
                 return _responseFactory.StatusCode(this, 201, 
                     result: new { test = testModel, attemptsLeft = test.AllowedAttempts });
@@ -95,11 +98,7 @@ namespace TestBaza.Controllers
 
             if (info is null)
             {
-                info = new()
-                {
-                    Test = test,
-                    User = user,
-                };
+                info = _passingInfoFactory.Create(user, test);
 
                 var attempts = info.Attempts.ToList();
                 attempts.Add(new Attempt

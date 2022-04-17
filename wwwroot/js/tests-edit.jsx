@@ -51,6 +51,7 @@
             description = test.description,
             questions = test.questions,
             isPrivate = test.isPrivate,
+            areAnswersManuallyChecked = test.areAnswersManuallyChecked,
             timeInfo = test.timeInfo,
             allowedAttempts = test.allowedAttempts,
             hasQuestions = this.state.hasQuestions,
@@ -73,8 +74,21 @@
                 <div className="form-group">
                     <div className="form-check form-switch">
                         <input className="form-check-input" type="checkbox" name="isprivate"
-                                onClick={this.handleUnsavedChange} defaultChecked={isPrivate && true} />
+                            onClick={this.handleUnsavedChange} defaultChecked={isPrivate} />
                         <label className="form-check-label">Доступ только по ссылке</label>
+                    </div>
+                    <div className="form-check form-switch">
+                        <input className="form-check-input" type="checkbox" name="areanswersmanuallychecked"
+                            onClick={this.handleUnsavedChange} defaultChecked={areAnswersManuallyChecked} />
+                        <label className="form-check-label">Проверять ответы вручную</label>
+                        {areAnswersManuallyChecked
+                            ? <p>Вы должны будете сами проверять ответы тех, кто прошёл тест.
+                                Это можно будет сделать в личном кабинете.</p>
+                            : <p>Ответы будут проверяться автоматически. Важно: <i>ответы будут проверяться на полное
+                                совпадение, за исключением регистра букв. Постарайтесь максимально сузить круг
+                                возможных ответов на вопросы в тесте.
+                            </i></p>
+                        }
                     </div>
                     <div className="form-check form-switch">
                         <label className="form-check-label">Ограничен по времени</label>
@@ -82,7 +96,7 @@
                                 onClick={e => this.handleTimeInfoChange(e)} defaultChecked={timeInfo.isTimeLimited} />
                             {timeInfo.isTimeLimited
                                 ? this.renderTimeInputs(timeInfo.hours, timeInfo.minutes, timeInfo.seconds)
-                                :null}
+                                : null }
                     </div>
                     <div className="form-check form-switch">
                         <label className="form-check-label">
@@ -237,12 +251,14 @@
         const isPrivate = form.elements["isprivate"].checked;
         const isTimeLimited = form.elements["timeinfo.istimelimited"].checked;
         const areAttemptsLimited = form.elements["areattemptslimited"].checked;
+        const areAnswersManuallyChecked = form.elements["areanswersmanuallychecked"].checked;
 
         const formData = new FormData(form);
         formData.append('testid', id);
         formData.set('isprivate', isPrivate);
         formData.set('timeinfo.istimelimited', isTimeLimited);
         formData.set('areattemptslimited', areAttemptsLimited);
+        formData.set('areanswersmanuallychecked', areAnswersManuallyChecked);
 
         await fetch('/api/tests/wq/update-test', {
             method: 'PUT',

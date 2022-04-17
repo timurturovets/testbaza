@@ -449,6 +449,9 @@ class EditableTestSummary extends React.Component {
             <p>Оценили: <b>{ratesCount}</b>, средняя оценка: <b>{averageRate}</b></p>
             <p>Ссылка: <b>{href}</b></p>
             <a className="btn btn-outline-success" href={`/tests/edit${id}`}>Редактировать</a>
+            <a className="btn btn-otuline-success" href={`/profile/test-stats${id}`}>
+                Просмотреть решения пользователей
+            </a>
             </div>);
     }
 }

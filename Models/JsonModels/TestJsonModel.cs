@@ -10,5 +10,6 @@
         public TimeInfo TimeInfo { get; set; } = new(false, 0);
         public int AllowedAttempts { get; set; }
         public bool AreAttemptsLimited { get; set; }
+        public bool AreAnswersManuallyChecked { get; set; }
     }
 }
