@@ -1,4 +1,6 @@
-﻿namespace TestBaza.Models
+﻿using TestBaza.Extensions;
+
+namespace TestBaza.Models
 {
     public class PassingInfo
     {
@@ -19,7 +21,7 @@
                 TestId = TestId,
                 TestName = Test!.TestName,
                 AttemptsUsed = Attempts.Count(),
-                LastTimePassed = time.ToUniversalTime().AddHours(3).ToString("dd.MM.yyyy HH:mm:ss")
+                LastTimePassed = time.ToMskTimeString()
             };
         }
     }

@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "9CG/nzrQKO0fDqX7M3KDV0iSPa1CpxJ6qfpwLjGaJXw=",
+  "Hash": "8E2qLBDxucOoQDg5yqjubqs+nBBQ9Ogq56CsgBG31bs=",
   "Source": "TestBaza",
   "BasePath": "_content/TestBaza",
   "Mode": "Default",
@@ -1120,6 +1120,23 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\js\\profile-account.jsx"
+    },
+    {
+      "Identity": "C:\\Users\\timur\\source\\repos\\TestBaza\\TestBaza\\wwwroot\\js\\profile-stats.jsx",
+      "SourceId": "TestBaza",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\timur\\source\\repos\\TestBaza\\TestBaza\\wwwroot\\",
+      "BasePath": "_content/TestBaza",
+      "RelativePath": "js/profile-stats.jsx",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\js\\profile-stats.jsx"
     },
     {
       "Identity": "C:\\Users\\timur\\source\\repos\\TestBaza\\TestBaza\\wwwroot\\js\\profile-tests.jsx",

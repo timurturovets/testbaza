@@ -35,6 +35,7 @@ namespace TestBaza.Repositories
                 .Include(t => t.Questions).ThenInclude(q => q.MultipleAnswers)
                 .Include(t => t.Creator)
                 .Include(t => t.Rates).ThenInclude(r => r.User)
+                .Include(t=>t.PassingInfos).ThenInclude(i=>i.Attempts).ThenInclude(a=>a.UserAnswers)
                 .SingleOrDefaultAsync();
         }
 

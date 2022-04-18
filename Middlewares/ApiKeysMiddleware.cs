@@ -15,7 +15,6 @@ namespace TestBaza.Middlewares
             string path = context.Request.Path;
             if (path.StartsWith("/api/tests/wq/"))
             {
-
                 ISession session = context.Session;
 
                 string apiKey = context.GetApiKey();

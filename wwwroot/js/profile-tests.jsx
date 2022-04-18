@@ -189,7 +189,8 @@ class DetailedPassedTest extends React.Component {
                         value: !!userAnswer.value && userAnswer.value !== 'null'
                             ? userAnswer.value
                             : "",
-                        questionNumber: question.number 
+                        questionNumber: question.number,
+                        isCorrect: userAnswer.isCorrect
                     }
                 });
                 console.log(`user answer value: ${userAnswer.value}`)
@@ -200,7 +201,8 @@ class DetailedPassedTest extends React.Component {
                     question: question,
                     answer: {
                         value: "",
-                        questionNumber: question.number
+                        questionNumber: question.number,
+                        isCorrect: false
                     }
                 });
             }
@@ -221,6 +223,15 @@ class DetailedPassedTest extends React.Component {
                         ? <div>
                             <input type="text" className="form-control" placeholder="Вы не ответили на этот вопрос."
                                 readOnly value={c.answer.value} />
+                            {!c.answer.value
+                                ? null
+                                : c.answer.isCorrect
+                                    ? <b className="text-success">Это верный ответ.</b>
+                                    : <p className="text-danger">
+                                        Это неверный ответ.
+                                        <b className="text-dark">Верный ответ: {c.question.answer}</b>
+                                    </p>
+                            }
                         </div>
                         : <div className="form-group form-check">
                             {c.question.answers.map(ans =>
@@ -243,7 +254,6 @@ class DetailedPassedTest extends React.Component {
             })}
         </div>;
     }
-    handleNext
 }
 
 ReactDOM.render(<UserTestsList />, document.getElementById("root"));

@@ -52,17 +52,18 @@ IServiceCollection services = builder.Services;
     services.AddTransient<ITestFactory, TestFactory>();
     services.AddTransient<IQuestionFactory, QuestionFactory>();
     services.AddTransient<IResponseFactory, ResponseFactory>();
+    services.AddTransient<IPassingInfoFactory, PassingInfoFactory>();
 
     services.AddSession();
 }
 
 WebApplication app = builder.Build();
 {
+    app.UseMiddleware<PathLoggerMiddleware>();
     if (app.Environment.IsDevelopment()) app.UseMigrationsEndPoint();
     else app.UseHsts();
 
     app.UseSession();
-
     app.ClearSession();
     app.UseErrorStatusCodesHandler();
     app.UseApiKeysHandler();
@@ -79,3 +80,17 @@ WebApplication app = builder.Build();
         pattern: "{controller=auth}/{action=reg}");
 }
 app.Run();
+
+class PathLoggerMiddleware
+{
+    private readonly RequestDelegate _next;
+    public PathLoggerMiddleware(RequestDelegate next) => _next = next;
+
+    public async Task InvokeAsync(HttpContext context)
+    {
+        context.RequestServices
+            .GetRequiredService<ILogger<PathLoggerMiddleware>>()
+            .LogCritical($"Request. Path is {context.Request.Path}");
+        await _next(context);
+    }
+}

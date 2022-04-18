@@ -1,4 +1,6 @@
-﻿namespace TestBaza.Models
+﻿using TestBaza.Extensions;
+
+namespace TestBaza.Models
 {
     public class Attempt
     {
@@ -30,5 +32,11 @@
                 Questions = PassingInfo!.Test!.Questions.Select(q => q.ToJsonModel())
             };
         }
+
+        public UserStatSummary ToStatSummary() 
+            => new (PassingInfo!.User!.UserName, 
+                AttemptId, 
+                TimeEnded.ToMskTimeString());
+        
     }
 }

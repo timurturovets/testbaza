@@ -1,4 +1,6 @@
-﻿namespace TestBaza.Models
+﻿using TestBaza.Extensions;
+
+namespace TestBaza.Models
 {
     public class Test
     {
@@ -59,7 +61,7 @@
                 AuthorName = Creator!.UserName,
                 Link = Link,
                 QuestionsCount = Questions.Count(),
-                TimeCreated = TimeCreated.ToUniversalTime().AddHours(3).ToString("dd.MM.yyyy HH:mm:ss"),
+                TimeCreated = TimeCreated.ToMskTimeString(),
                 RatesCount = Rates.Count(),
                 AverageRate = Rates.Any() ? Rates.Select(r => r.Value).Average() : 0,
                 IsBrowsable = IsBrowsable,
@@ -77,6 +79,7 @@
             IsPrivate = model.IsPrivate;
             AllowedAttempts = model.AllowedAttempts;
             AreAttemptsLimited = model.AreAttemptsLimited;
+            AreAnswersManuallyChecked = model.AreAnswersManuallyChecked;
 
             TimeInfo timeInfo = model.TimeInfo;
             IsTimeLimited = timeInfo.IsTimeLimited;

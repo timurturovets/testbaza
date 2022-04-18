@@ -40,14 +40,61 @@ namespace TestBaza.Controllers
 
         [Route("/profile/user-tests")]
         public IActionResult UserTests() => _responseFactory.View(this);
+
         [Route("/profile/test-stats{id}")]
-        public async Task<IActionResult> TestStats([FromQuery] int id)
+        public async Task<IActionResult> TestStats([FromRoute] int id)
         {
             Test? test = await _testsRepo.GetTestAsync(id);
             if (test is null) return _responseFactory.NotFound(this);
 
+            User creator = await _userManager.GetUserAsync(User);
+            if (!test.Creator!.Equals(creator)) return _responseFactory.Forbid(this);
+
             ViewData["TestId"] = id;
             return _responseFactory.View(this);
+        }
+        
+        [HttpGet("/api/profile/get-stat")]
+        public async Task<IActionResult> GetUserStat([FromQuery] int testId, [FromQuery] int attemptId)
+        {
+            Test? test = await _testsRepo.GetTestAsync(testId);
+            if (test is null) return _responseFactory.NotFound(this);
+
+            User creator = await _userManager.GetUserAsync(User);
+            if (!test.Creator!.Equals(creator)) return _responseFactory.Forbid(this);
+
+            Attempt? attempt = test.PassingInfos
+                .SingleOrDefault(i => i.Attempts
+                    .Any(a => a.AttemptId == attemptId))
+                ?.Attempts.SingleOrDefault(a => a.AttemptId == attemptId);
+
+            if(attempt is null) return _responseFactory.NotFound(this);
+
+            DetailedPassedTest model = attempt.ToDetailedTest();
+            return _responseFactory.Ok(this, result: model);
+        }
+        [HttpGet("/api/profile/get-stats")]
+        public async Task<IActionResult> GetUserStats([FromQuery] int id)
+        {
+            Test? test = await _testsRepo.GetTestAsync(id);
+            if (test is null) return _responseFactory.NotFound(this);
+
+            User creator = await _userManager.GetUserAsync(User);
+            if (!test.Creator!.Equals(creator)) return _responseFactory.Forbid(this);
+
+            IEnumerable<PassingInfo> infos = test.PassingInfos;
+            if (!infos.Any()) return _responseFactory.NoContent(this);
+
+            IEnumerable<UserStatSummary> summaries = infos
+                .Select(i => i.Attempts
+                    .Where(a => a.IsEnded)
+                    .OrderBy(a => a.TimeEnded)
+                    .LastOrDefault())
+                .Select(a => a!.ToStatSummary());
+
+            if (!summaries.Any()) return _responseFactory.NoContent(this);
+
+            return _responseFactory.Ok(this, result: summaries);
         }
 
         [HttpGet("/api/profile/user-info")]

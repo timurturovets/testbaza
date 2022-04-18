@@ -1,6 +1,6 @@
 ﻿namespace TestBaza.Factories
 {
-    public class PassingInfoFactory
+    public class PassingInfoFactory : IPassingInfoFactory
     {
         public PassingInfo Create(User user, Test test)
         {

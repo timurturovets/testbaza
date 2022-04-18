@@ -20,7 +20,7 @@
                     ? question.Answer!
                     : question.CorrectAnswerNumber + "";
 
-                return correctAnswer == Value;
+                return correctAnswer.Trim().ToLower() == Value?.Trim().ToLower();
             }
             set { return; }
         }

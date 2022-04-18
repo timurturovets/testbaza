@@ -436,22 +436,26 @@ class EditableTestSummary extends React.Component {
         const href = anchor.href;
 
         return (<div>
-            <h3>Тест {name}</h3>
-            <p>Создан {timeCreated}</p>
+            <h3 className="m-0">Тест {name}</h3>
+            <p className="m-0">Создан {timeCreated}</p>
             {isPublished
-                ? <p className="text-success d-inline">Опубликован</p>
-                : <p className="text-danger d-inline">Не опубликован</p>
+                ? <p className="text-success m-0">Опубликован</p>
+                : <p className="text-danger m-0">Не опубликован</p>
             }
             {isBrowsable
-                ? <p className="text-success">В открытом доступе</p>
-                : <p className="text-danger">Доступен только по ссылке</p>
+                ? <p className="text-success m-0">В открытом доступе</p>
+                : <p className="text-danger m-0">Доступен только по ссылке</p>
             }
-            <p>Оценили: <b>{ratesCount}</b>, средняя оценка: <b>{averageRate}</b></p>
-            <p>Ссылка: <b>{href}</b></p>
-            <a className="btn btn-outline-success" href={`/tests/edit${id}`}>Редактировать</a>
-            <a className="btn btn-otuline-success" href={`/profile/test-stats${id}`}>
-                Просмотреть решения пользователей
-            </a>
+            <p className="m-0">Оценили: <b>{ratesCount}</b>, средняя оценка: <b>{averageRate}</b></p>
+            <p className="m-0">Ссылка: <b>{href}</b></p>
+            <div className="btn-toolbar">
+                <div className="btn-group">
+                    <a className="btn btn-outline-success" href={`/tests/edit${id}`}>Редактировать</a>
+                    <a className="btn btn-outline-success" href={`/profile/test-stats${id}`}>
+                        Просмотреть решения пользователей
+                        </a>
+                </div>
+            </div>
             </div>);
     }
 }
@@ -462,12 +466,12 @@ class Forms extends React.Component {
     }
     render() {
         return <div>
-                <ManageAccountForm />
-                <hr />
-                <PasswordChangeForm />
-                <hr />
+            <ManageAccountForm />
+            <hr />
+            <PasswordChangeForm />
+            <hr />
             <UserTests />
-            </div>
+        </div>
     }
 }
 

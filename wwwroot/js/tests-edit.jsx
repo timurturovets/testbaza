@@ -79,12 +79,16 @@
                     </div>
                     <div className="form-check form-switch">
                         <input className="form-check-input" type="checkbox" name="areanswersmanuallychecked"
-                            onClick={this.handleUnsavedChange} defaultChecked={areAnswersManuallyChecked} />
+                            onClick={e => {
+                                const { test } = this.state;
+                                this.setState({ test: {...test, areAnswersManuallyChecked: !test.areAnswersManuallyChecked}})
+                                this.handleUnsavedChange(e);
+                            }} defaultChecked={areAnswersManuallyChecked} />
                         <label className="form-check-label">Проверять ответы вручную</label>
                         {areAnswersManuallyChecked
-                            ? <p>Вы должны будете сами проверять ответы тех, кто прошёл тест.
+                            ? <p className="m-0 text-sm">Вы должны будете сами проверять ответы тех, кто прошёл тест.
                                 Это можно будет сделать в личном кабинете.</p>
-                            : <p>Ответы будут проверяться автоматически. Важно: <i>ответы будут проверяться на полное
+                            : <p className="m-0 text-sm">Ответы будут проверяться автоматически. Важно: <i>ответы будут проверяться на полное
                                 совпадение, за исключением регистра букв. Постарайтесь максимально сузить круг
                                 возможных ответов на вопросы в тесте.
                             </i></p>
@@ -267,7 +271,8 @@
             if (response.status === 200) {
                 const object = await response.json();
                 const test = object.result;
-
+                console.log("i got le test from fetch! the obj is");
+                console.log(test);
                 this.setState({ test: test, isChanged: true, success: true, isSaved: true });
 
             } else this.setState({ isChanged: true, success: false, isSaved: false });
