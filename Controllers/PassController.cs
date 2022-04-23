@@ -190,7 +190,6 @@ namespace TestBaza.Controllers
                 IsChecked = false
             };
             await _passingInfoRepo.UpdateInfoAsync(info);
-
             return _responseFactory.Ok(this);
         }
     }

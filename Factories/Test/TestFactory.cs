@@ -1,4 +1,6 @@
-﻿namespace TestBaza.Factories
+﻿using System.Security.Cryptography;
+
+namespace TestBaza.Factories
 {
     public class TestFactory : ITestFactory
     {
@@ -12,7 +14,7 @@
                 TimeCreated = DateTime.Now,
                 IsTimeLimited = isTimeLimited,
                 TimeLimit = timeLimit,
-                Link = "test" + Guid.NewGuid()
+                Link = "test" + (Guid.NewGuid() + "")[0..6]
             };
         }
     }

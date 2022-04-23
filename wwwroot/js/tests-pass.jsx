@@ -426,7 +426,7 @@ class Question extends React.Component {
                         <div key={answer.number} className="form-check">
                             <input key={answer.number} className="form-check-input" type="radio" name={`radio-answer`}
                                 defaultValue={`${answer.number}`}
-                                checked={userAnswer === answer.number}
+                                checked={parseInt(userAnswer) === answer.number}
                                 onChange={this.onAnswerChanged}
                             />
                             <label className="form-check-label">{answer.value}</label>
