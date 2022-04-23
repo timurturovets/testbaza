@@ -70,6 +70,7 @@ WebApplication app = builder.Build();
 
     app.UseAuthentication();
     app.UseAuthorization();
+    app.UseUserPresenceHandler();
 
     app.MapControllerRoute(
         name: "default",

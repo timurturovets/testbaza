@@ -9,5 +9,11 @@ namespace TestBaza.Extensions
             app.UseMiddleware<ErrorStatusCodesMiddleware>();
             return app;
         }
+
+        public static IApplicationBuilder UseUserPresenceHandler(this IApplicationBuilder app)
+        {
+            app.UseMiddleware<AuthorizeMiddleware>();
+            return app;
+        }
     }
 }

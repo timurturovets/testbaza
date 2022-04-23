@@ -240,7 +240,10 @@ class DetailedPassedTest extends React.Component {
                                         ? <b className="text-success">Это верный ответ.</b>
                                         : <p className="text-danger">
                                             Это неверный ответ.
-                                            <b className="text-dark">Верный ответ: {c.question.answer}</b>
+                                            {areAnswersManuallyChecked
+                                                ? null
+                                                : <b className="text-dark">Верный ответ: {c.question.answer}</b>
+                                            }
                                             </p>
                                 : null
                             }
