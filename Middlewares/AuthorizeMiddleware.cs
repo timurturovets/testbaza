@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authentication;
 
 namespace TestBaza.Middlewares
 {
@@ -14,10 +15,9 @@ namespace TestBaza.Middlewares
         {
             UserManager<User> manager = context.RequestServices.GetRequiredService<UserManager<User>>();
             User? user = await manager.GetUserAsync(context.User);
-            if (user is null)
-            {
-                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            }
+
+            if (user is null) await context.SignOutAsync();
+            
             await _next(context);
         }
     }
