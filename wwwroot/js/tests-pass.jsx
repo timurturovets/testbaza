@@ -45,12 +45,9 @@
     populateData = async () => {
         const testId = this.props.testId;
         await fetch(`/api/pass/info?id=${testId}`).then(async response => {
-            console.log(response.status);
             if (response.status === 201) {
                 //Нет текущей попытки
                 const object = await response.json();
-                console.log(`object`);
-                console.log(object);
                 const test = object.result.test;
                 const answers = test.questions.map(q => new UserAnswer(q.number, null));
 
@@ -67,8 +64,6 @@
             } else if (response.status === 200) {
                 //Есть текущая попытка
                 const object = await response.json();
-                console.log(`object`);
-                console.log(object);
                 const result = object.result;
                 const timeLeft = result.timeLeft * 1000,
                     test = result.test,
@@ -94,7 +89,7 @@
                 });
             } else if (response.status === 409) {
                 this.setState({ isLoading: false, exceededAttempts: true });
-            } else alert(`status: ${response.status}`);
+            } else alert(`Произошла непредвиденная ошибка. Попробуйте снова. ${response.status}`);
         });
     }
 
@@ -197,7 +192,7 @@
                         break;
                     }
                 }
-            } else alert(`status ${response.status}`);
+            } else alert(`Произошла непредвиденная ошибка. Попробуйте снова. ${response.status}`);
         });
 
     }
@@ -213,10 +208,8 @@
         event.preventDefault();
 
         let { test, answers, currentQuestion } = this.state;
-        console.log(test);
         const question = test.questions[currentQuestion];
         const userAnswer = answers.find(a => a.questionNumber === question.number);
-        console.log(`user answer is` + userAnswer);
         if (test.questions.length - 1 !== currentQuestion) {
             currentQuestion++;
             this.setState({ currentQuestion: currentQuestion });
@@ -237,7 +230,7 @@
                             break;
                         }
                     }
-                } else alert(`status ${response.status}`);
+                } else alert(`Произошла непредвиденная ошибка. Попробуйте снова. ${response.status}`);
             });
         }
     }
@@ -268,7 +261,7 @@
                             break;
                         }
                     }
-                } else alert(`status ${response.status}`);
+                } else alert(`Произошла непредвиденная ошибка. Попробуйте снова. ${response.status}`);
             });
         }
     }
@@ -411,7 +404,6 @@ class Question extends React.Component {
     render() {
         const { info, isBrowsing } = this.props,
             { isSaved, isHintActive, userAnswer } = this.state;
-        console.log(`User answer when rendering question: ${userAnswer}`);
         return (<div>
             <h3>Вопрос {info.number}</h3>
             <h4 className="display-3">{info.value}</h4>

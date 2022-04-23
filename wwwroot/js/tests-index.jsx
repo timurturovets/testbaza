@@ -38,7 +38,6 @@ class TestsList extends React.Component {
         const response = await fetch('/api/tests/all');
         if (response.status == 200) {
             await response.json().then(object => {
-                console.log(object);
                 this.setState({ isLoading: false, tests: object.result });
             })
         } else if (response.status === 204) this.setState({ isLoading: false, tests: [] });
@@ -46,7 +45,6 @@ class TestsList extends React.Component {
     }
 
     renderTests = () => {
-        console.log(this.state);
         return this.state.tests.length > 0
             ? (<div>
                 {

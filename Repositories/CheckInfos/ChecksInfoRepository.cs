@@ -15,7 +15,7 @@ namespace TestBaza.Repositories
         public IEnumerable<CheckInfo> GetUserCheckInfos(User user)
         {
             return _context.CheckInfos
-                .Include(a=>a.Attempt).ThenInclude(a=>a.PassingInfo).ThenInclude(i=>i.Test)
+                .Include(a=>a.Attempt).ThenInclude(a=>a!.PassingInfo).ThenInclude(i=>i!.Test)
                 .Where(i => i.Attempt != null
                     && i.Attempt.PassingInfo != null
                     && i.Attempt.PassingInfo.Test != null

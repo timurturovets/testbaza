@@ -1,9 +1,4 @@
-﻿using System.Diagnostics;
-
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Identity;
-
-using TestBaza.Models;
+﻿using Microsoft.AspNetCore.Mvc;
 
 namespace TestBaza.Controllers
 {

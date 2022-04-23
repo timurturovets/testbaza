@@ -45,8 +45,6 @@
             if (response.status === 200) {
                 const object = await response.json();
                 const result = object.result;
-                console.log('this is stat:');
-                console.log(result);
                 this.setState({ isBrowsingStat: true, browsedStat: result });
             } else alert(`Произошла непредвиденная ошибка. Попробуйте снова. ${response.status}`);
         });
@@ -116,7 +114,6 @@ class UserStat extends React.Component {
                         isCorrect: userAnswer.isCorrect
                     }
                 });
-                console.log(`user answer value: ${userAnswer.value}`)
             } else {
 
                 combined.push({
@@ -130,11 +127,8 @@ class UserStat extends React.Component {
                 });
             }
         }
-        console.log('ale priem wtf');
         return <div>
             <button className="btn btn-outline-primary" onClick={this.props.onBrowsingEnd}>Назад</button>
-            {console.log('combined: ')}
-            {console.log(combined)}
             {combined.map(c => {
                 return <div key={c.id}>
                     <hr />

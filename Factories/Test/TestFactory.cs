@@ -1,10 +1,14 @@
-﻿using System.Security.Cryptography;
-
-namespace TestBaza.Factories
+﻿namespace TestBaza.Factories
 {
     public class TestFactory : ITestFactory
     {
-        public Test Create(string testName, string description, bool isPrivate, bool isTimeLimited, int timeLimit, User creator)
+        public Test Create(
+            string testName, 
+            string description, 
+            bool isPrivate, 
+            bool isTimeLimited, 
+            int timeLimit, 
+            User creator)
         {
             return new Test {
                 TestName = testName,

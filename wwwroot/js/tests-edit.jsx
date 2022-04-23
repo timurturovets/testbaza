@@ -30,7 +30,6 @@
         await fetch(`/api/tests/wq/get-test${id}`).then(async response => {
             if (response.status === 200) {
                 const object = await response.json();
-                console.log(object);
                 const test = object.result;
                 this.setState({
                     isLoading: false,
@@ -57,8 +56,6 @@
             hasQuestions = this.state.hasQuestions,
             publishingErrors = this.state.publishingErrors;
             
-        console.log('rendering test! test is');
-        console.log(test);
         return (<div>
             <form name="edit-test" className="form-horizontal">
                 <div className="form-group">
@@ -129,7 +126,6 @@
                 }
             </form>
             <h1 className="text-center display-3">Вопросы в тесте</h1>
-            {console.log(questions)}
             {hasQuestions
                 ? questions.map(question =>
                     <div key={question.questionId}>
@@ -176,7 +172,6 @@
     }
 
     renderTimeInputs = (hours = 0, minutes = 0, seconds = 0) => {
-        console.log('rendering time inputs');
         return (<div>
             <input className="d-inline" type="number" name="timeinfo.hours" min="0" max="48" defaultValue={hours}
                 onChange={e=>this.handleTimeInfoChange(e)}/>
@@ -191,11 +186,9 @@
     }
 
     handleTimeInfoChange = event => {
-        console.log('handling timeinfochange');
         const name = event.target.name.toLowerCase(),
             test = this.state.test,
             value = parseInt(event.target.value);
-        console.log(`value is ${value}, name is ${name}`);
         if (name === "timeinfo.istimelimited") {
 
             test.timeInfo.isTimeLimited = event.target.checked;
@@ -220,11 +213,9 @@
     }
 
     handleAttemptsInfoChange = event => {
-        console.log(event.target.name);
         const name = event.target.name,
             test = this.state.test;
         if (name === 'areattemptslimited') {
-            console.log('setting areAttemptsLimited to ' + event.target.checked);
             this.setState({
                 test: {
                     ...test,
@@ -271,8 +262,6 @@
             if (response.status === 200) {
                 const object = await response.json();
                 const test = object.result;
-                console.log("i got le test from fetch! the obj is");
-                console.log(test);
                 this.setState({ test: test, isChanged: true, success: true, isSaved: true });
 
             } else this.setState({ isChanged: true, success: false, isSaved: false });
@@ -308,7 +297,6 @@
         }).then(async response => {
             if (response.status === 200) {
                 const object = await response.json();
-                console.log(object);
                 const question = object.result;
                 const questionId = question.questionId,
                     questionNumber = parseInt(question.number);
@@ -318,7 +306,7 @@
 
                 this.setState({ test: test, hasQuestions: true });
 
-            } else console.log(`status: ${response.status}`);
+            } else alert(`Произошла непредвиденная ошибка. Попробуйте снова. ${response.status}`);
         });
     }
 
@@ -451,7 +439,6 @@ class EditableQuestion extends React.Component {
                     : <div>{answers.length > 0 ? <label className="input-group-prepend">Верный</label> : null}
 
                        {answers.map(answer => {
-                           console.log(answer);
                            return <div key={answer.answerId} className="form-group">
                                <EditableAnswer
                                    onValueChange={this.onAnswerValueChange}
@@ -521,7 +508,6 @@ class EditableQuestion extends React.Component {
         formData.append('model.QuestionId', id);
         formData.set('model.HintEnabled', hintEnabled);
 
-        console.log(answers);
         await fetch('/api/tests/update-question', {
             method: 'PUT',
             body: formData
@@ -537,14 +523,11 @@ class EditableQuestion extends React.Component {
     }
 
     onAnswerValueChange = (event, id) => {
-        console.log(`Answer value change event, id: ${id}`);
         const value = event.target.value;
         const answers = this.state.answers;
         for (const obj of answers) {
             if (obj.answerId === id) {
-                console.log(obj);
                 answers[answers.indexOf(obj)].value = value;
-                console.log(`value: ${obj.value}`);
                 this.setState({ answers: answers, saved: false });
                 this.props.onSavedChange(false);
                 break;
@@ -581,7 +564,6 @@ class EditableQuestion extends React.Component {
     handleAddAnswer = async event => {
         event.preventDefault();
         const id = this.props.questionId;
-        console.log(`questionID: ${id}`);
         const formData = new FormData();
         formData.append("questionId", id);
         await fetch("/api/tests/add-answer", {
@@ -590,7 +572,6 @@ class EditableQuestion extends React.Component {
         }).then(async response => {
             if (response.status === 200) {
                 const object = await response.json();
-                console.log(object);
 
                 const result = object.result;
                 const answers = this.state.answers;
@@ -614,7 +595,6 @@ class EditableAnswer extends React.Component {
         const id = this.props.answerId,
             value = this.props.value,
             number = this.props.number;
-        console.log('number: ' + number);
         return (<div className="input-group mb-3">
             <div className="input-group-append form-check form-switch">
                 <input type="radio" name="model.CorrectAnswerNumber" className="form-check-input"

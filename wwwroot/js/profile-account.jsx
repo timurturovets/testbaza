@@ -363,7 +363,6 @@ class UserTests extends React.Component {
 
     render() {
         const { isLoading, tests, isEmpty } = this.state;
-        console.log(tests);
         return (<div>
             <h2 className="text-center">Ваши тесты</h2>
             {isLoading

@@ -49,7 +49,6 @@
 
     populateData = async () => {
         await fetch('/api/profile/passed-tests-info').then(async response => {
-            console.log(response.status);
             if (response.status === 204) {
                 this.setState({ isLoading: false, isEmpty: true });
             }
@@ -169,8 +168,6 @@ class DetailedPassedTest extends React.Component {
     }
 
     render() {
-        console.log('detailed past render. detailed test is');
-        console.log(this.props.info);
         const { testName,
             questions,
             userAnswers,
@@ -203,7 +200,6 @@ class DetailedPassedTest extends React.Component {
                         isCorrect: userAnswer.isCorrect
                     }
                 });
-                console.log(`user answer value: ${userAnswer.value}`)
             } else {
 
                 combined.push({
@@ -227,8 +223,6 @@ class DetailedPassedTest extends React.Component {
                     : <p className="text-danger m-0">Создатель теста ещё не проверил вашу работу.</p>
                 : null
             }
-            {console.log('combined: ')}
-            {console.log(combined)}
             {combined.map(c => {
                 return <div key={c.id}>
                     <hr />

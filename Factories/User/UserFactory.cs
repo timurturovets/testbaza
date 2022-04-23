@@ -1,6 +1,4 @@
-﻿using TestBaza.Data;
-
-namespace TestBaza.Factories
+﻿namespace TestBaza.Factories
 {
     public class UserFactory : IUserFactory
     {

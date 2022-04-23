@@ -15,12 +15,10 @@ namespace TestBaza.Controllers
         private readonly IPassingInfoRepository _passingInfoRepo;
         private readonly IPassingInfoFactory _passingInfoFactory;
         private readonly IResponseFactory _responseFactory;
-        private readonly ILogger<PassController> _logger;
         public PassController(
             UserManager<User> userManager,
             ITestsRepository testsRepo,
             IPassingInfoRepository passingInfoRepo,
-            ILogger<PassController> logger,
             IPassingInfoFactory passingInfoFactory,
             IResponseFactory responseFactory
             )
@@ -28,7 +26,6 @@ namespace TestBaza.Controllers
             _userManager = userManager;
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    _testsRepo = testsRepo;
             _passingInfoRepo = passingInfoRepo;
-            _logger = logger;
             _responseFactory = responseFactory;
             _passingInfoFactory = passingInfoFactory;
         }
@@ -53,7 +50,6 @@ namespace TestBaza.Controllers
             }
 
             Attempt? currentAttempt = info.Attempts.SingleOrDefault(a => !a.IsEnded);
-            _logger.LogError($"Attempt is null: {currentAttempt is null}");
 
             if (test.AreAttemptsLimited 
                 && info.Attempts.Count() >= test.AllowedAttempts

@@ -21,7 +21,6 @@ namespace TestBaza.Controllers
 
         private readonly ITestFactory _testFactory;
         private readonly IResponseFactory _responseFactory;
-        private readonly ILogger<TestsController> _logger;
         public TestsController(
             IRatesRepository ratesRepo,
             ITestsRepository testsRepo,
@@ -30,9 +29,7 @@ namespace TestBaza.Controllers
             UserManager<User> userManager,
 
             ITestFactory testFactory,
-            IResponseFactory responseFactory,
-
-            ILogger<TestsController> logger
+            IResponseFactory responseFactory
             )
         {
             _ratesRepo = ratesRepo;
@@ -43,7 +40,6 @@ namespace TestBaza.Controllers
 
             _testFactory = testFactory;
             _responseFactory = responseFactory;
-            _logger = logger;
         }
 
         public IActionResult Index()
@@ -56,6 +52,7 @@ namespace TestBaza.Controllers
         {
             var tests = _testsRepo.GetBrowsableTests();
             if (!tests.Any()) return _responseFactory.NoContent(this);
+
             IEnumerable<TestSummary> testsSummaries = tests.Select(t => t.ToSummary());
             return _responseFactory.Ok(this, result: testsSummaries);
         }
@@ -77,7 +74,6 @@ namespace TestBaza.Controllers
         public async Task<IActionResult> PassByLink([FromQuery] string test)
         {
             Test? passingTest = await _testsRepo.GetTestByLinkAsync(test);
-            _logger.LogWarning($"TestName: {passingTest?.TestName}, isPublished: {passingTest?.IsPublished}");    
             if (passingTest is null) return _responseFactory.NotFound(this);
 
             if (!passingTest.IsPublished) return _responseFactory.Forbid(this);
@@ -108,7 +104,6 @@ namespace TestBaza.Controllers
         {
             try
             {
-                _logger.LogInformation($"New create test request, TestName-{model.TestName}, IsPrivate:{model.IsPrivate}");
                 if (ModelState.IsValid)
                 {
                     User creator = await _userManager.GetUserAsync(User);
@@ -135,9 +130,8 @@ namespace TestBaza.Controllers
                 }
                 else return View();
             }
-            catch (Exception e)
+            catch 
             {
-                _logger.LogError(e.InnerException?.Message ?? e.Message);
                 return _responseFactory.BadRequest(this);
             }
         }
@@ -161,20 +155,12 @@ namespace TestBaza.Controllers
             if (!test.Creator.Equals(creator)) return _responseFactory.Forbid(this);
             ViewData["TestId"] = id;
 
-            string apiKey = HttpContext.GetApiKey();
-            ISession session = HttpContext.Session;
-            session.SetString(API_KEY_NAME, apiKey);
-
-            _logger.LogError($"String from session: {session.GetString(API_KEY_NAME)}");
             return _responseFactory.View(this);
         }
 
         [HttpPut("/api/tests/wq/update-test")]
         public async Task<IActionResult> UpdateTest([FromForm] UpdateTestRequestModel model)
-        {
-            _logger.LogInformation($"New change test request, testName: {model.TestName}, description: {model.Description}," +
-                $"IsPrivate: {model.IsPrivate}");
-            if (ModelState.IsValid)
+        {if (ModelState.IsValid)
             {
                 Test? test = await _testsRepo.GetTestAsync(model.TestId);
                 if (test is null) return _responseFactory.NotFound(this);
@@ -210,7 +196,6 @@ namespace TestBaza.Controllers
         [HttpPut("/api/tests/add-question")]
         public async Task<IActionResult> AddQuestion([FromForm] int testId)
         {
-            _logger.LogInformation($"New add question request, testId: {testId}");
             Test? test = await _testsRepo.GetTestAsync(testId);
             if (test is null) return _responseFactory.NotFound(this);
 
@@ -235,8 +220,6 @@ namespace TestBaza.Controllers
         [HttpPut("/api/tests/update-question")]
         public async Task<IActionResult> UpdateQuestion([FromForm] UpdateQuestionRequestModel model)
         {
-            _logger.LogError($"New change question request, value: {model.Value}, answer: {model.Answer}, aType: {model.AnswerType}");
-
             Question? question = await _qsRepo.GetQuestionAsync(model.QuestionId);
             if (question is null) return _responseFactory.NotFound(this);
 
@@ -266,8 +249,6 @@ namespace TestBaza.Controllers
         [HttpPost("/api/tests/delete-question")]
         public async Task<IActionResult> DeleteQuestion([FromForm] int questionId)
         {
-            _logger.LogInformation($"New delete question request, questionId: {questionId}");
-
             Question? question = await _qsRepo.GetQuestionAsync(questionId);
             if (question is null) return _responseFactory.NotFound(this);
 
@@ -280,7 +261,6 @@ namespace TestBaza.Controllers
         [HttpPost("/api/tests/add-answer")]
         public async Task<IActionResult> AddAnswer(int questionId)
         {
-            _logger.LogError($"QuestionId: {questionId}");
             Question? question = await _qsRepo.GetQuestionAsync(questionId);
             User creator = await _userManager.GetUserAsync(User);
 
@@ -294,7 +274,6 @@ namespace TestBaza.Controllers
         [HttpPost("/api/tests/delete-answer")]
         public async Task<IActionResult> DeleteAnswer(int answerId, int questionId)
         {
-            _logger.LogError($"AnswerID: {answerId}");
             Question? question = await _qsRepo.GetQuestionAsync(questionId);
             if (question is null) return _responseFactory.NotFound(this);
 
@@ -518,7 +497,6 @@ namespace TestBaza.Controllers
         public async Task<IActionResult> RateTest([FromForm] RateTestRequestModel model)
         {
             User rater = await _userManager.GetUserAsync(User);
-            _logger.LogCritical($"New rate test request, id is {model.TestId}, value is {model.Rate}");
             Test? test = await _testsRepo.GetTestAsync(model.TestId);
             if (test is null) return _responseFactory.NotFound(this);
 

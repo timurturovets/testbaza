@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
 
-using TestBaza.Models;
 using TestBaza.Factories;
 using TestBaza.Extensions;
 using TestBaza.Repositories;
@@ -17,15 +16,13 @@ namespace TestBaza.Controllers
         private readonly IChecksInfoRepository _checksRepo;
         private readonly IResponseFactory _responseFactory;
         private readonly UserManager<User> _userManager;
-        private readonly ILogger<ProfileController> _logger;
         public ProfileController(
             ITestsRepository testsRepo,
             IPassingInfoRepository passingInfoRepo,
             IChecksInfoRepository checksRepo,
 
             IResponseFactory responseFactory,
-            UserManager<User> userManager,
-            ILogger<ProfileController> logger
+            UserManager<User> userManager
             )
         {
             _testsRepo = testsRepo;
@@ -34,7 +31,6 @@ namespace TestBaza.Controllers
 
             _responseFactory = responseFactory;
             _userManager = userManager;
-            _logger = logger;
         }
 
         [Route("/profile")]
@@ -137,8 +133,6 @@ namespace TestBaza.Controllers
         [HttpPost("/api/profile/update-user")]
         public async Task<IActionResult> UpdateUser([FromForm] UpdateUserRequestModel model)
         {
-            _logger.LogError($"New update user request, name: {model.UserName}, " +
-                $"email: {model.Email}, password: {model.Password}");
             if (ModelState.IsValid)
             {
                 User user = await _userManager.GetUserAsync(User);
@@ -186,14 +180,12 @@ namespace TestBaza.Controllers
         public async Task<IActionResult> GetPassedTests()
         {
             User user = await _userManager.GetUserAsync(User);
-            _logger.LogCritical("in method");
             IEnumerable<PassingInfo> infos = _passingInfoRepo.GetUserInfos(user);
 
             if (!infos.Any()) return _responseFactory.NoContent(this);
 
             IEnumerable<PassedTestSummary> summaries = infos.Select(i => {
                 var model = i.ToPassedTestSummary();
-                _logger.LogWarning($"i.test.rates.length: {i.Test!.Rates.Count()}");
                 model.UserRate = i.Test!.Rates.SingleOrDefault(r => r.User!.Equals(user))?.Value ?? -1;
                 return model;
             });
@@ -235,17 +227,12 @@ namespace TestBaza.Controllers
 
             if (attempt is null) return _responseFactory.NotFound(this);
             if (!attempt.IsEnded) return _responseFactory.Conflict(this);
-            _logger.LogWarning($"Le length: {model.CorrectAQNumbers.Count}");
-            _logger.LogWarning($"Le length2: {model.IncorrectAQNumbers.Count}");
 
             foreach (int number in model.CorrectAQNumbers)
                 attempt.UserAnswers.First(a => a.QuestionNumber == number).IsCorrect = true;
             
             foreach (int number in model.IncorrectAQNumbers)
                 attempt.UserAnswers.First(a => a.QuestionNumber == number).IsCorrect = false;
-
-            _logger.LogWarning("In the end of \"CheckTest\" methode");
-
 
             attempt.CheckInfo!.IsChecked = true;
             await _testsRepo.UpdateTestAsync(test);

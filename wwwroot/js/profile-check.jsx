@@ -42,8 +42,6 @@
             if (response.status === 200) {
                 const object = await response.json();
                 const result = object.result;
-                console.log('fetched:');
-                console.log(result);
                 this.setState({ isLoading: false, checks: result });
             } else alert(`Произошла непредвиденная ошибка. Попробуйте снова. ${response.status}`);
         });
@@ -113,11 +111,9 @@ class CheckedTest extends React.Component {
                 .filter(a => !a.isCorrect)
                 .map(a => a.questionNumber))
         };
-        console.log(this.state.incorrectAQNumbers);
     }
 
     render() {
-        console.log(this.props.info);
         const { userName, timeUsed, userAnswers, questions } = this.props.info;
         const answers = userAnswers;
         const { isSaved, correctAQNumbers } = this.state;
@@ -140,7 +136,6 @@ class CheckedTest extends React.Component {
                         isCorrect: correctAQNumbers.has(question.number)
                     }
                 });
-                console.log(`!!!userAnswer, correctAQNumbers.has: ${correctAQNumbers.has(question.number)}`)
             } else {
 
                 combined.push({
@@ -227,24 +222,16 @@ class CheckedTest extends React.Component {
         const { correctAQNumbers, incorrectAQNumbers } = this.state;
         const formData = new FormData();
 
-        console.log('c numbers');
-        console.log(correctAQNumbers);
-        console.log('inc numbers');
-        console.log(incorrectAQNumbers);
-
         formData.append('model.testId', testId);
         formData.append('model.attemptId', attemptId);
 
         correctAQNumbers.forEach((item, index) => {
             formData.append(`model.CorrectAQNumbers[${index-1}]`, item);
-            console.log(`appended correct ${index}`);
         });
 
         incorrectAQNumbers.forEach((item, index) => {
             formData.append(`model.IncorrectAQNumbers[${index-1}]`, item);
-            console.log(`appended incorrect ${index}`);
         });
-        console.log(formData.get('model.IncorrectAQNumbers[0]'));
         await fetch('/api/profile/check-test', {
             method: 'POST',
             body: formData
@@ -257,7 +244,6 @@ class CheckedTest extends React.Component {
 
     handleChange = (event, isCorrect, questionNumber) => {
         event.preventDefault();
-        console.log(`handle change methode; isCorrect=${isCorrect}, qN: ${questionNumber}`);
         const { correctAQNumbers, incorrectAQNumbers } = this.state;
 
         if (isCorrect) {
@@ -267,8 +253,6 @@ class CheckedTest extends React.Component {
             incorrectAQNumbers.add(questionNumber);
             correctAQNumbers.delete(questionNumber);
         }
-        console.log(correctAQNumbers);
-        console.log(incorrectAQNumbers);
         this.setState({ isSaved: false, correctAQNumbers: correctAQNumbers, incorrectAQNumbers: incorrectAQNumbers });
     }
 }

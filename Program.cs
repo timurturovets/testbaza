@@ -3,9 +3,7 @@ global using System.Threading.Tasks;
 global using System.Collections.Generic;
 
 global using TestBaza.Models;
-global using static TestBaza.Constants;
 
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 using TestBaza.Data;
@@ -60,14 +58,11 @@ IServiceCollection services = builder.Services;
 
 WebApplication app = builder.Build();
 {
-    app.UseMiddleware<PathLoggerMiddleware>();
     if (app.Environment.IsDevelopment()) app.UseMigrationsEndPoint();
     else app.UseHsts();
 
     app.UseSession();
-    app.ClearSession();
     app.UseErrorStatusCodesHandler();
-    app.UseApiKeysHandler();
 
     app.UseHttpsRedirection();
     app.UseStaticFiles();
@@ -81,17 +76,3 @@ WebApplication app = builder.Build();
         pattern: "{controller=auth}/{action=reg}");
 }
 app.Run();
-
-class PathLoggerMiddleware
-{
-    private readonly RequestDelegate _next;
-    public PathLoggerMiddleware(RequestDelegate next) => _next = next;
-
-    public async Task InvokeAsync(HttpContext context)
-    {
-        context.RequestServices
-            .GetRequiredService<ILogger<PathLoggerMiddleware>>()
-            .LogCritical($"Request. Path is {context.Request.Path}");
-        await _next(context);
-    }
-}
