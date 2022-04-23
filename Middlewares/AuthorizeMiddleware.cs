@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Authentication;
 
 namespace TestBaza.Middlewares
 {
@@ -13,11 +12,14 @@ namespace TestBaza.Middlewares
 
         public async Task InvokeAsync(HttpContext context)
         {
-            UserManager<User> manager = context.RequestServices.GetRequiredService<UserManager<User>>();
-            User? user = await manager.GetUserAsync(context.User);
+            UserManager<User> userManager = context.RequestServices.GetRequiredService<UserManager<User>>();
+            SignInManager<User> signInManager = context.RequestServices.GetRequiredService<SignInManager<User>>();
 
-            if (user is null) await context.SignOutAsync();
-            
+            User? user = await userManager.GetUserAsync(context.User);
+            if (!(context.Request.Path + "").StartsWith("/auth"))
+            {
+                if (user is null) await signInManager.SignOutAsync();
+            }
             await _next(context);
         }
     }

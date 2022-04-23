@@ -68,10 +68,11 @@ WebApplication app = builder.Build();
     app.UseStaticFiles();
     app.UseRouting();
 
-    app.UseUserPresenceHandler();
 
     app.UseAuthentication();
     app.UseAuthorization();
+
+    app.UseUserPresenceHandler();
 
     app.MapControllerRoute(
         name: "default",

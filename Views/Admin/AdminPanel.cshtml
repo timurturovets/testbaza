@@ -3,6 +3,9 @@
 
 @inject UserManager<User> userManager;
 @inject ITestsRepository testsRepo;
+
+<h3>Админ-панель</h3>
+
 <div class="d-flex">
 @foreach (Test test in testsRepo.GetAllTests()){
     <div id="test@(test.TestId)" class="m-5" style="border: 2px solid black">
@@ -27,7 +30,7 @@
 @foreach(User user in userManager.Users){
     <div id="user@(user.Id)" class="m-5" style="border: 2px solid black">
         <h4>Пользователь @(user.UserName)</h4>
-        <button id="deleteu@(user.Id)">Удалить</button>
+        <button id="deleteu@(user.Id)" class="btn btn-outline-primary">Удалить</button>
         <script>
         document.getElementById("deleteu@(user.Id)").addEventListener("click", async e=>{
             e.preventDefault();
