@@ -12,6 +12,7 @@ namespace TestBaza.Repositories
             _context = context;
         }
 
+        public IEnumerable<Test> GetAllTests() => _context.Tests.ToList();
         public IEnumerable<Test> GetBrowsableTests() => _context.Tests
             .Where(t => t.IsBrowsable)
             .Include(t => t.Questions).ThenInclude(q => q.MultipleAnswers)

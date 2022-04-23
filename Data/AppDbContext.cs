@@ -23,9 +23,7 @@ namespace TestBaza.Data
             builder.Entity<CheckInfo>()
                 .HasOne(i => i.Attempt)
                 .WithOne(a => a.CheckInfo)
-                .HasForeignKey<CheckInfo>(i => i.AttemptId)
-                .IsRequired()
-                .OnDelete(DeleteBehavior.NoAction);
+                .HasForeignKey<CheckInfo>(i => i.AttemptId);
 
             builder.Entity<Attempt>()
                 .Navigation(a => a.CheckInfo).AutoInclude();
@@ -34,8 +32,7 @@ namespace TestBaza.Data
                 .HasOne(r => r.Test)
                 .WithMany(t => t.Rates)
                 .IsRequired()
-                .HasForeignKey(r => r.TestId)
-                .OnDelete(DeleteBehavior.NoAction);
+                .HasForeignKey(r => r.TestId);
 
             builder.Entity<Rate>()
                 .HasOne(r => r.User)

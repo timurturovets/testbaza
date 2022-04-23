@@ -2,6 +2,7 @@
 {
     public interface ITestsRepository
     {
+        IEnumerable<Test> GetAllTests();
         IEnumerable<Test> GetBrowsableTests();
         Task<Test?> GetTestAsync(string testName);
         Task<Test?> GetTestAsync(int testId);

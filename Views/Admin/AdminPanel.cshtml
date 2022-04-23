@@ -1,0 +1,45 @@
+﻿@using Microsoft.AspNetCore.Identity;
+@using TestBaza.Repositories;
+
+@inject UserManager<User> userManager;
+@inject ITestsRepository testsRepo;
+<div class="d-flex">
+@foreach (Test test in testsRepo.GetAllTests()){
+    <div id="test@(test.TestId)" class="m-5" style="border: 2px solid black">
+        <h4>Тест @(test.TestName)</h4>
+    <button id="deletet@(test.TestId)" class="btn btn-outline-primary">Удалить</button>
+    <script>
+        document.getElementById("deletet@(test.TestId)").addEventListener("click", async e=>{
+            e.preventDefault();
+            await fetch('/api/admin/delete-test?id=@(test.TestId)').then(response=>{
+                if(response.status === 200) {
+                    alert("Успешно");
+                    const elem = document.getElementById("test@(test.TestId)");
+                    elem.parentNode.removeChild(elem);
+                } else alert(`Ошибка ${response.status}`);
+            })
+        })
+    </script>
+    </div>
+}
+</div>
+<div class="d-flex">
+@foreach(User user in userManager.Users){
+    <div id="user@(user.Id)" class="m-5" style="border: 2px solid black">
+        <h4>Пользователь @(user.UserName)</h4>
+        <button id="deleteu@(user.Id)">Удалить</button>
+        <script>
+        document.getElementById("deleteu@(user.Id)").addEventListener("click", async e=>{
+            e.preventDefault();
+            await fetch('/api/admin/delete-user?id=@(user.Id)').then(response=>{
+                if(response.status === 200) {
+                    alert("Успешно");
+                    const elem = document.getElementById("user@(user.Id)");
+                    elem.parentNode.removeChild(elem);
+                } else alert(`Ошибка ${response.status}`);
+            })
+        })
+    </script>
+    </div>
+}
+</div>
