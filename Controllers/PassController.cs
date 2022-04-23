@@ -38,7 +38,7 @@ namespace TestBaza.Controllers
         {
             Test? test = await _testsRepo.GetTestAsync(id);
             if (test is null) return _responseFactory.NotFound(this);
-            if (!test.IsBrowsable) return _responseFactory.Forbid(this);
+            if (!test.IsPublished) return _responseFactory.Forbid(this);
 
             User user = await _userManager.GetUserAsync(User);
             PassingInfo? info = (await _passingInfoRepo.GetInfoAsync(user, test))!;
@@ -113,7 +113,7 @@ namespace TestBaza.Controllers
             }
             else
             {
-                if (test.AllowedAttempts <= info.Attempts.Count())
+                if (test.AreAttemptsLimited && test.AllowedAttempts <= info.Attempts.Count())
                 {
                     return _responseFactory.Conflict(this);
                 }
@@ -183,6 +183,12 @@ namespace TestBaza.Controllers
 
             currentAttempt.IsEnded = true;
             currentAttempt.TimeEnded = DateTime.Now;
+            currentAttempt.CheckInfo = new()
+            {
+                Attempt = currentAttempt,
+                Checker = test.Creator,
+                IsChecked = false
+            };
             await _passingInfoRepo.UpdateInfoAsync(info);
 
             return _responseFactory.Ok(this);

@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "8E2qLBDxucOoQDg5yqjubqs+nBBQ9Ogq56CsgBG31bs=",
+  "Hash": "xmDHIaOA/XQ18+wgIYafO6kB7eRGK30QtPawlsLGgyA=",
   "Source": "TestBaza",
   "BasePath": "_content/TestBaza",
   "Mode": "Default",
@@ -1122,12 +1122,12 @@
       "OriginalItemSpec": "wwwroot\\js\\profile-account.jsx"
     },
     {
-      "Identity": "C:\\Users\\timur\\source\\repos\\TestBaza\\TestBaza\\wwwroot\\js\\profile-stats.jsx",
+      "Identity": "C:\\Users\\timur\\source\\repos\\TestBaza\\TestBaza\\wwwroot\\js\\profile-check.jsx",
       "SourceId": "TestBaza",
       "SourceType": "Discovered",
       "ContentRoot": "C:\\Users\\timur\\source\\repos\\TestBaza\\TestBaza\\wwwroot\\",
       "BasePath": "_content/TestBaza",
-      "RelativePath": "js/profile-stats.jsx",
+      "RelativePath": "js/profile-check.jsx",
       "AssetKind": "All",
       "AssetMode": "All",
       "AssetRole": "Primary",
@@ -1136,7 +1136,7 @@
       "AssetTraitValue": "",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "wwwroot\\js\\profile-stats.jsx"
+      "OriginalItemSpec": "wwwroot\\js\\profile-check.jsx"
     },
     {
       "Identity": "C:\\Users\\timur\\source\\repos\\TestBaza\\TestBaza\\wwwroot\\js\\profile-tests.jsx",
@@ -1154,6 +1154,23 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\js\\profile-tests.jsx"
+    },
+    {
+      "Identity": "C:\\Users\\timur\\source\\repos\\TestBaza\\TestBaza\\wwwroot\\js\\profile-teststats.jsx",
+      "SourceId": "TestBaza",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\timur\\source\\repos\\TestBaza\\TestBaza\\wwwroot\\",
+      "BasePath": "_content/TestBaza",
+      "RelativePath": "js/profile-teststats.jsx",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\js\\profile-teststats.jsx"
     },
     {
       "Identity": "C:\\Users\\timur\\source\\repos\\TestBaza\\TestBaza\\wwwroot\\js\\tests-edit.jsx",

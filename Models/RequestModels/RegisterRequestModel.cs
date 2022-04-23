@@ -5,7 +5,7 @@ namespace TestBaza.Models
     public class RegisterRequestModel
     {
         [Required(ErrorMessage ="Вы не ввели никнейм")]
-        [RegularExpression(@"(?!\s)(?=([а-яА-ЯёЁ]|[a-zA-Z])).{4,20}", 
+        [RegularExpression(@"(?!.*\s)(?=.*([а-яА-ЯёЁ]|[a-zA-Z])).{4,20}", 
             ErrorMessage ="Никнейм должен быть не короче 4 и не длиннее 20 символов, не содержать пробелов")]
         public string? UserName { get; set; }
 

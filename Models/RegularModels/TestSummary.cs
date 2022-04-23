@@ -18,5 +18,6 @@
         public double AverageRate { get; set; }
         public int AllowedAttempts { get; set; }
         public bool AreAttemptsLimited { get; set; }
+        public bool AreAnswersManuallyChecked { get; set; }
     }
 }

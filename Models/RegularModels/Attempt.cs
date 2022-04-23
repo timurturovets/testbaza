@@ -9,7 +9,12 @@ namespace TestBaza.Models
         public DateTime TimeStarted { get; set; }
         public DateTime TimeEnded { get; set; }
         public bool IsEnded { get; set; }
+
         public IEnumerable<UserAnswer> UserAnswers { get; set; } = new List<UserAnswer>();
+
+        public int CheckInfoId { get; set; }
+        public CheckInfo? CheckInfo { get; set; }
+
         public int PassingInfoId { get; set; }
         public PassingInfo? PassingInfo { get; set; }
 
@@ -25,15 +30,19 @@ namespace TestBaza.Models
 
         public DetailedPassedTest ToDetailedTest()
         {
+            Test test = PassingInfo!.Test!;
             return new DetailedPassedTest
             {
-                TestName = PassingInfo!.Test!.TestName,
+                TestName = test.TestName,
+                AreAnswersManuallyChecked = test.AreAnswersManuallyChecked,
+                IsChecked = CheckInfo?.IsChecked ?? false,
                 UserAnswers = UserAnswers.Select(a => a.ToJsonModel()),
-                Questions = PassingInfo!.Test!.Questions.Select(q => q.ToJsonModel())
+                Questions = test.Questions.Select(q => q.ToJsonModel()),
+                CorrectAnswersCount = UserAnswers.Count(a => a.IsCorrect),
+                TimeUsed = (TimeEnded - TimeStarted).ToString(@"hh\:mm\:ss")
             };
         }
-
-        public UserStatSummary ToStatSummary() 
+        public UserStatSummary ToStatSummary()
             => new (PassingInfo!.User!.UserName, 
                 AttemptId, 
                 TimeEnded.ToMskTimeString());

@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 
 
-using TestBaza.Models;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 namespace TestBaza.Data
@@ -18,6 +17,22 @@ namespace TestBaza.Data
                 .WithOne(t => t.Creator)
                 .IsRequired()
                 .HasForeignKey(t => t.CreatorId);
+
+            builder.Entity<User>()
+                .HasMany(u => u.CheckInfos)
+                .WithOne(i => i.Checker)
+                .IsRequired()
+                .HasForeignKey(i => i.CheckerId);
+
+            builder.Entity<CheckInfo>()
+                .HasOne(i => i.Attempt)
+                .WithOne(a => a.CheckInfo)
+                .HasForeignKey<CheckInfo>(i => i.AttemptId)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<Attempt>()
+                .Navigation(a => a.CheckInfo).AutoInclude();
 
             builder.Entity<Rate>()
                 .HasOne(r => r.Test)
@@ -44,6 +59,7 @@ namespace TestBaza.Data
         public DbSet<Answer> Answers { get; set; }
         public DbSet<Rate> Rates { get; set; }
         public DbSet<PassingInfo> PassingInfos { get; set; }
+        public DbSet<CheckInfo> CheckInfos { get; set; }
         public DbSet<Attempt> Attempts { get; set; }
         public DbSet<UserAnswer> UserAnswers { get; set; }
     }

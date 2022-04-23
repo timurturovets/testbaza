@@ -7,7 +7,7 @@ namespace TestBaza.Models
         public IEnumerable<Test> Tests { get; set; } = new List<Test>();
         public IEnumerable<Rate> Rates { get; set; } = new List<Rate>();
         public IEnumerable<PassingInfo> PassingInfos { get; set; } = new List<PassingInfo>();
-
+        public IEnumerable<CheckInfo> CheckInfos { get; set; } = new List<CheckInfo>();
         public UserJsonModel ToJsonModel()
         {
             return new UserJsonModel

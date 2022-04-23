@@ -47,6 +47,7 @@ IServiceCollection services = builder.Services;
     services.AddTransient<IQuestionsRepository, QuestionsRepository>();
     services.AddTransient<IRatesRepository, RatesRepository>();
     services.AddTransient<IPassingInfoRepository, PassingInfoRepository>();
+    services.AddTransient<IChecksInfoRepository, ChecksInfoRepository>();
 
     services.AddTransient<IUserFactory, UserFactory>();
     services.AddTransient<ITestFactory, TestFactory>();

@@ -169,16 +169,26 @@ class DetailedPassedTest extends React.Component {
     }
 
     render() {
-        const test = this.props.info;
-        console.log(test);
-        const questions = test.questions,
-            answers = test.userAnswers;
+        console.log('detailed past render. detailed test is');
+        console.log(this.props.info);
+        const { testName,
+            questions,
+            userAnswers,
+            correctAnswersCount,
+            areAnswersManuallyChecked,
+            isChecked } = this.props.info;
+
+        const showChecks = isChecked
+            ? true
+            : areAnswersManuallyChecked
+                ? false
+                : true;
 
         const combined = [];
         let i = 0;
         for (const question of questions) {
             i++;
-            const userAnswer = answers.find(a => a.questionNumber === question.number);
+            const userAnswer = userAnswers.find(a => a.questionNumber === question.number);
 
             if (!!userAnswer) {
 
@@ -210,7 +220,13 @@ class DetailedPassedTest extends React.Component {
 
         return <div>
             <button className="btn btn-outline-primary" onClick={this.props.onBrowsingEnd}>К тестам</button>
-            <h2 className="display-2 text-center">Тест {test.testName}</h2>
+            <h2 className="display-2 text-center">Тест {testName}</h2>
+            {areAnswersManuallyChecked
+                ? isChecked
+                    ? <p className="text-success m-0">Работа проверена.</p>
+                    : <p className="text-danger m-0">Создатель теста ещё не проверил вашу работу.</p>
+                : null
+            }
             {console.log('combined: ')}
             {console.log(combined)}
             {combined.map(c => {
@@ -223,22 +239,24 @@ class DetailedPassedTest extends React.Component {
                         ? <div>
                             <input type="text" className="form-control" placeholder="Вы не ответили на этот вопрос."
                                 readOnly value={c.answer.value} />
-                            {!c.answer.value
-                                ? null
-                                : c.answer.isCorrect
-                                    ? <b className="text-success">Это верный ответ.</b>
-                                    : <p className="text-danger">
-                                        Это неверный ответ.
-                                        <b className="text-dark">Верный ответ: {c.question.answer}</b>
-                                    </p>
+                            {showChecks
+                                ? !c.answer.value
+                                    ? null
+                                    : c.answer.isCorrect
+                                        ? <b className="text-success">Это верный ответ.</b>
+                                        : <p className="text-danger">
+                                            Это неверный ответ.
+                                            <b className="text-dark">Верный ответ: {c.question.answer}</b>
+                                            </p>
+                                : null
                             }
                         </div>
                         : <div className="form-group form-check">
                             {c.question.answers.map(ans =>
-                                <div key={ans.questionNumber}>
+                                <div key={ans.answerId}>
                                     <input type="radio" className="form-check-input d-inline"
                                         readOnly
-                                        checked={ans.number === c.answer.value} />
+                                        checked={ans.number === parseInt(c.answer.value)} />
                                     <label className="form-check-label">{ans.value}</label>
                                     {ans.number === c.userAnswer
                                         ? <p>(ваш ответ)</p>
@@ -252,6 +270,10 @@ class DetailedPassedTest extends React.Component {
                     }
                 </div>
             })}
+            {showChecks
+                ? <p>Правильных ответов: <b>{correctAnswersCount + "/" + questions.length}</b></p>
+                : <p>Работа ещё не проверена.</p>
+            }
         </div>;
     }
 }

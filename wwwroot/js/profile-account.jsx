@@ -384,6 +384,7 @@ class UserTests extends React.Component {
                                 isBrowsable={test.isBrowsable}
                                 ratesCount={test.ratesCount}
                                 averageRate={test.averageRate}
+                                areAnswersManuallyChecked={test.areAnswersManuallyChecked}
                             /><hr /></div>)
                     }
                     )}
@@ -428,14 +429,15 @@ class EditableTestSummary extends React.Component {
             isPublished,
             isBrowsable,
             ratesCount,
-            averageRate
+            averageRate,
+            areAnswersManuallyChecked
         } = this.props;
         window.navigator.clipboard
         const anchor = document.createElement("a");
         anchor.setAttribute("href", `/tests/share?test=${link}`);
         const href = anchor.href;
 
-        return (<div>
+        return <div>
             <h3 className="m-0">Тест {name}</h3>
             <p className="m-0">Создан {timeCreated}</p>
             {isPublished
@@ -453,10 +455,16 @@ class EditableTestSummary extends React.Component {
                     <a className="btn btn-outline-success" href={`/tests/edit${id}`}>Редактировать</a>
                     <a className="btn btn-outline-success" href={`/profile/test-stats${id}`}>
                         Просмотреть решения пользователей
+                    </a>
+                    {areAnswersManuallyChecked
+                        ? <a className="btn btn-outline-success" href={`/profile/check-tests${id}`}>
+                            Проверить решения пользователей
                         </a>
+                        : null
+                    }
                 </div>
             </div>
-            </div>);
+            </div>
     }
 }
 

@@ -1,0 +1,9 @@
+﻿<div id="root"><h2 class="display-2">Загрузка...</h2></div>
+
+<partial name="_ReactScriptsPartial" />
+<script src="~/js/profile-check.jsx" type="text/babel" asp-append-version="true"></script>
+<script type="text/babel">
+    const testId = @ViewData["TestId"];
+
+    ReactDOM.render(<ChecksList testId={testId} />, document.getElementById("root"))
+</script>

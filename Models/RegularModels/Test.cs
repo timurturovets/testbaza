@@ -26,7 +26,6 @@ namespace TestBaza.Models
         public IEnumerable<PassingInfo> PassingInfos { get; set; } = new List<PassingInfo>();
         public string? CreatorId { get; set; }
         public User? Creator { get; set; }
-
         public override bool Equals(object? obj)
         {
             if (obj is Test test)
@@ -45,6 +44,7 @@ namespace TestBaza.Models
                 TestName = TestName,
                 Description = Description,
                 AuthorName = Creator!.UserName,
+                IsPrivate = IsPrivate,
                 TimeInfo = new TimeInfo(IsTimeLimited, TimeLimit),
                 Questions = Questions.Select(q => q.ToJsonModel(includeAnswers)),
                 AllowedAttempts = AllowedAttempts,
@@ -68,7 +68,8 @@ namespace TestBaza.Models
                 IsPublished = IsPublished,
                 TimeInfo = new TimeInfo(IsTimeLimited, TimeLimit),
                 AllowedAttempts = AllowedAttempts,
-                AreAttemptsLimited = AreAttemptsLimited
+                AreAttemptsLimited = AreAttemptsLimited,
+                AreAnswersManuallyChecked = AreAnswersManuallyChecked
             };
         }
 

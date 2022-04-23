@@ -28,7 +28,7 @@
     populateData = async () => {
         await fetch(`/api/profile/get-stats?id=${this.props.testId}`).then(async response => {
             if (response.status === 204) {
-                this.setState({ isEmpty: true });
+                this.setState({ isLoading: false, isEmpty: true });
             } else if (response.status === 200) {
                 const object = await response.json();
                 const result = object.result;
@@ -61,7 +61,7 @@
         const { stats, isEmpty } = this.state;
         return <div>
             {isEmpty
-                ? <h4>Этот тест ещё никто не разу не проходил :(</h4>
+                ? <h4>Этот тест ещё никто не проходил :(</h4>
                 : <div>
                     {stats.map(stat => <UserStatSummary key={stat.attemptId}
                         info={stat}
@@ -95,7 +95,7 @@ class UserStat extends React.Component {
     }
 
     render() {
-        const { questions, userAnswers } = this.props.info;
+        const { questions, userAnswers, correctAnswersCount } = this.props.info;
 
         const combined = [];
         let i = 0;
@@ -130,7 +130,7 @@ class UserStat extends React.Component {
                 });
             }
         }
-
+        console.log('ale priem wtf');
         return <div>
             <button className="btn btn-outline-primary" onClick={this.props.onBrowsingEnd}>Назад</button>
             {console.log('combined: ')}
@@ -160,20 +160,25 @@ class UserStat extends React.Component {
                                 <div key={ans.questionNumber}>
                                     <input type="radio" className="form-check-input d-inline"
                                         readOnly
-                                        checked={ans.number === c.answer.value} />
+                                        checked={ans.number === parseInt(c.answer.value)} />
                                     <label className="form-check-label">{ans.value}</label>
-                                    {ans.number === c.userAnswer
-                                        ? <p>(ответ пользователя)</p>
-                                        : null
-                                    }
                                 </div>)}
                             {!c.answer.value
                                 ? <p>(Пользователь не ответил на этот вопрос)</p>
-                                : null}
+                                : c.question.correctAnswerNumber === parseInt(c.answer.value)
+                                    ? <b className="text-success">Это верный ответ.</b>
+                                    : <p className="text-danger">
+                                        Это неверный ответ. <br />
+                                        <b className="text-dark">Верный ответ: 
+                                            {c.question.answers.find(a => a.number === c.question.correctAnswerNumber)
+                                                .value}
+                                        </b>
+                                    </p>}
                         </div>
                     }
                 </div>
             })}
-        </div>;
+            <p>Правильных ответов: <b>{correctAnswersCount + "/" + questions.length}</b></p>
+        </div>
     }
 }

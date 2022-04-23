@@ -14,14 +14,15 @@ namespace TestBaza.Controllers
     {
         private readonly ITestsRepository _testsRepo;
         private readonly IPassingInfoRepository _passingInfoRepo;
-        private readonly IRatesRepository _ratesRepo;
+        private readonly IChecksInfoRepository _checksRepo;
         private readonly IResponseFactory _responseFactory;
         private readonly UserManager<User> _userManager;
         private readonly ILogger<ProfileController> _logger;
         public ProfileController(
             ITestsRepository testsRepo,
             IPassingInfoRepository passingInfoRepo,
-            IRatesRepository ratesRepo,
+            IChecksInfoRepository checksRepo,
+
             IResponseFactory responseFactory,
             UserManager<User> userManager,
             ILogger<ProfileController> logger
@@ -29,7 +30,8 @@ namespace TestBaza.Controllers
         {
             _testsRepo = testsRepo;
             _passingInfoRepo = passingInfoRepo;
-            _ratesRepo = ratesRepo;
+            _checksRepo = checksRepo;
+
             _responseFactory = responseFactory;
             _userManager = userManager;
             _logger = logger;
@@ -40,6 +42,16 @@ namespace TestBaza.Controllers
 
         [Route("/profile/user-tests")]
         public IActionResult UserTests() => _responseFactory.View(this);
+
+        [Route("/profile/check-tests{id}")]
+        public async Task<IActionResult> CheckTests([FromRoute] int id)
+        {
+            Test? test = await _testsRepo.GetTestAsync(id);
+            if (test is null) return _responseFactory.NotFound(this);
+
+            ViewData["TestId"] = id;
+            return _responseFactory.View(this);
+        }
 
         [Route("/profile/test-stats{id}")]
         public async Task<IActionResult> TestStats([FromRoute] int id)
@@ -53,7 +65,24 @@ namespace TestBaza.Controllers
             ViewData["TestId"] = id;
             return _responseFactory.View(this);
         }
-        
+
+        [HttpGet("/api/profile/checks-info")]
+        public async Task<IActionResult> GetChecks([FromQuery] int testId)
+        {
+            Test? test = await _testsRepo.GetTestAsync(testId);
+            if (test is null) return _responseFactory.NotFound(this);
+
+            User user = await _userManager.GetUserAsync(User);
+            if (!test!.Creator!.Equals(user)) return _responseFactory.Forbid(this);
+
+            List<CheckInfo> infos = _checksRepo.GetUserCheckInfos(user).ToList();
+            IEnumerable<CheckInfoSummary> summaries = infos
+                .Where(i => i.Attempt?.PassingInfo?.Test?.Equals(test) ?? false)
+                .Select(i=>i.ToSummary());
+
+            return _responseFactory.Ok(this, result: summaries);
+        }
+
         [HttpGet("/api/profile/get-stat")]
         public async Task<IActionResult> GetUserStat([FromQuery] int testId, [FromQuery] int attemptId)
         {
@@ -73,6 +102,7 @@ namespace TestBaza.Controllers
             DetailedPassedTest model = attempt.ToDetailedTest();
             return _responseFactory.Ok(this, result: model);
         }
+
         [HttpGet("/api/profile/get-stats")]
         public async Task<IActionResult> GetUserStats([FromQuery] int id)
         {
@@ -188,6 +218,39 @@ namespace TestBaza.Controllers
             DetailedPassedTest model = lastAttempt.ToDetailedTest();
 
             return _responseFactory.Ok(this, result: model);
+        }
+
+        [HttpPost("/api/profile/check-test")]
+        public async Task<IActionResult> CheckTest([FromForm] CheckTestRequestModel model)
+        {
+            Test? test = await _testsRepo.GetTestAsync(model.TestId);
+            if (test is null) return _responseFactory.NotFound(this);
+
+            User user = await _userManager.GetUserAsync(User);
+            if (!user.Equals(test.Creator)) return _responseFactory.Forbid(this);
+
+            Attempt? attempt = test.PassingInfos
+                .FirstOrDefault(i => i.Attempts.Any(a => a.AttemptId == model.AttemptId))
+                ?.Attempts?.Single(a => a.AttemptId == model.AttemptId);
+
+            if (attempt is null) return _responseFactory.NotFound(this);
+            if (!attempt.IsEnded) return _responseFactory.Conflict(this);
+            _logger.LogWarning($"Le length: {model.CorrectAQNumbers.Count}");
+            _logger.LogWarning($"Le length2: {model.IncorrectAQNumbers.Count}");
+
+            foreach (int number in model.CorrectAQNumbers)
+                attempt.UserAnswers.First(a => a.QuestionNumber == number).IsCorrect = true;
+            
+            foreach (int number in model.IncorrectAQNumbers)
+                attempt.UserAnswers.First(a => a.QuestionNumber == number).IsCorrect = false;
+
+            _logger.LogWarning("In the end of \"CheckTest\" methode");
+
+
+            attempt.CheckInfo!.IsChecked = true;
+            await _testsRepo.UpdateTestAsync(test);
+
+            return _responseFactory.Ok(this);
         }
     }
 }

@@ -77,7 +77,7 @@ namespace TestBaza.Controllers
         public async Task<IActionResult> PassByLink([FromQuery] string test)
         {
             Test? passingTest = await _testsRepo.GetTestByLinkAsync(test);
-
+            _logger.LogWarning($"TestName: {passingTest?.TestName}, isPublished: {passingTest?.IsPublished}");    
             if (passingTest is null) return _responseFactory.NotFound(this);
 
             if (!passingTest.IsPublished) return _responseFactory.Forbid(this);
