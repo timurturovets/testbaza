@@ -19,4 +19,9 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="6.0.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\images\questions" />
+    <Folder Include="wwwroot\images\tests" />
+  </ItemGroup>
+
 </Project>

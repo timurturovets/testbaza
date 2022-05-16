@@ -133,13 +133,14 @@ public class Test
         else if (image is null) return;
         else
         {
-            var fileName = image.FileName + Guid.NewGuid().ToString()[..5];
+            var fileRoute = image.FileName + Guid.NewGuid().ToString()[..5];
             var pathToImage = Path.Combine(
                 environment.WebRootPath, 
                 "images", 
                 "tests",
-                fileName
+                fileRoute
                 );
+            ImageRoute = fileRoute;
             await using var stream = new FileStream(pathToImage, FileMode.Create);
             await image.CopyToAsync(stream);
         }
