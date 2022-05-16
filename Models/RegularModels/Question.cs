@@ -87,7 +87,7 @@ namespace TestBaza.Models
             else if (image is null) return;
             else
             {
-                var fileRoute = image.FileName + Guid.NewGuid()[..5];
+                var fileRoute = image.FileName + Guid.NewGuid().ToString()[..5];
                 var pathToImage = Path.Combine(
                     environment.WebRootPath,
                     "images",

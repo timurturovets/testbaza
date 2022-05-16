@@ -160,7 +160,8 @@ namespace TestBaza.Controllers
 
         [HttpPut("/api/tests/wq/update-test")]
         public async Task<IActionResult> UpdateTest([FromForm] UpdateTestRequestModel model)
-        {if (ModelState.IsValid)
+        {
+            if (ModelState.IsValid)
             {
                 var test = await _testsRepo.GetTestAsync(model.TestId);
                 if (test is null) return _responseFactory.NotFound(this);
@@ -169,9 +170,10 @@ namespace TestBaza.Controllers
                 if (!test.Creator!.Equals(creator)) return _responseFactory.Forbid(this);
 
                 test.Update(model);
-
+                var env = HttpContext.RequestServices.GetRequiredService<IWebHostEnvironment>();
+                test.UpdateImage(model.Image, env);
                 await _testsRepo.UpdateTestAsync(test);
-
+                
                 var testModel = test.ToJsonModel();
                 return _responseFactory.Ok(this, testModel);
             }
@@ -227,7 +229,9 @@ namespace TestBaza.Controllers
             if (!question.Test!.Creator!.Equals(creator)) return _responseFactory.Forbid(this);
 
             question.Update(model);
-
+            var env = HttpContext.RequestServices.GetRequiredService<IWebHostEnvironment>();
+            question.UpdateImage(model.Image, env);
+            
             await _qsRepo.UpdateQuestionAsync(question);
 
             return _responseFactory.Ok(this);
@@ -273,7 +277,7 @@ namespace TestBaza.Controllers
             return _responseFactory.Ok(this);
         }
 
-        [HttpGet("/api/tests/publish-test{testId}")]
+        [HttpGet("/api/tests/publish-test{testId:int}")]
         public async Task<IActionResult> PublishTest([FromRoute] int testId)
         {
             var test = await _testsRepo.GetTestAsync(testId);
