@@ -1,4 +1,6 @@
-﻿namespace TestBaza.Models
+﻿using System.Net.Mime;
+
+namespace TestBaza.Models
 {
     public class Question
     {
@@ -9,7 +11,11 @@
         public string? Hint { get; set; }
         public bool HintEnabled { get; set; }
         public string? ImageRoute { get; set; }
-        public bool HasImage { get; set; }
+        public bool HasImage
+        {
+            get => !string.IsNullOrEmpty(ImageRoute);
+            set {}
+        }
         public string? Answer { get; set; }
         public IEnumerable<Answer> MultipleAnswers { get; set; } = new List<Answer>();
         public int CorrectAnswerNumber { get; set; }
@@ -35,6 +41,8 @@
                 QuestionId = QuestionId,
                 Number = Number,
                 Value = Value,
+                ImageRoute = ImageRoute,
+                HasImage = HasImage,
                 Hint = Hint,
                 HintEnabled = HintEnabled,
                 Answer = includeAnswers ? Answer : string.Empty,
@@ -42,6 +50,52 @@
                 CorrectAnswerNumber = includeAnswers ? CorrectAnswerNumber : -1,
                 AnswerType = (int)AnswerType,
             };
+        }
+
+        public void Update(UpdateQuestionRequestModel model)
+        {
+            Value = model.Value;
+            Hint = model.Hint;
+            HintEnabled = model.HintEnabled;
+            Answer = model.Answer;
+            model.Answers?.ToList().ForEach(a =>
+            {
+                var answer = MultipleAnswers.FirstOrDefault(ans => ans.AnswerId == a.AnswerId);
+                if (answer is null) return;
+                answer.Value = a.Value;
+            });
+            AnswerType = model.AnswerType;
+            CorrectAnswerNumber = model.CorrectAnswerNumber;
+        }
+
+        public async void UpdateImage(IFormFile? image, IWebHostEnvironment environment)
+        {
+            if (HasImage)
+            {
+                var pathToImage = Path.Combine(
+                    environment.WebRootPath,
+                    "images", 
+                    "questions",
+                    ImageRoute!
+                    );
+                File.Delete(pathToImage);
+                if (image is null) return;
+                await using var stream = new FileStream(pathToImage, FileMode.Create);
+                await image.CopyToAsync(stream);
+            } 
+            // ReSharper disable once RedundantJumpStatement
+            else if (image is null) return;
+            else
+            {
+                var pathToImage = Path.Combine(
+                    environment.WebRootPath,
+                    "images",
+                    "questions",
+                    image.FileName + Guid.NewGuid().ToString()[..5]
+                    );
+                await using var stream = new FileStream(pathToImage, FileMode.Create);
+                await image.CopyToAsync(stream);
+            }
         }
     }
 }

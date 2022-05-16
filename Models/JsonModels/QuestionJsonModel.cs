@@ -5,6 +5,8 @@
         public int QuestionId { get; set; }
         public int Number { get; set; }
         public string? Value { get; set; }
+        public string? ImageRoute { get; set; }
+        public bool HasImage { get; set; }
         public string? Hint { get; set; }
         public bool HintEnabled { get; set; }
         public string? Answer { get; set; }

@@ -19,13 +19,13 @@ namespace TestBaza.Models
 
                 if (test.AreAnswersManuallyChecked) return _isCorrect;
 
-                var question = test.Questions.SingleOrDefault(q => q.Number == QuestionNumber);
+                var question = test.Questions.FirstOrDefault(q => q.Number == QuestionNumber);
 
                 var correctAnswer = question?.AnswerType == AnswerType.HasToBeTyped
-                    ? question?.Answer
+                    ? question.Answer
                     : question?.CorrectAnswerNumber + "";
 
-                return correctAnswer?.Trim().ToLower() == Value?.Trim().ToLower();
+                return string.Equals(correctAnswer?.Trim(), Value?.Trim(), StringComparison.CurrentCultureIgnoreCase);
             }
             set 
             { 

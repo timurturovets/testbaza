@@ -5,6 +5,8 @@
         public int TestId { get; set; }
         public string? TestName { get; set; }
         public string? Description { get; set; }
+        public string? ImageRoute { get; set; }
+        public bool HasImage { get; set; }
         public bool IsPrivate { get; set; }
         public IEnumerable<QuestionJsonModel> Questions { get; set; } = new List<QuestionJsonModel>();
         public string? AuthorName { get; set; }

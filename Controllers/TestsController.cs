@@ -175,7 +175,7 @@ namespace TestBaza.Controllers
                 var testModel = test.ToJsonModel();
                 return _responseFactory.Ok(this, testModel);
             }
-            else return _responseFactory.BadRequest(this);
+            return _responseFactory.BadRequest(this);
         }
 
         [HttpPost("/api/tests/delete-test")]
@@ -226,21 +226,7 @@ namespace TestBaza.Controllers
             var creator = await _userManager.GetUserAsync(User);
             if (!question.Test!.Creator!.Equals(creator)) return _responseFactory.Forbid(this);
 
-            question.Value = model.Value;
-            question.Hint = model.Hint;
-            question.HintEnabled = model.HintEnabled;
-            question.Answer = model.Answer;
-            if (model.Answers is not null)
-            {
-                model.Answers.ToList().ForEach(a =>
-                {
-                    var answer = question.MultipleAnswers.FirstOrDefault(ans => ans.AnswerId == a.AnswerId);
-                    if (answer is null) return;
-                    answer.Value = a.Value;
-                });
-            }
-            question.AnswerType = model.AnswerType;
-            question.CorrectAnswerNumber = model.CorrectAnswerNumber;
+            question.Update(model);
 
             await _qsRepo.UpdateQuestionAsync(question);
 
@@ -267,8 +253,8 @@ namespace TestBaza.Controllers
             if (question is null) return _responseFactory.NotFound(this);
             if (!question.Test!.Creator!.Equals(creator)) return _responseFactory.Forbid(this);
 
-            var info = await _qsRepo.AddAnswerToQuestionAsync(question);
-            return _responseFactory.Ok(this, result: new { answerId = info.Id, number = info.Number });
+            var (answerId, number) = await _qsRepo.AddAnswerToQuestionAsync(question);
+            return _responseFactory.Ok(this, new { answerId, number });
         }
 
         [HttpPost("/api/tests/delete-answer")]
@@ -296,7 +282,7 @@ namespace TestBaza.Controllers
             if (test is null)
             {
                 errors.Add("Произошла непредвиденная ошибка. Перезагрузите страницу.");
-                return _responseFactory.BadRequest(this, result: errors );
+                return _responseFactory.BadRequest(this, errors );
             }
 
             var creator = await _userManager.GetUserAsync(User);

@@ -10,6 +10,7 @@ using TestBaza.Data;
 using TestBaza.Factories;
 using TestBaza.Extensions;
 using TestBaza.Repositories;
+using IHostingEnvironment = Microsoft.AspNetCore.Hosting.IHostingEnvironment;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,7 +34,7 @@ var services = builder.Services;
         .AddEntityFrameworkStores<AppDbContext>();
 
     services.AddControllersWithViews();
-
+    
     services.ConfigureApplicationCookie(options =>
     {
         options.LoginPath = "/auth/login";

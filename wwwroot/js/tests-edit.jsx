@@ -19,10 +19,9 @@
     }
 
     render() {
-        const content = this.state.isLoading
+        return this.state.isLoading
             ? <h1>Информация о тесте загружается...</h1>
-            : this.renderTest()
-        return content;
+            : this.renderTest();
     }
 
     populateData = async () => {
@@ -48,6 +47,8 @@
 
         const name = test.testName,
             {description, 
+                hasImage,
+                imageRoute,
                 questions,
                 isPrivate,
                 areAnswersManuallyChecked,
@@ -65,6 +66,18 @@
                     <label className="display-6">Описание теста</label>
                     <input type="text" className="form-control" name="description"
                         onChange={this.handleUnsavedChange} defaultValue={description} />
+                    <label className="display-6">Картинка описания</label>
+                    {hasImage
+                        ? <div>
+                            <img src={imageRoute} alt="Картинка теста"/>
+                            <button>Удалить картинку</button>
+                        </div>
+                        : <div>
+                            <label className="display-6">Добавить картинку</label>
+                            <input type="file" accept="image/*" />
+                            <button className="btn btn-success">Загрузить</button>
+                        </div>
+                    }
                 </div>
                 <div className="form-group">
                     <div className="form-check form-switch">
