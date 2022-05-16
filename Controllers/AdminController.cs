@@ -30,7 +30,7 @@ namespace TestBaza.Controllers
         {
             if (!await CheckIfAdmin()) return Forbid();
 
-            Test? test = await _testsRepo.GetTestAsync(id);
+            var test = await _testsRepo.GetTestAsync(id);
             if (test is null) return NotFound();
 
             await _testsRepo.RemoveTestAsync(test);
@@ -42,7 +42,7 @@ namespace TestBaza.Controllers
         {
             if (!await CheckIfAdmin()) return Forbid();
 
-            User? user = _userManager.Users.FirstOrDefault(u => u.Id == id);
+            var user = _userManager.Users.FirstOrDefault(u => u.Id == id);
             if (user is null) return NotFound();
 
             var result = await _userManager.DeleteAsync(user);
@@ -50,13 +50,13 @@ namespace TestBaza.Controllers
         }
         private async Task<bool> CheckIfAdmin()
         {
-            string adminName = HttpContext
+            var adminName = HttpContext
                 .RequestServices
                 .GetRequiredService<IConfiguration>()
                 .GetValue<string>("ADMIN_USERNAME");
 
-            User currentUser = await _userManager.GetUserAsync(User);
-            return adminName == (currentUser?.UserName ?? "");
+            var currentUser = await _userManager.GetUserAsync(User);
+            return adminName == currentUser?.UserName;
         }
     }
 }

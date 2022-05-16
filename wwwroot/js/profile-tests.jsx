@@ -177,9 +177,7 @@ class DetailedPassedTest extends React.Component {
 
         const showChecks = isChecked
             ? true
-            : areAnswersManuallyChecked
-                ? false
-                : true;
+            : !areAnswersManuallyChecked;
 
         const combined = [];
         let i = 0;

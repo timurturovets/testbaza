@@ -12,10 +12,10 @@ namespace TestBaza.Middlewares
 
         public async Task InvokeAsync(HttpContext context)
         {
-            UserManager<User> userManager = context.RequestServices.GetRequiredService<UserManager<User>>();
-            SignInManager<User> signInManager = context.RequestServices.GetRequiredService<SignInManager<User>>();
+            var userManager = context.RequestServices.GetRequiredService<UserManager<User>>();
+            var signInManager = context.RequestServices.GetRequiredService<SignInManager<User>>();
 
-            User? user = await userManager.GetUserAsync(context.User);
+            var user = await userManager.GetUserAsync(context.User);
             if (!(context.Request.Path + "").StartsWith("/auth"))
             {
                 if (user is null) await signInManager.SignOutAsync();

@@ -33,23 +33,23 @@ namespace TestBaza.Controllers
         [HttpGet("/api/pass/info")]
         public async Task<IActionResult> GetInfo([FromQuery] int id)
         {
-            Test? test = await _testsRepo.GetTestAsync(id);
+            var test = await _testsRepo.GetTestAsync(id);
             if (test is null) return _responseFactory.NotFound(this);
             if (!test.IsPublished) return _responseFactory.Forbid(this);
 
-            User user = await _userManager.GetUserAsync(User);
-            PassingInfo? info = (await _passingInfoRepo.GetInfoAsync(user, test))!;
-            TestJsonModel testModel = test.ToJsonModel(includeAnswers: false);
+            var user = await _userManager.GetUserAsync(User);
+            var info = await _passingInfoRepo.GetInfoAsync(user, test);
+            var testModel = test.ToJsonModel(includeAnswers: false);
 
             if(info is null)
             {
                 info = _passingInfoFactory.Create(user, test);
                 await _passingInfoRepo.AddInfoAsync(info);
                 return _responseFactory.StatusCode(this, 201, 
-                    result: new { test = testModel, attemptsLeft = test.AllowedAttempts });
+                    new { test = testModel, attemptsLeft = test.AllowedAttempts });
             }
 
-            Attempt? currentAttempt = info.Attempts.SingleOrDefault(a => !a.IsEnded);
+            var currentAttempt = info.Attempts.SingleOrDefault(a => !a.IsEnded);
 
             if (test.AreAttemptsLimited 
                 && info.Attempts.Count() >= test.AllowedAttempts
@@ -58,39 +58,35 @@ namespace TestBaza.Controllers
                 return _responseFactory.Conflict(this);
             }
 
-            int attemptsLeft = test.AreAttemptsLimited
+            var attemptsLeft = test.AreAttemptsLimited
            ? test.AllowedAttempts - info.Attempts.Count()
            : -1;
 
-            if (currentAttempt is not null)
-            {                                
-                AttemptJsonModel attemptModel = currentAttempt.ToJsonModel();
-                if (test.IsTimeLimited)
-                {
-                    DateTime end = currentAttempt.TimeStarted + TimeSpan.FromSeconds(test.TimeLimit);
-                    if (end < DateTime.Now)
-                    {
-                        currentAttempt.TimeEnded = end;
-                        currentAttempt.IsEnded = true;
-                        await _passingInfoRepo.UpdateInfoAsync(info);
+            if (currentAttempt is null)
+                return _responseFactory.StatusCode(this, 201, result: new {test = testModel, attemptsLeft});
+            
+            var attemptModel = currentAttempt.ToJsonModel();
+            if (!test.IsTimeLimited) return _responseFactory.Ok(this, result: attemptModel);
+            
+            var end = currentAttempt.TimeStarted + TimeSpan.FromSeconds(test.TimeLimit);
+            if (end >= DateTime.Now) return _responseFactory.Ok(this, result: attemptModel);
+            
+            currentAttempt.TimeEnded = end;
+            currentAttempt.IsEnded = true;
+            await _passingInfoRepo.UpdateInfoAsync(info);
 
-                        return _responseFactory.StatusCode(this, 201, result: new { test = testModel, attemptsLeft});
-                    }
-                }
-                return _responseFactory.Ok(this, result: attemptModel);
-            }
-            return _responseFactory.StatusCode(this, 201, result: new { test = testModel, attemptsLeft });
+            return _responseFactory.StatusCode(this, 201, result: new { test = testModel, attemptsLeft});
         }
 
         [HttpGet("/api/pass/start-passing")]
         public async Task<IActionResult> StartPassing([FromQuery] int testId)
         {
-            Test? test = await _testsRepo.GetTestAsync(testId);
+            var test = await _testsRepo.GetTestAsync(testId);
             if (test is null) return _responseFactory.NotFound(this);
 
-            User user = await _userManager.GetUserAsync(User);
+            var user = await _userManager.GetUserAsync(User);
 
-            PassingInfo? info = await _passingInfoRepo.GetInfoAsync(user, test);
+            var info = await _passingInfoRepo.GetInfoAsync(user, test);
 
             if (info is null)
             {
@@ -131,18 +127,18 @@ namespace TestBaza.Controllers
         [HttpPost("/api/pass/save-answer")]
         public async Task<IActionResult> SaveAnswer([FromForm] SaveAnswerRequestModel model)
         {
-            Test? test = await _testsRepo.GetTestAsync(model.TestId);
+            var test = await _testsRepo.GetTestAsync(model.TestId);
             if (test is null) return _responseFactory.NotFound(this);
 
-            User user = await _userManager.GetUserAsync(User);
+            var user = await _userManager.GetUserAsync(User);
 
-            PassingInfo? info = await _passingInfoRepo.GetInfoAsync(user, test);
+            var info = await _passingInfoRepo.GetInfoAsync(user, test);
             if (info is null) return _responseFactory.BadRequest(this);
 
-            Attempt? currentAttempt = info.Attempts.SingleOrDefault(a => !a.IsEnded);
+            var currentAttempt = info.Attempts.SingleOrDefault(a => !a.IsEnded);
             if (currentAttempt is null) return _responseFactory.Conflict(this);
 
-            UserAnswer? answer = currentAttempt.UserAnswers
+            var answer = currentAttempt.UserAnswers
                 .SingleOrDefault(a => a.QuestionNumber == model.QuestionNumber);
             if (answer is null)
             {
@@ -166,20 +162,20 @@ namespace TestBaza.Controllers
         [HttpGet("/api/pass/end-passing")]
         public async Task<IActionResult> EndPassing([FromQuery] int testId)
         {
-            Test? test = await _testsRepo.GetTestAsync(testId);
+            var test = await _testsRepo.GetTestAsync(testId);
             if (test is null) return _responseFactory.NotFound(this);
 
-            User user = await _userManager.GetUserAsync(User);
+            var user = await _userManager.GetUserAsync(User);
 
-            PassingInfo? info = await _passingInfoRepo.GetInfoAsync(user, test);
+            var info = await _passingInfoRepo.GetInfoAsync(user, test);
             if (info is null) return _responseFactory.Conflict(this);
 
-            Attempt? currentAttempt = info.Attempts.SingleOrDefault(a => !a.IsEnded);
+            var currentAttempt = info.Attempts.SingleOrDefault(a => !a.IsEnded);
             if (currentAttempt is null) return _responseFactory.Conflict(this);
 
             currentAttempt.IsEnded = true;
             currentAttempt.TimeEnded = DateTime.Now;
-            currentAttempt.CheckInfo = new()
+            currentAttempt.CheckInfo = new CheckInfo
             {
                 Attempt = currentAttempt,
                 Checker = test.Creator,

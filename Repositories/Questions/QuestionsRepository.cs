@@ -40,7 +40,7 @@ namespace TestBaza.Repositories
         }
         public async Task<AnswerInfo> AddAnswerToQuestionAsync(Question question)
         {
-            int number = question.MultipleAnswers.Count() + 1;
+            var number = question.MultipleAnswers.Count() + 1;
             Answer answer = new()
             {
                 Number = number,
@@ -53,13 +53,13 @@ namespace TestBaza.Repositories
         }
         public async Task RemoveAnswerFromQuestionAsync(Question question, Answer answer)
         {
-            int number = answer.Number;
+            var number = answer.Number;
             _context.Answers.Remove(answer);
             await _context.SaveChangesAsync();
 
             question = (await GetQuestionAsync(question.QuestionId))!;
 
-            foreach(Answer a in question.MultipleAnswers)
+            foreach(var a in question.MultipleAnswers)
             {
                 if (a.Number < number) continue;
                 a.Number--;
@@ -76,15 +76,15 @@ namespace TestBaza.Repositories
 
         public async Task DeleteQuestionAsync(Question question)
         {
-            int number = question.Number;
-            int testId = question.Test!.TestId;
+            var number = question.Number;
+            var testId = question.Test!.TestId;
 
             _context.Questions.Remove(question);
             await _context.SaveChangesAsync();
 
-            Test test = (await _testsRepo.GetTestAsync(testId))!;
+            var test = (await _testsRepo.GetTestAsync(testId))!;
 
-            foreach(Question q in test.Questions)
+            foreach(var q in test.Questions)
             {
                 if (q.Number < number) continue;
                 q.Number--;

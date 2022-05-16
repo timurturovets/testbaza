@@ -13,9 +13,9 @@ using TestBaza.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
-IServiceCollection services = builder.Services;
+var services = builder.Services;
 {
-    string connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
     services.AddDbContext<AppDbContext>(options =>
         options.UseSqlServer(connectionString));
     services.AddDatabaseDeveloperPageExceptionFilter();
@@ -56,7 +56,7 @@ IServiceCollection services = builder.Services;
     services.AddSession();
 }
 
-WebApplication app = builder.Build();
+var app = builder.Build();
 {
     if (app.Environment.IsDevelopment()) app.UseMigrationsEndPoint();
     else app.UseHsts();

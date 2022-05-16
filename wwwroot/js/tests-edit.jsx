@@ -44,17 +44,15 @@
     }
 
     renderTest = () => {
-        const { _, test, isChanged, success, ___, isSaved } = this.state;
+        const { test, isChanged, success, isSaved, hasQuestions, publishingErrors } = this.state;
 
         const name = test.testName,
-            description = test.description,
-            questions = test.questions,
-            isPrivate = test.isPrivate,
-            areAnswersManuallyChecked = test.areAnswersManuallyChecked,
-            timeInfo = test.timeInfo,
-            allowedAttempts = test.allowedAttempts,
-            hasQuestions = this.state.hasQuestions,
-            publishingErrors = this.state.publishingErrors;
+            {description, 
+                questions,
+                isPrivate,
+                areAnswersManuallyChecked,
+                timeInfo,
+                allowedAttempts} = test;
             
         return (<div>
             <form name="edit-test" className="form-horizontal">
@@ -236,7 +234,6 @@
     }
 
     handleSubmit = async () => {
-        event.preventDefault();
         const id = this.props.testId;
         const form = document.forms["edit-test"];
         if (form.elements["testName"].value === "" || form.elements["description"].value === "") {

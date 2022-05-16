@@ -30,7 +30,7 @@ namespace TestBaza.Models
 
         public DetailedPassedTest ToDetailedTest()
         {
-            Test test = PassingInfo!.Test!;
+            var test = PassingInfo!.Test!;
             return new DetailedPassedTest
             {
                 TestName = test.TestName,

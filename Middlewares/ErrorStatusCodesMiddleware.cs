@@ -21,8 +21,6 @@
                     context.Request.Path = "/home/notfoundpage";
                     await _next(context);
                     break;
-                default:
-                    break;
             }
         }
     }

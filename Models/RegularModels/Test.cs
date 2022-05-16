@@ -82,7 +82,7 @@ namespace TestBaza.Models
             AreAttemptsLimited = model.AreAttemptsLimited;
             AreAnswersManuallyChecked = model.AreAnswersManuallyChecked;
 
-            TimeInfo timeInfo = model.TimeInfo;
+            var timeInfo = model.TimeInfo;
             IsTimeLimited = timeInfo.IsTimeLimited;
             TimeLimit = timeInfo.ConvertToSeconds();
         }

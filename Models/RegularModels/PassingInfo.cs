@@ -15,7 +15,7 @@ namespace TestBaza.Models
 
         public PassedTestSummary ToPassedTestSummary()
         {
-            DateTime time = Attempts.OrderBy(a => a.TimeEnded).LastOrDefault()?.TimeEnded ?? default;
+            var time = Attempts.OrderBy(a => a.TimeEnded).LastOrDefault()?.TimeEnded ?? default;
             return new PassedTestSummary
             {
                 TestId = TestId,

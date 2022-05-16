@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
 
 using TestBaza.Factories;
-using TestBaza.Extensions;
 using TestBaza.Repositories;
 
 namespace TestBaza.Controllers
@@ -51,16 +50,17 @@ namespace TestBaza.Controllers
         public IActionResult All()
         {
             var tests = _testsRepo.GetBrowsableTests();
-            if (!tests.Any()) return _responseFactory.NoContent(this);
+            var list = tests.ToList();
+            if (list.Count == 0) return _responseFactory.NoContent(this);
 
-            IEnumerable<TestSummary> testsSummaries = tests.Select(t => t.ToSummary());
-            return _responseFactory.Ok(this, result: testsSummaries);
+            var testsSummaries = list.Select(t => t.ToSummary());
+            return _responseFactory.Ok(this, testsSummaries);
         }
 
         [HttpGet]
         public async Task<IActionResult> Pass([FromQuery] int id)
         {
-            Test? test = await _testsRepo.GetTestAsync(id);
+            var test = await _testsRepo.GetTestAsync(id);
 
             if (test is null) return _responseFactory.NotFound(this);
 
@@ -73,27 +73,27 @@ namespace TestBaza.Controllers
         [Route("/tests/share")]
         public async Task<IActionResult> PassByLink([FromQuery] string test)
         {
-            Test? passingTest = await _testsRepo.GetTestByLinkAsync(test);
+            var passingTest = await _testsRepo.GetTestByLinkAsync(test);
             if (passingTest is null) return _responseFactory.NotFound(this);
 
             if (!passingTest.IsPublished) return _responseFactory.Forbid(this);
 
             ViewData["TestId"] = passingTest.TestId;
-            return _responseFactory.View(this, viewName: "Pass");
+            return _responseFactory.View(this, "Pass");
         }
 
-        [HttpGet("/api/tests/wq/get-test{id}")]
+        [HttpGet("/api/tests/wq/get-test{id:int}")]
         public async Task<IActionResult> GetTest([FromRoute] int id)
         {
-            Test? test = await _testsRepo.GetTestAsync(id);
-            User creator = await _userManager.GetUserAsync(User);
+            var test = await _testsRepo.GetTestAsync(id);
+            var creator = await _userManager.GetUserAsync(User);
 
             if (test is null) return _responseFactory.NotFound(this);
 
             if (!test.Creator!.Equals(creator)) return _responseFactory.Forbid(this);
 
-            TestJsonModel model = test.ToJsonModel();
-            return _responseFactory.Ok(this, result: model);
+            var model = test.ToJsonModel();
+            return _responseFactory.Ok(this, model);
         }
 
         [HttpGet]
@@ -106,29 +106,29 @@ namespace TestBaza.Controllers
             {
                 if (ModelState.IsValid)
                 {
-                    User creator = await _userManager.GetUserAsync(User);
+                    var creator = await _userManager.GetUserAsync(User);
                     if (await _testsRepo.GetTestAsync(model.TestName!) is not null)
                     {
                         ViewData["Error"] = "Тест с таким названием уже существует.";
                         return _responseFactory.View(this);
                     }
 
-                    Test test = _testFactory.Create(
-                        testName: model.TestName!,
-                        description: model.Description ?? "Без описания",
-                        isPrivate: model.IsPrivate,
-                        isTimeLimited: model.TimeInfo?.IsTimeLimited ?? false,
-                        timeLimit: model.TimeInfo?.ConvertToSeconds() ?? 0,
-                        creator: creator);
+                    var test = _testFactory.Create(
+                        model.TestName!,
+                        model.Description ?? "Без описания",
+                        model.IsPrivate,
+                        model.TimeInfo?.IsTimeLimited ?? false,
+                        model.TimeInfo?.ConvertToSeconds() ?? 0,
+                        creator);
 
                     await _testsRepo.AddTestAsync(test);
 
                     await _userManager.UpdateAsync(creator);
-                    int id = test.TestId;
+                    var id = test.TestId;
 
-                    return _responseFactory.RedirectToAction(this, actionName: "edit", controllerName: "tests", new { id });
+                    return _responseFactory.RedirectToAction(this, "edit", "tests", new { id });
                 }
-                else return View();
+                return View();
             }
             catch 
             {
@@ -140,17 +140,17 @@ namespace TestBaza.Controllers
         [Route("/tests/edit{id}")]
         public async Task<IActionResult> Edit([FromRoute] int id)
         {
-            Test? test = await _testsRepo.GetTestAsync(testId: id);
-            User creator = await _userManager.GetUserAsync(User);
+            var test = await _testsRepo.GetTestAsync(id);
+            var creator = await _userManager.GetUserAsync(User);
             if (test is null)
             {
                 ViewData["Error"] = $"Ошибка. Теста с ID {id} не существует. Попробуйте перезайти на страницу редактирования";
-                return _responseFactory.RedirectToAction(this, actionName: "index", controllerName: "home", null);
+                return _responseFactory.RedirectToAction(this, "index", "home", null);
             }
             if (test.Creator is null)
             {
                 ViewData["Error"] = $"Произошла неизвестная ошибка. Попробуйте перезайти на страницу редактирования";
-                return _responseFactory.RedirectToAction(this, actionName: "index", controllerName: "home", null);
+                return _responseFactory.RedirectToAction(this, "index", "home", null);
             }
             if (!test.Creator.Equals(creator)) return _responseFactory.Forbid(this);
             ViewData["TestId"] = id;
@@ -162,18 +162,18 @@ namespace TestBaza.Controllers
         public async Task<IActionResult> UpdateTest([FromForm] UpdateTestRequestModel model)
         {if (ModelState.IsValid)
             {
-                Test? test = await _testsRepo.GetTestAsync(model.TestId);
+                var test = await _testsRepo.GetTestAsync(model.TestId);
                 if (test is null) return _responseFactory.NotFound(this);
 
-                User creator = await _userManager.GetUserAsync(User);
+                var creator = await _userManager.GetUserAsync(User);
                 if (!test.Creator!.Equals(creator)) return _responseFactory.Forbid(this);
 
                 test.Update(model);
 
                 await _testsRepo.UpdateTestAsync(test);
 
-                TestJsonModel testModel = test.ToJsonModel();
-                return _responseFactory.Ok(this, result: testModel);
+                var testModel = test.ToJsonModel();
+                return _responseFactory.Ok(this, testModel);
             }
             else return _responseFactory.BadRequest(this);
         }
@@ -181,9 +181,9 @@ namespace TestBaza.Controllers
         [HttpPost("/api/tests/delete-test")]
         public async Task<IActionResult> DeleteTest([FromForm] int testId)
         {
-            User creator = await _userManager.GetUserAsync(User);
+            var creator = await _userManager.GetUserAsync(User);
 
-            Test? test = await _testsRepo.GetTestAsync(testId);
+            var test = await _testsRepo.GetTestAsync(testId);
             if (test is null) return _responseFactory.NotFound(this);
 
             if (!test.Creator!.Equals(creator)) return _responseFactory.Forbid(this);
@@ -196,13 +196,13 @@ namespace TestBaza.Controllers
         [HttpPut("/api/tests/add-question")]
         public async Task<IActionResult> AddQuestion([FromForm] int testId)
         {
-            Test? test = await _testsRepo.GetTestAsync(testId);
+            var test = await _testsRepo.GetTestAsync(testId);
             if (test is null) return _responseFactory.NotFound(this);
 
-            User creator = await _userManager.GetUserAsync(User);
+            var creator = await _userManager.GetUserAsync(User);
             if (!test.Creator!.Equals(creator)) return _responseFactory.Forbid(this);
 
-            int number = test.Questions.Count() + 1;
+            var number = test.Questions.Count() + 1;
 
             Question newQuestion = new()
             {
@@ -211,8 +211,8 @@ namespace TestBaza.Controllers
             };
 
             await _qsRepo.AddQuestionAsync(newQuestion);
-            Question? createdQuestion = _qsRepo.GetQuestion(test, number);
-            int questionId = createdQuestion!.QuestionId;
+            var createdQuestion = _qsRepo.GetQuestion(test, number);
+            var questionId = createdQuestion!.QuestionId;
 
             return _responseFactory.Ok(this, result: new { questionId, number });
         }
@@ -220,10 +220,10 @@ namespace TestBaza.Controllers
         [HttpPut("/api/tests/update-question")]
         public async Task<IActionResult> UpdateQuestion([FromForm] UpdateQuestionRequestModel model)
         {
-            Question? question = await _qsRepo.GetQuestionAsync(model.QuestionId);
+            var question = await _qsRepo.GetQuestionAsync(model.QuestionId);
             if (question is null) return _responseFactory.NotFound(this);
 
-            User creator = await _userManager.GetUserAsync(User);
+            var creator = await _userManager.GetUserAsync(User);
             if (!question.Test!.Creator!.Equals(creator)) return _responseFactory.Forbid(this);
 
             question.Value = model.Value;
@@ -234,7 +234,7 @@ namespace TestBaza.Controllers
             {
                 model.Answers.ToList().ForEach(a =>
                 {
-                    Answer? answer = question.MultipleAnswers.FirstOrDefault(ans => ans.AnswerId == a.AnswerId);
+                    var answer = question.MultipleAnswers.FirstOrDefault(ans => ans.AnswerId == a.AnswerId);
                     if (answer is null) return;
                     answer.Value = a.Value;
                 });
@@ -249,10 +249,10 @@ namespace TestBaza.Controllers
         [HttpPost("/api/tests/delete-question")]
         public async Task<IActionResult> DeleteQuestion([FromForm] int questionId)
         {
-            Question? question = await _qsRepo.GetQuestionAsync(questionId);
+            var question = await _qsRepo.GetQuestionAsync(questionId);
             if (question is null) return _responseFactory.NotFound(this);
 
-            User creator = await _userManager.GetUserAsync(User);
+            var creator = await _userManager.GetUserAsync(User);
             if (!question.Test!.Creator!.Equals(creator)) return _responseFactory.Forbid(this);
             await _qsRepo.DeleteQuestionAsync(question);
             return _responseFactory.Ok(this);
@@ -261,26 +261,26 @@ namespace TestBaza.Controllers
         [HttpPost("/api/tests/add-answer")]
         public async Task<IActionResult> AddAnswer(int questionId)
         {
-            Question? question = await _qsRepo.GetQuestionAsync(questionId);
-            User creator = await _userManager.GetUserAsync(User);
+            var question = await _qsRepo.GetQuestionAsync(questionId);
+            var creator = await _userManager.GetUserAsync(User);
 
             if (question is null) return _responseFactory.NotFound(this);
             if (!question.Test!.Creator!.Equals(creator)) return _responseFactory.Forbid(this);
 
-            AnswerInfo info = await _qsRepo.AddAnswerToQuestionAsync(question);
+            var info = await _qsRepo.AddAnswerToQuestionAsync(question);
             return _responseFactory.Ok(this, result: new { answerId = info.Id, number = info.Number });
         }
 
         [HttpPost("/api/tests/delete-answer")]
         public async Task<IActionResult> DeleteAnswer(int answerId, int questionId)
         {
-            Question? question = await _qsRepo.GetQuestionAsync(questionId);
+            var question = await _qsRepo.GetQuestionAsync(questionId);
             if (question is null) return _responseFactory.NotFound(this);
 
-            User creator = await _userManager.GetUserAsync(User);
+            var creator = await _userManager.GetUserAsync(User);
             if (!question.Test!.Creator!.Equals(creator)) return _responseFactory.Forbid(this);
 
-            Answer? answer = question.MultipleAnswers.SingleOrDefault(a => a.AnswerId == answerId);
+            var answer = question.MultipleAnswers.SingleOrDefault(a => a.AnswerId == answerId);
             if (answer is null) return _responseFactory.BadRequest(this);
 
             await _qsRepo.RemoveAnswerFromQuestionAsync(question, answer);
@@ -290,7 +290,7 @@ namespace TestBaza.Controllers
         [HttpGet("/api/tests/publish-test{testId}")]
         public async Task<IActionResult> PublishTest([FromRoute] int testId)
         {
-            Test? test = await _testsRepo.GetTestAsync(testId);
+            var test = await _testsRepo.GetTestAsync(testId);
             List<string> errors = new();
 
             if (test is null)
@@ -299,7 +299,7 @@ namespace TestBaza.Controllers
                 return _responseFactory.BadRequest(this, result: errors );
             }
 
-            User creator = await _userManager.GetUserAsync(User);
+            var creator = await _userManager.GetUserAsync(User);
             if (!test.Creator!.Equals(creator)) return _responseFactory.Forbid(this);
 
             if (string.IsNullOrEmpty(test.TestName))
@@ -311,7 +311,7 @@ namespace TestBaza.Controllers
             if (string.IsNullOrEmpty(test.Description)) test.Description = "Без описания.";
             else if (test.Description.Length > 100) errors.Add("Описание теста должно содержать не более 100 символов.");
 
-            if (test.Questions.Count() == 0)
+            if (!test.Questions.Any())
             {
                 errors.Add("В тесте должен быть хотя бы один вопрос. ");
             }
@@ -337,30 +337,31 @@ namespace TestBaza.Controllers
                 hasUnchosenCorrectAnswers = false,
                 hasNullAnswers = false;
 
-            foreach (Question q in test.Questions)
+            foreach (var q in test.Questions)
             {
-                IEnumerable<Question> qsWithSameNumbers = test.Questions.Where(qn => qn.Number == q.Number);
-                int qsCount = qsWithSameNumbers.Count();
+                var qsWithSameNumbers = test.Questions.Where(qn => qn.Number == q.Number);
+                var withSameNumbers = qsWithSameNumbers as Question[] 
+                                        ?? qsWithSameNumbers.ToArray();
+                var qsCount = withSameNumbers.Count();
                 if (qsCount > 1)
                 {
                     while (true)
                     {
-                        for (int i = 0; i < qsCount; i++)
+                        for (var i = 0; i < qsCount; i++)
                         {
-                            Question last = qsWithSameNumbers.Last();
-                            qsWithSameNumbers.First(qn => qn.Number == last.Number + 1).Number++;
+                            var last = withSameNumbers.Last();
+                            withSameNumbers.First(qn => qn.Number == last.Number + 1).Number++;
                             last.Number++;
                         }
-                        if (qsWithSameNumbers.Count() < 2)
-                        {
-                            await _qsRepo.UpdateQuestionAsync(q);
-                            break;
-                        }
+
+                        if (withSameNumbers.Count() >= 2) continue;
+                        await _qsRepo.UpdateQuestionAsync(q);
+                        break;
                     }
 
                 }
 
-                int n = q.Number;
+                var n = q.Number;
                 if (string.IsNullOrEmpty(q.Value))
                 {
                     hasQuestionsWithoutValue = true;
@@ -385,47 +386,48 @@ namespace TestBaza.Controllers
                 }
                 if (q.AnswerType == AnswerType.MultipleVariants)
                 {
-                    foreach (Answer a in q.MultipleAnswers)
+                    var qAnswers = q.MultipleAnswers.ToList();
+                    foreach (var a in qAnswers)
                     {
-                        IEnumerable<Answer> answersWithSameNumber = q.MultipleAnswers.Where(ans => ans.Number == a.Number);
-                        int answersCount = answersWithSameNumber.Count();
+                        var answersWithSameNumber = qAnswers
+                            .Where(ans => ans.Number == a.Number).ToList();
+                        var answersCount = answersWithSameNumber.Count;
                         if (answersCount > 1)
                         {
                             while (true)
                             {
-                                for (int i = 0; i < answersCount; i++)
+                                for (var i = 0; i < answersCount; i++)
                                 {
-                                    Answer last = answersWithSameNumber.Last();
-                                    answersWithSameNumber.First(a => a.Number == last.Number + 1).Number++;
+                                    var last = answersWithSameNumber.Last();
+                                    answersWithSameNumber.First(ans => ans.Number == last.Number + 1).Number++;
+                                    qAnswers.First(ans => ans.Number == last.Number + 1).Number++;
                                     last.Number++;
                                 }
-                                if (answersWithSameNumber.Count() < 2)
-                                {
-                                    await _qsRepo.UpdateQuestionAsync(q);
-                                    break;
-                                }
+
+                                if (answersWithSameNumber.Count >= 2) continue;
+                                q.MultipleAnswers = qAnswers;
+                                await _qsRepo.UpdateQuestionAsync(q);
+                                break;
                             }
                         }
 
-                        if (string.IsNullOrEmpty(a.Value))
-                        {
-                            hasAnswersWithoutValue = true;
-                            notAllAnswersEnteredErrors += $"на вопрос {n}, ";
-                            break;
-                        }
+                        if (!string.IsNullOrEmpty(a.Value)) continue;
+                        
+                        hasAnswersWithoutValue = true;
+                        notAllAnswersEnteredErrors += $"на вопрос {n}, ";
+                        break;
+                    
                     }
 
-                    if (q.MultipleAnswers.Count() < 2)
+                    if (qAnswers.Count < 2)
                     {
                         hasQuestionsWithNotEnoughAnswers = true;
                         notEnoughAnswersErrors += $"вопрос {n}, ";
                     }
-
-                    if(q.CorrectAnswerNumber == 0)
-                    {
-                        hasUnchosenCorrectAnswers = true;
-                        correctAnswerUnchosenErrors += $"вопроса {n}, ";
-                    }
+                    
+                    if (q.CorrectAnswerNumber != 0) continue;
+                    hasUnchosenCorrectAnswers = true;
+                    correctAnswerUnchosenErrors += $"вопроса {n}, ";
                 }
                 else if (q.AnswerType != AnswerType.HasToBeTyped)
                 {
@@ -434,53 +436,53 @@ namespace TestBaza.Controllers
                 }
             }
 
-            static string replaceLastComma(string value) => Regex.Replace(value, @",\s$", ".");
+            static string ReplaceLastComma(string value) => Regex.Replace(value, @",\s$", ".");
 
             string msg;
             if (hasQuestionsWithoutValue)
             {
-                msg = replaceLastComma(noQuestionValueErrors);
+                msg = ReplaceLastComma(noQuestionValueErrors);
                 errors.Add(msg);
             }
             if (hasHintsWithoutValue)
             {
-                msg = replaceLastComma(noHintValueErrors);
+                msg = ReplaceLastComma(noHintValueErrors);
                 errors.Add(msg);
             }
 
             if (hasQuestionsWithoutAnswer)
             {     
-                msg = replaceLastComma(noQuestionAnswerErrors);
+                msg = ReplaceLastComma(noQuestionAnswerErrors);
                 errors.Add(msg);
             }
 
             if (hasAnswersWithoutValue)
             {
-                msg = replaceLastComma(notAllAnswersEnteredErrors);
+                msg = ReplaceLastComma(notAllAnswersEnteredErrors);
                 errors.Add(msg);
             }
 
             if (hasQuestionsWithNotEnoughAnswers)
             {
-                msg = replaceLastComma(notEnoughAnswersErrors);
+                msg = ReplaceLastComma(notEnoughAnswersErrors);
                 errors.Add(msg);
             }
 
             if (hasUndeclaredAnswerTypes)
             {
-                msg = replaceLastComma(answerTypeNotDeclaredErrors);
+                msg = ReplaceLastComma(answerTypeNotDeclaredErrors);
                 errors.Add(msg);
             }
 
             if (hasUnchosenCorrectAnswers)
             {
-                msg = replaceLastComma(correctAnswerUnchosenErrors);
+                msg = ReplaceLastComma(correctAnswerUnchosenErrors);
                 errors.Add(msg);
             }
 
             if (hasNullAnswers)
             {
-                msg = replaceLastComma(nullAnswerErrors);
+                msg = ReplaceLastComma(nullAnswerErrors);
                 errors.Add(msg);
             }
 
@@ -496,11 +498,11 @@ namespace TestBaza.Controllers
         [HttpPost("/api/tests/rate-test")]
         public async Task<IActionResult> RateTest([FromForm] RateTestRequestModel model)
         {
-            User rater = await _userManager.GetUserAsync(User);
-            Test? test = await _testsRepo.GetTestAsync(model.TestId);
+            var rater = await _userManager.GetUserAsync(User);
+            var test = await _testsRepo.GetTestAsync(model.TestId);
             if (test is null) return _responseFactory.NotFound(this);
 
-            Rate? rate = test.Rates.SingleOrDefault(r => r.User!.Equals(rater));
+            var rate = test.Rates.SingleOrDefault(r => r.User!.Equals(rater));
 
             if (rate is not null)
             {
@@ -509,7 +511,7 @@ namespace TestBaza.Controllers
             }
             else
             {
-                rate = new() { Value = model.Rate, Test = test, User = rater };
+                rate = new Rate { Value = model.Rate, Test = test, User = rater };
                 await _ratesRepo.AddRateAsync(rate);
             }
             return _responseFactory.Ok(this);

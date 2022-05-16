@@ -8,6 +8,8 @@
         public string? Value { get; set; }
         public string? Hint { get; set; }
         public bool HintEnabled { get; set; }
+        public string? ImageRoute { get; set; }
+        public bool HasImage { get; set; }
         public string? Answer { get; set; }
         public IEnumerable<Answer> MultipleAnswers { get; set; } = new List<Answer>();
         public int CorrectAnswerNumber { get; set; }

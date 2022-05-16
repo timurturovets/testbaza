@@ -15,13 +15,13 @@ namespace TestBaza.Models
         {
             get
             {
-                Test test = Attempt!.PassingInfo!.Test!;
+                var test = Attempt!.PassingInfo!.Test!;
 
                 if (test.AreAnswersManuallyChecked) return _isCorrect;
 
-                Question? question = test.Questions.SingleOrDefault(q => q.Number == QuestionNumber);
+                var question = test.Questions.SingleOrDefault(q => q.Number == QuestionNumber);
 
-                string? correctAnswer = question?.AnswerType == AnswerType.HasToBeTyped
+                var correctAnswer = question?.AnswerType == AnswerType.HasToBeTyped
                     ? question?.Answer
                     : question?.CorrectAnswerNumber + "";
 

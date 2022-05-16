@@ -20,7 +20,7 @@ namespace TestBaza.Factories
         public ViewResult View(Controller controller, object model) => controller.View(model: model);
         public ViewResult View(Controller controller, string viewName) => controller.View(viewName);
         public ViewResult View(Controller controller, string viewName, object model) 
-            => controller.View(viewName: viewName, model: model);
+            => controller.View(viewName, model);
         public RedirectToActionResult RedirectToAction(Controller controller, 
             string actionName, 
             string controllerName, 
