@@ -11,27 +11,24 @@ namespace TestBaza.Controllers
         private readonly SignInManager<User> _signInManager;
 
         private readonly IUserFactory _userFactory;
-        private readonly IResponseFactory _responseFactory;
         public AuthController(
             UserManager<User> userManager,
             SignInManager<User> signInManager,
-            IUserFactory userFactory,
-            IResponseFactory responseFactory)
+            IUserFactory userFactory)
         {
             _userManager = userManager;
             _signInManager = signInManager;
 
             _userFactory = userFactory;
-            _responseFactory = responseFactory;
         }
 
         [HttpGet]
         [ActionName("reg")]
         public IActionResult Register()
         {
-            if (_signInManager.IsSignedIn(HttpContext.User)) 
-                return _responseFactory.RedirectToAction(this, "index",  "home", null);
-            return _responseFactory.View(this, viewName:"register");
+            return _signInManager.IsSignedIn(HttpContext.User) 
+                ? RedirectToAction("Index", "Home") 
+                : View("Register");
         }
 
         [HttpPost]
@@ -39,66 +36,63 @@ namespace TestBaza.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(RegisterRequestModel model)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid) return View("Register", model);
+            if (await _userManager.FindByNameAsync(model.UserName) is not null)
             {
-                if ((await _userManager.FindByNameAsync(model.UserName)) is not null)
-                {
-                    ModelState.AddModelError(string.Empty, "Этот никнейм уже занят. Попробуйте другой");
-                }
-                else
-                {
-                    var user = _userFactory.Create(model.UserName!, model.Email!);
-                    var createResult = await _userManager.CreateAsync(user, model.Password);
-
-                    if (createResult.Succeeded)
-                    {
-                        var signInResult = await _signInManager.PasswordSignInAsync(user, model.Password, true, false);
-                        if (signInResult.Succeeded) 
-                            return _responseFactory.RedirectToAction(this, "index","home", null);
-                    }
-                    ModelState.AddModelError(string.Empty, "Произоша ошибка при попытке зарегистрироваться. Попробуйте снова");
-                }
+                ModelState.AddModelError(string.Empty,
+                    "Этот никнейм уже занят. Попробуйте другой");
             }
-            return _responseFactory.View(this, "register", model);
+            else
+            {
+                var user = _userFactory.Create(model.UserName!, model.Email!);
+                var createResult = await _userManager.CreateAsync(user, model.Password);
+
+                if (createResult.Succeeded)
+                {
+                    var signInResult = await _signInManager.PasswordSignInAsync(user, model.Password, true, false);
+                    if (signInResult.Succeeded) 
+                        return RedirectToAction("index","home");
+                }
+                ModelState.AddModelError(string.Empty, "Произоша ошибка при попытке зарегистрироваться. Попробуйте снова");
+            }
+            return View("Register", model);
         }
 
         [HttpGet]
         public IActionResult Login()
         {
-            if (_signInManager.IsSignedIn(HttpContext.User))
-                return _responseFactory.RedirectToAction(this, "index", "home", null);
-            return _responseFactory.View(this);
+            return _signInManager.IsSignedIn(HttpContext.User) 
+                ? RedirectToAction("index", "home") 
+                : View();
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginRequestModel model)
         {
-            if (ModelState.IsValid)
-            {
-                //В поле Login пользователь может ввести как свой никнейм, так и эл. почту
-                //Соответственно, проверяем оба варианта
-                var user = await _userManager.FindByNameAsync(model.Login);
-                if (user is null) user = await _userManager.FindByEmailAsync(model.Login);
+            if (!ModelState.IsValid) return View(model);
+            //В поле Login пользователь может ввести как свой никнейм, так и эл. почту
+            //Соответственно, проверяем оба варианта
+            var user = await _userManager.FindByNameAsync(model.Login) 
+                       ?? await _userManager.FindByEmailAsync(model.Login);
 
-                if(user is not null)
+            if(user is not null)
+            {
+                var result = await _signInManager.PasswordSignInAsync(user, model.Password, true, false);
+                if (result.Succeeded)
                 {
-                    var result = await _signInManager.PasswordSignInAsync(user, model.Password, true, false);
-                    if (result.Succeeded)
-                    {
-                        return _responseFactory.RedirectToAction(this, "index", "home", null);
-                    }
-                    ModelState.AddModelError(string.Empty,
-                            "Произошла ошибка при попытке войти в аккаунт. Проверьте правильность введённых данных");
+                    return RedirectToAction("index", "home");
                 }
-                else ModelState.AddModelError(string.Empty, "Вы ввели неверный логин");
+                ModelState.AddModelError(string.Empty,
+                    "Произошла ошибка при попытке войти в аккаунт. Проверьте правильность введённых данных");
             }
-            return _responseFactory.View(this, model);
+            else ModelState.AddModelError(string.Empty, "Вы ввели неверный логин");
+            return View(model);
         }
         public async Task<IActionResult> Logout()
         {
             await _signInManager.SignOutAsync();
-            return _responseFactory.RedirectToAction(this, "login", "auth", null);
+            return RedirectToAction("login", "auth");
         }
     }
 }

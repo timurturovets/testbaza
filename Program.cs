@@ -10,7 +10,6 @@ using TestBaza.Data;
 using TestBaza.Factories;
 using TestBaza.Extensions;
 using TestBaza.Repositories;
-using IHostingEnvironment = Microsoft.AspNetCore.Hosting.IHostingEnvironment;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -51,7 +50,6 @@ var services = builder.Services;
     services.AddTransient<IUserFactory, UserFactory>();
     services.AddTransient<ITestFactory, TestFactory>();
     services.AddTransient<IQuestionFactory, QuestionFactory>();
-    services.AddTransient<IResponseFactory, ResponseFactory>();
     services.AddTransient<IPassingInfoFactory, PassingInfoFactory>();
 
     services.AddSession();
@@ -61,22 +59,23 @@ var app = builder.Build();
 {
     if (app.Environment.IsDevelopment()) app.UseMigrationsEndPoint();
     else app.UseHsts();
-
-    app.UseSession();
-    app.UseErrorStatusCodesHandler();
-
-    app.UseHttpsRedirection();
-    app.UseStaticFiles();
-    app.UseRouting();
+    
+    app.UseSession()
+       .UseDatabaseUpdateRequestsHandler()
+       .UseErrorStatusCodesHandler()
 
 
-    app.UseAuthentication();
-    app.UseAuthorization();
+       .UseHttpsRedirection()
+       .UseStaticFiles()
+       .UseRouting()
+    
+       .UseAuthentication()
+       .UseAuthorization()
 
-    app.UseUserPresenceHandler();
+       .UseUserPresenceHandler()
 
-    app.MapControllerRoute(
-        name: "default",
-        pattern: "{controller=auth}/{action=reg}");
+        .ToEndpointRouteBuilder().MapControllerRoute(
+        "default",
+        "{controller=auth}/{action=reg}");
 }
 app.Run();

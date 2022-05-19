@@ -15,5 +15,16 @@ namespace TestBaza.Extensions
             app.UseMiddleware<AuthorizeMiddleware>();
             return app;
         }
+
+        public static IApplicationBuilder UseDatabaseUpdateRequestsHandler(this IApplicationBuilder app)
+        {
+            app.UseMiddleware<DatabaseUpdatesMiddleware>();
+            return app;
+        }
+
+        public static IEndpointRouteBuilder ToEndpointRouteBuilder(this IApplicationBuilder app)
+        {
+            return (IEndpointRouteBuilder)app;
+        }
     }
 }

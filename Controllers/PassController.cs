@@ -14,19 +14,16 @@ namespace TestBaza.Controllers
         private readonly ITestsRepository _testsRepo;
         private readonly IPassingInfoRepository _passingInfoRepo;
         private readonly IPassingInfoFactory _passingInfoFactory;
-        private readonly IResponseFactory _responseFactory;
         public PassController(
             UserManager<User> userManager,
             ITestsRepository testsRepo,
             IPassingInfoRepository passingInfoRepo,
-            IPassingInfoFactory passingInfoFactory,
-            IResponseFactory responseFactory
+            IPassingInfoFactory passingInfoFactory
             )
         {
             _userManager = userManager;
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    _testsRepo = testsRepo;
             _passingInfoRepo = passingInfoRepo;
-            _responseFactory = responseFactory;
             _passingInfoFactory = passingInfoFactory;
         }
 
@@ -34,28 +31,28 @@ namespace TestBaza.Controllers
         public async Task<IActionResult> GetInfo([FromQuery] int id)
         {
             var test = await _testsRepo.GetTestAsync(id);
-            if (test is null) return _responseFactory.NotFound(this);
-            if (!test.IsPublished) return _responseFactory.Forbid(this);
+            if (test is null) return NotFound();
+            if (!test.IsPublished) return Forbid();
 
             var user = await _userManager.GetUserAsync(User);
             var info = await _passingInfoRepo.GetInfoAsync(user, test);
-            var testModel = test.ToJsonModel(includeAnswers: false);
+            var testModel = test.ToJsonModel(false);
 
-            if(info is null)
+            if (info is null)
             {
                 info = _passingInfoFactory.Create(user, test);
                 await _passingInfoRepo.AddInfoAsync(info);
-                return _responseFactory.StatusCode(this, 201, 
-                    new { test = testModel, attemptsLeft = test.AllowedAttempts });
+                return StatusCode(201,
+                    new {result = new {test = testModel, attemptsLeft = test.AllowedAttempts}});
             }
 
             var currentAttempt = info.Attempts.SingleOrDefault(a => !a.IsEnded);
 
-            if (test.AreAttemptsLimited 
+            if (test.AreAttemptsLimited
                 && info.Attempts.Count() >= test.AllowedAttempts
                 && currentAttempt is null)
             {
-                return _responseFactory.Conflict(this);
+                return Conflict();
             }
 
             var attemptsLeft = test.AreAttemptsLimited
@@ -63,26 +60,26 @@ namespace TestBaza.Controllers
            : -1;
 
             if (currentAttempt is null)
-                return _responseFactory.StatusCode(this, 201, result: new {test = testModel, attemptsLeft});
+                return StatusCode(201, new{result = new {test = testModel, attemptsLeft}});
             
             var attemptModel = currentAttempt.ToJsonModel();
-            if (!test.IsTimeLimited) return _responseFactory.Ok(this, result: attemptModel);
+            if (!test.IsTimeLimited) return Ok(new{result = attemptModel});
             
             var end = currentAttempt.TimeStarted + TimeSpan.FromSeconds(test.TimeLimit);
-            if (end >= DateTime.Now) return _responseFactory.Ok(this, result: attemptModel);
+            if (end >= DateTime.Now) return Ok(new{result =  attemptModel});
             
             currentAttempt.TimeEnded = end;
             currentAttempt.IsEnded = true;
             await _passingInfoRepo.UpdateInfoAsync(info);
 
-            return _responseFactory.StatusCode(this, 201, result: new { test = testModel, attemptsLeft});
+            return StatusCode(201, new{ result = new { test = testModel, attemptsLeft}});
         }
 
         [HttpGet("/api/pass/start-passing")]
         public async Task<IActionResult> StartPassing([FromQuery] int testId)
         {
             var test = await _testsRepo.GetTestAsync(testId);
-            if (test is null) return _responseFactory.NotFound(this);
+            if (test is null) return NotFound();
 
             var user = await _userManager.GetUserAsync(User);
 
@@ -101,13 +98,13 @@ namespace TestBaza.Controllers
                 info.Attempts = attempts;
 
                 await _passingInfoRepo.AddInfoAsync(info);
-                return _responseFactory.Ok(this);
+                return Ok();
             }
             else
             {
                 if (test.AreAttemptsLimited && test.AllowedAttempts <= info.Attempts.Count())
                 {
-                    return _responseFactory.Conflict(this);
+                    return Conflict();
                 }
                 else
                 {
@@ -119,7 +116,7 @@ namespace TestBaza.Controllers
                     });
                     info.Attempts = attempts;
                     await _passingInfoRepo.UpdateInfoAsync(info);
-                    return _responseFactory.Ok(this);
+                    return Ok();
                 }
             }
         }
@@ -128,21 +125,21 @@ namespace TestBaza.Controllers
         public async Task<IActionResult> SaveAnswer([FromForm] SaveAnswerRequestModel model)
         {
             var test = await _testsRepo.GetTestAsync(model.TestId);
-            if (test is null) return _responseFactory.NotFound(this);
+            if (test is null) return NotFound();
 
             var user = await _userManager.GetUserAsync(User);
 
             var info = await _passingInfoRepo.GetInfoAsync(user, test);
-            if (info is null) return _responseFactory.BadRequest(this);
+            if (info is null) return BadRequest();
 
             var currentAttempt = info.Attempts.SingleOrDefault(a => !a.IsEnded);
-            if (currentAttempt is null) return _responseFactory.Conflict(this);
+            if (currentAttempt is null) return Conflict();
 
             var answer = currentAttempt.UserAnswers
                 .SingleOrDefault(a => a.QuestionNumber == model.QuestionNumber);
             if (answer is null)
             {
-                answer = new()
+                answer = new UserAnswer
                 {
                     Attempt = currentAttempt,
                     QuestionNumber = model.QuestionNumber,
@@ -156,22 +153,22 @@ namespace TestBaza.Controllers
 
             await _passingInfoRepo.UpdateInfoAsync(info);
 
-            return _responseFactory.Ok(this);
+            return Ok();
         }
 
         [HttpGet("/api/pass/end-passing")]
         public async Task<IActionResult> EndPassing([FromQuery] int testId)
         {
             var test = await _testsRepo.GetTestAsync(testId);
-            if (test is null) return _responseFactory.NotFound(this);
+            if (test is null) return NotFound();
 
             var user = await _userManager.GetUserAsync(User);
 
             var info = await _passingInfoRepo.GetInfoAsync(user, test);
-            if (info is null) return _responseFactory.Conflict(this);
+            if (info is null) return Conflict();
 
             var currentAttempt = info.Attempts.SingleOrDefault(a => !a.IsEnded);
-            if (currentAttempt is null) return _responseFactory.Conflict(this);
+            if (currentAttempt is null) return Conflict();
 
             currentAttempt.IsEnded = true;
             currentAttempt.TimeEnded = DateTime.Now;
@@ -182,7 +179,7 @@ namespace TestBaza.Controllers
                 IsChecked = false
             };
             await _passingInfoRepo.UpdateInfoAsync(info);
-            return _responseFactory.Ok(this);
+            return Ok();
         }
     }
 }
