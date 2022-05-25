@@ -1,4 +1,4 @@
-﻿@model UpdateQuestionRequestModel
+﻿@model UpdateQuestionDto
 
 @{
     ViewData["Title"] = "Редактирование теста";
@@ -9,19 +9,7 @@
 <partial name="_ReactScriptsPartial" />
 <script src="~/js/tests-edit.jsx" asp-append-version="true" type="text/babel"></script>
 <script type="text/babel">
-    let isEverythingSaved = true;
-    const onSavedChange = isSaved => {
-        isEverythingSaved = isSaved
-    };
-
-    ReactDOM.render(<EditableTest testId={@ViewData["TestId"]} onSavedChange={onSavedChange} />, document.getElementById('root'));
+    ReactDOM.render(<EditableTest testId={@ViewData["TestId"]} />, document.getElementById('root'));
     
-    window.addEventListener("beforeunload", e => {
-        if(!isEverythingSaved){
-            const msg = "У вас остались несохранённые изменения. В случае закрытия страницы, они пропадут.";
-            e.returnValue=msg;
-            return msg;
-        }
-    });
     
 </script>

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
 
 using TestBaza.Factories;
+using TestBaza.Models.DTOs;
 using TestBaza.Repositories;
 
 namespace TestBaza.Controllers
@@ -122,9 +123,9 @@ namespace TestBaza.Controllers
         }
 
         [HttpPost("/api/pass/save-answer")]
-        public async Task<IActionResult> SaveAnswer([FromForm] SaveAnswerRequestModel model)
+        public async Task<IActionResult> SaveAnswer([FromForm] SaveAnswerDto dto)
         {
-            var test = await _testsRepo.GetTestAsync(model.TestId);
+            var test = await _testsRepo.GetTestAsync(dto.TestId);
             if (test is null) return NotFound();
 
             var user = await _userManager.GetUserAsync(User);
@@ -136,20 +137,20 @@ namespace TestBaza.Controllers
             if (currentAttempt is null) return Conflict();
 
             var answer = currentAttempt.UserAnswers
-                .SingleOrDefault(a => a.QuestionNumber == model.QuestionNumber);
+                .SingleOrDefault(a => a.QuestionNumber == dto.QuestionNumber);
             if (answer is null)
             {
                 answer = new UserAnswer
                 {
                     Attempt = currentAttempt,
-                    QuestionNumber = model.QuestionNumber,
-                    Value = model.Value
+                    QuestionNumber = dto.QuestionNumber,
+                    Value = dto.Value
                 };
                 var answers = currentAttempt.UserAnswers.ToList();
                 answers.Add(answer);
                 currentAttempt.UserAnswers = answers;
             }
-            else answer.Value = model.Value;
+            else answer.Value = dto.Value;
 
             await _passingInfoRepo.UpdateInfoAsync(info);
 

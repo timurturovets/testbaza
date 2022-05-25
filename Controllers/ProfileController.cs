@@ -2,8 +2,11 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
 
+using TestBaza.Models.RegularModels;
 using TestBaza.Extensions;
+using TestBaza.Models.DTOs;
 using TestBaza.Repositories;
+using TestBaza.Models.Summaries;
 
 namespace TestBaza.Controllers
 {
@@ -126,7 +129,7 @@ namespace TestBaza.Controllers
         }
 
         [HttpPost("/api/profile/update-user")]
-        public async Task<IActionResult> UpdateUser([FromForm] UpdateUserRequestModel model)
+        public async Task<IActionResult> UpdateUser([FromForm] UpdateUserDto model)
         {
             if (!ModelState.IsValid) 
                 return BadRequest(new {result = ModelState.ToStringEnumerable()});
@@ -145,7 +148,7 @@ namespace TestBaza.Controllers
         }
 
         [HttpPost("/api/profile/change-password")]
-        public async Task<IActionResult> ChangePassword([FromForm] ChangePasswordRequestModel model)
+        public async Task<IActionResult> ChangePassword([FromForm] ChangePasswordDto model)
         {
             if (ModelState.IsValid)
             {
@@ -210,7 +213,7 @@ namespace TestBaza.Controllers
         }
 
         [HttpPost("/api/profile/check-test")]
-        public async Task<IActionResult> CheckTest([FromForm] CheckTestRequestModel model)
+        public async Task<IActionResult> CheckTest([FromForm] CheckTestDto model)
         {
             var test = await _testsRepo.GetTestAsync(model.TestId);
             if (test is null) return NotFound();
@@ -226,10 +229,10 @@ namespace TestBaza.Controllers
             if (attempt is null) return NotFound();
             if (!attempt.IsEnded) return Conflict();
 
-            foreach (var number in model.CorrectAQNumbers)
+            foreach (var number in model.CorrectAnswers)
                 attempt.UserAnswers.First(a => a.QuestionNumber == number).IsCorrect = true;
             
-            foreach (var number in model.IncorrectAQNumbers)
+            foreach (var number in model.IncorrectAnswers)
                 attempt.UserAnswers.First(a => a.QuestionNumber == number).IsCorrect = false;
 
             attempt.CheckInfo!.IsChecked = true;

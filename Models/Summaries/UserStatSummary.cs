@@ -1,4 +1,3 @@
-﻿namespace TestBaza.Models
-{
-    public record class UserStatSummary(string UserName, int AttemptId, string LastTimePassed);
-}
+﻿namespace TestBaza.Models.Summaries;
+
+public record UserStatSummary(string UserName, int AttemptId, string LastTimePassed);

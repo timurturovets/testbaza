@@ -8,7 +8,6 @@ C:\Users\timur\source\repos\TestBaza\TestBaza\obj\Debug\net6.0\TestBaza.MvcAppli
 C:\Users\timur\source\repos\TestBaza\TestBaza\obj\Debug\net6.0\TestBaza.RazorAssemblyInfo.cache
 C:\Users\timur\source\repos\TestBaza\TestBaza\obj\Debug\net6.0\TestBaza.RazorAssemblyInfo.cs
 C:\Users\timur\source\repos\TestBaza\TestBaza\bin\Debug\net6.0\appsettings.Development.json
-C:\Users\timur\source\repos\TestBaza\TestBaza\bin\Debug\net6.0\appsettings.json
 C:\Users\timur\source\repos\TestBaza\TestBaza\bin\Debug\net6.0\TestBaza.staticwebassets.runtime.json
 C:\Users\timur\source\repos\TestBaza\TestBaza\bin\Debug\net6.0\TestBaza.exe
 C:\Users\timur\source\repos\TestBaza\TestBaza\bin\Debug\net6.0\TestBaza.deps.json

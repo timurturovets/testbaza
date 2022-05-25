@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 
 using TestBaza.Factories;
+using TestBaza.Models.DTOs;
 
 namespace TestBaza.Controllers
 {
@@ -34,28 +35,28 @@ namespace TestBaza.Controllers
         [HttpPost]
         [ActionName("reg")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Register(RegisterRequestModel model)
+        public async Task<IActionResult> Register(RegisterDto dto)
         {
-            if (!ModelState.IsValid) return View("Register", model);
-            if (await _userManager.FindByNameAsync(model.UserName) is not null)
+            if (!ModelState.IsValid) return View("Register", dto);
+            if (await _userManager.FindByNameAsync(dto.UserName) is not null)
             {
                 ModelState.AddModelError(string.Empty,
                     "Этот никнейм уже занят. Попробуйте другой");
             }
             else
             {
-                var user = _userFactory.Create(model.UserName!, model.Email!);
-                var createResult = await _userManager.CreateAsync(user, model.Password);
+                var user = _userFactory.Create(dto.UserName!, dto.Email!);
+                var createResult = await _userManager.CreateAsync(user, dto.Password);
 
                 if (createResult.Succeeded)
                 {
-                    var signInResult = await _signInManager.PasswordSignInAsync(user, model.Password, true, false);
+                    var signInResult = await _signInManager.PasswordSignInAsync(user, dto.Password, true, false);
                     if (signInResult.Succeeded) 
                         return RedirectToAction("index","home");
                 }
                 ModelState.AddModelError(string.Empty, "Произоша ошибка при попытке зарегистрироваться. Попробуйте снова");
             }
-            return View("Register", model);
+            return View("Register", dto);
         }
 
         [HttpGet]
@@ -68,17 +69,17 @@ namespace TestBaza.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Login(LoginRequestModel model)
+        public async Task<IActionResult> Login(LoginDto dto)
         {
-            if (!ModelState.IsValid) return View(model);
+            if (!ModelState.IsValid) return View(dto);
             //В поле Login пользователь может ввести как свой никнейм, так и эл. почту
             //Соответственно, проверяем оба варианта
-            var user = await _userManager.FindByNameAsync(model.Login) 
-                       ?? await _userManager.FindByEmailAsync(model.Login);
+            var user = await _userManager.FindByNameAsync(dto.Login) 
+                       ?? await _userManager.FindByEmailAsync(dto.Login);
 
             if(user is not null)
             {
-                var result = await _signInManager.PasswordSignInAsync(user, model.Password, true, false);
+                var result = await _signInManager.PasswordSignInAsync(user, dto.Password, true, false);
                 if (result.Succeeded)
                 {
                     return RedirectToAction("index", "home");
@@ -87,7 +88,7 @@ namespace TestBaza.Controllers
                     "Произошла ошибка при попытке войти в аккаунт. Проверьте правильность введённых данных");
             }
             else ModelState.AddModelError(string.Empty, "Вы ввели неверный логин");
-            return View(model);
+            return View(dto);
         }
         public async Task<IActionResult> Logout()
         {

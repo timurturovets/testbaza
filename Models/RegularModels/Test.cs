@@ -1,6 +1,9 @@
 ﻿using TestBaza.Extensions;
+using TestBaza.Models.DTOs;
+using TestBaza.Models.Summaries;
+using TestBaza.Models.JsonModels;
 
-namespace TestBaza.Models;
+namespace TestBaza.Models.RegularModels;
 
 public class Test
 {
@@ -52,10 +55,9 @@ public class Test
         return false;
     }
 
-    public override int GetHashCode()
-    {
-        return TestId.GetHashCode();
-    }
+    //ReSharper disable once NonReadonlyMemberInGetHashCode
+    public override int GetHashCode() => TestId.GetHashCode();
+    
 
     public TestJsonModel ToJsonModel(bool includeAnswers = true)
     {
@@ -97,7 +99,7 @@ public class Test
         };
     }
 
-    public void Update(UpdateTestRequestModel model)
+    public void Update(UpdateTestDto model)
     {
         TestName = model.TestName;
         Description = model.Description;

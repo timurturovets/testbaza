@@ -1,35 +1,37 @@
-﻿namespace TestBaza.Models
+﻿using TestBaza.Models.Summaries;
+using TestBaza.Models.JsonModels;
+
+namespace TestBaza.Models.RegularModels;
+
+public class CheckInfo
 {
-    public class CheckInfo
+    public int CheckInfoId { get; set; }
+
+    public bool IsChecked { get; set; }
+
+    public string? CheckerId { get; set; }
+    public User? Checker { get; set; }
+
+    public int AttemptId { get; set; }
+    public Attempt? Attempt { get; set; }
+
+    public CheckInfoSummary ToSummary()
     {
-        public int CheckInfoId { get; set; }
-
-        public bool IsChecked { get; set; }
-
-        public string? CheckerId { get; set; }
-        public User? Checker { get; set; }
-
-        public int AttemptId { get; set; }
-        public Attempt? Attempt { get; set; }
-
-        public CheckInfoSummary ToSummary()
+        return new CheckInfoSummary
         {
-            return new CheckInfoSummary
-            {
-                IsChecked = IsChecked,
-                UserName = Attempt!.PassingInfo!.User!.UserName,
-                AttemptId = AttemptId
-            };
-        }
+            IsChecked = IsChecked,
+            UserName = Attempt!.PassingInfo!.User!.UserName,
+            AttemptId = AttemptId
+        };
+    }
 
-        public CheckInfoJsonModel ToJsonModel()
+    public CheckInfoJsonModel ToJsonModel()
+    {
+        return new CheckInfoJsonModel
         {
-            return new CheckInfoJsonModel
-            {
-                TimeUsed = (Attempt!.TimeEnded - Attempt!.TimeStarted).ToString("HH:mm:ss"),
-                UserAnswers = Attempt!.UserAnswers.Select(a => a.ToJsonModel()),
-                Questions = Attempt!.PassingInfo!.Test!.Questions.Select(q => q.ToJsonModel())
-            };
-        }
+            TimeUsed = (Attempt!.TimeEnded - Attempt!.TimeStarted).ToString("HH:mm:ss"),
+            UserAnswers = Attempt!.UserAnswers.Select(a => a.ToJsonModel()),
+            Questions = Attempt!.PassingInfo!.Test!.Questions.Select(q => q.ToJsonModel())
+        };
     }
 }

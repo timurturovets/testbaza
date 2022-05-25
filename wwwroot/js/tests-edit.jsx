@@ -151,7 +151,6 @@
                             correctAnswer={question.correctAnswerNumber}
                             answerType={question.answerType}
                             onDeleted={this.onQuestionDeleted}
-                            onSavedChange={this.props.onSavedChange}
                         />
                     </div>
                 )
@@ -363,7 +362,6 @@
     }
 
     handleUnsavedChange = () => {
-        this.props.onSavedChange(false);
         this.setState({ isSaved: false });
     }
 }
@@ -493,22 +491,18 @@ class EditableQuestion extends React.Component {
 
     handleHintPresence = event => {
         const elem = event.target;
-        this.props.onSavedChange(false);
         this.setState({hintEnabled: elem.checked, saved: false})
     }
 
     handleUnsavedState = () => {
         this.setState({ saved: false });
-        this.props.onSavedChange(false);
     }
 
     handleSubmit = async event => {
         this.setState({ saved: true });
-        this.props.onSavedChange(true);
         event.preventDefault();
         
         const id = this.props.questionId;
-        const answers = this.state.answers;
 
         const form = document.forms[`edit-question${id}`];
 
@@ -539,7 +533,6 @@ class EditableQuestion extends React.Component {
             if (obj.answerId === id) {
                 answers[answers.indexOf(obj)].value = value;
                 this.setState({ answers: answers, saved: false });
-                this.props.onSavedChange(false);
                 break;
             }
         }

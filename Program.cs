@@ -2,7 +2,7 @@ global using System;
 global using System.Threading.Tasks;
 global using System.Collections.Generic;
 
-global using TestBaza.Models;
+global using TestBaza.Models.RegularModels;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -74,8 +74,8 @@ var app = builder.Build();
 
        .UseUserPresenceHandler()
 
-        .ToEndpointRouteBuilder().MapControllerRoute(
-        "default",
-        "{controller=auth}/{action=reg}");
+       .ToEndpointRouteBuilder().MapControllerRoute(
+        "default", 
+            "{controller=auth}/{action=reg}");
 }
 app.Run();

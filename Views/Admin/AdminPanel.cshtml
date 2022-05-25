@@ -1,13 +1,13 @@
 ﻿@using Microsoft.AspNetCore.Identity;
 @using TestBaza.Repositories;
 
-@inject UserManager<User> userManager;
-@inject ITestsRepository testsRepo;
+@inject UserManager<User> _userManager;
+@inject ITestsRepository _testsRepo;
 
 <h3>Админ-панель</h3>
 
 <div class="d-flex">
-@foreach (var test in testsRepo.GetAllTests()){
+@foreach (var test in _testsRepo.GetAllTests()){
     <div id="test@(test.TestId)" class="m-5" style="border: 2px solid black">
         <h4>Тест @(test.TestName)</h4>
     <button id="deletet@(test.TestId)" class="btn btn-outline-primary">Удалить</button>
@@ -27,7 +27,7 @@
 }
 </div>
 <div class="d-flex">
-@foreach(var user in userManager.Users){
+@foreach(var user in _userManager.Users){
     <div id="user@(user.Id)" class="m-5" style="border: 2px solid black">
         <h4>Пользователь @(user.UserName)</h4>
         <button id="deleteu@(user.Id)" class="btn btn-outline-primary">Удалить</button>

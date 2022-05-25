@@ -1,49 +1,50 @@
 ﻿using Microsoft.EntityFrameworkCore;
 
-namespace TestBaza.Models
+using TestBaza.Models.JsonModels;
+
+namespace TestBaza.Models.RegularModels;
+
+public class UserAnswer
 {
-    public class UserAnswer
+    public int UserAnswerId { get; set; }
+
+    public string? Value { get; set; }
+    public int QuestionNumber { get; set; }
+    private bool _isCorrect;
+
+    [BackingField(nameof(_isCorrect))]
+    public bool IsCorrect
     {
-        public int UserAnswerId { get; set; }
-
-        public string? Value { get; set; }
-        public int QuestionNumber { get; set; }
-        private bool _isCorrect;
-
-        [BackingField(nameof(_isCorrect))]
-        public bool IsCorrect
+        get
         {
-            get
-            {
-                var test = Attempt!.PassingInfo!.Test!;
+            var test = Attempt!.PassingInfo!.Test!;
 
-                if (test.AreAnswersManuallyChecked) return _isCorrect;
+            if (test.AreAnswersManuallyChecked) return _isCorrect;
 
-                var question = test.Questions.FirstOrDefault(q => q.Number == QuestionNumber);
+            var question = test.Questions.FirstOrDefault(q => q.Number == QuestionNumber);
 
-                var correctAnswer = question?.AnswerType == AnswerType.HasToBeTyped
-                    ? question.Answer
-                    : question?.CorrectAnswerNumber + "";
+            var correctAnswer = question?.AnswerType == AnswerType.HasToBeTyped
+                ? question.Answer
+                : question?.CorrectAnswerNumber + "";
 
-                return string.Equals(correctAnswer?.Trim(), Value?.Trim(), StringComparison.CurrentCultureIgnoreCase);
-            }
-            set 
-            { 
-                if(!Attempt?.PassingInfo?.Test?.AreAnswersManuallyChecked ?? false) return;
-                _isCorrect = value;
-            }
+            return string.Equals(correctAnswer?.Trim(), Value?.Trim(), StringComparison.CurrentCultureIgnoreCase);
         }
-        public int AttemptId { get; set; }
-        public Attempt? Attempt { get; set; }
+        set 
+        { 
+            if(!Attempt?.PassingInfo?.Test?.AreAnswersManuallyChecked ?? false) return;
+            _isCorrect = value;
+        }
+    }
+    public int AttemptId { get; set; }
+    public Attempt? Attempt { get; set; }
 
-        public UserAnswerJsonModel ToJsonModel()
+    public UserAnswerJsonModel ToJsonModel()
+    {
+        return new UserAnswerJsonModel
         {
-            return new UserAnswerJsonModel
-            {
-                Value = Value,
-                IsCorrect = IsCorrect,
-                QuestionNumber = QuestionNumber
-            };
-        }
+            Value = Value,
+            IsCorrect = IsCorrect,
+            QuestionNumber = QuestionNumber
+        };
     }
 }

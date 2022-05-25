@@ -1,8 +1,7 @@
-﻿namespace TestBaza.Models
+﻿namespace TestBaza.Models.RegularModels;
+
+public enum AnswerType
 {
-    public enum AnswerType
-    {
-        HasToBeTyped = 1,
-        MultipleVariants = 2
-    }
+    HasToBeTyped = 1,
+    MultipleVariants = 2
 }

@@ -1,6 +1,8 @@
-﻿namespace TestBaza.Models;
+﻿using TestBaza.Models.JsonModels;
 
-public class UpdateQuestionRequestModel
+namespace TestBaza.Models.DTOs;
+
+public class UpdateQuestionDto
 {
     public int QuestionId { get; set; }
     public string? Value { get; set; }
