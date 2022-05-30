@@ -1,6 +1,8 @@
 ﻿using TestBaza.Models.DTOs;
 using TestBaza.Models.JsonModels;
 
+// ReSharper disable ValueParameterNotUsed
+// ReSharper disable UnusedMember.Global
 namespace TestBaza.Models.RegularModels;
 
 public class Question
@@ -15,10 +17,10 @@ public class Question
 
     public bool HasImage
     {
-        get => !string.IsNullOrEmpty(ImageRoute);
+        get => !string.IsNullOrEmpty(ImageRoute) && !string.IsNullOrEmpty(ImagePhysicalPath);
         set { }
     }
-
+    public string? ImagePhysicalPath { get; set; }
     public string? Answer { get; set; }
     public IEnumerable<Answer> MultipleAnswers { get; set; } = new List<Answer>();
     public int CorrectAnswerNumber { get; set; }
@@ -36,6 +38,7 @@ public class Question
         return false;
     }
 
+    //ReSharper disable once NonReadonlyMemberInGetHashCode
     public override int GetHashCode()
     {
         return QuestionId.GetHashCode();
@@ -79,29 +82,36 @@ public class Question
     {
         if (HasImage)
         {
-            var pathToImage = Path.Combine(
-                environment.WebRootPath,
-                "images",
-                "questions",
-                ImageRoute!
-            );
-            File.Delete(pathToImage);
-            if (image is null) return;
-            await using var stream = new FileStream(pathToImage, FileMode.Create);
+            if(File.Exists(ImagePhysicalPath)) File.Delete(ImagePhysicalPath);
+
+            if (image is null)
+            {
+                ImageRoute = null;
+                ImagePhysicalPath = null;
+                return;
+            }
+            
+            await using var stream = new FileStream(ImagePhysicalPath!, FileMode.Create);
             await image.CopyToAsync(stream);
         }
         else
         {
             if (image is null) return;
-            var fileRoute = Guid.NewGuid().ToString()[..7] + image.FileName ;
-            var imageLink = $"images/questions/{fileRoute}";
+            
+            var fileRoute = Guid.NewGuid().ToString()[..7] + image.FileName;
+            
+            var imageLink = $"/images/questions/{fileRoute}";
+            
             var pathToImage = Path.Combine(
                 environment.WebRootPath,
                 "images",
-                "uestions",
+                "questions",
                 fileRoute
             );
+            
             ImageRoute = imageLink;
+            ImagePhysicalPath = pathToImage;
+            
             await using var stream = new FileStream(pathToImage, FileMode.Create);
             await image.CopyToAsync(stream);
         }

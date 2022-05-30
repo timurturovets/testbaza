@@ -5,9 +5,9 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
 
 using TestBaza.Factories;
+using TestBaza.Extensions;
 using TestBaza.Models.DTOs;
 using TestBaza.Repositories;
-using TestBaza.Models.Summaries;
 
 namespace TestBaza.Controllers;
 
@@ -180,7 +180,7 @@ public class TestsController : Controller
         if (test is null) return NotFound();
 
         if (!test.Creator!.Equals(creator)) return Forbid();
-
+        
         await _testsRepo.RemoveTestAsync(test);
 
         return Ok();
@@ -224,8 +224,8 @@ public class TestsController : Controller
         question.UpdateImage(dto.Image, env);
         
         await _qsRepo.UpdateQuestionAsync(question);
-
-        return Ok();
+        var model = question.ToJsonModel();
+        return Ok(new{result = model});
     }
     [HttpPost("/api/tests/delete-question")]
     public async Task<IActionResult> DeleteQuestion([FromForm] int questionId)
@@ -235,7 +235,9 @@ public class TestsController : Controller
 
         var creator = await _userManager.GetUserAsync(User);
         if (!question.Test!.Creator!.Equals(creator)) return Forbid();
+
         await _qsRepo.DeleteQuestionAsync(question);
+        
         return Ok();
     }
 
@@ -498,6 +500,39 @@ public class TestsController : Controller
             rate = new Rate { Value = model.Rate, Test = test, User = rater };
             await _ratesRepo.AddRateAsync(rate);
         }
+        return Ok();
+    }
+
+    [HttpPost("/api/tests/delete-test-image{id:int}")]
+    public async Task<IActionResult> DeleteTestImage([FromRoute] int id)
+    {
+        var test = await _testsRepo.GetTestAsync(id);
+        if (test is null) return NotFound();
+
+        var user = await _userManager.GetUserAsync(User);
+        if (!test.Creator!.Equals(user)) return Forbid();
+
+        var env = HttpContext.GetService<IWebHostEnvironment>();
+        test.UpdateImage(null, env);
+        
+        await _testsRepo.UpdateTestAsync(test);
+
+        return Ok();
+    }
+
+    [HttpPost("/api/tests/delete-question-image{id:int}")]
+    public async Task<IActionResult> DeleteQuestionImage([FromRoute] int id)
+    {
+        var question = await _qsRepo.GetQuestionAsync(id);
+        if (question is null) return NotFound();
+
+        var user = await _userManager.GetUserAsync(User);
+        if (!question.Test!.Creator!.Equals(user)) return Forbid();
+
+        var env = HttpContext.GetService<IWebHostEnvironment>();
+        question.UpdateImage(null, env);
+
+        await _qsRepo.UpdateQuestionAsync(question);
         return Ok();
     }
 }

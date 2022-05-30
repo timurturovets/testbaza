@@ -67,6 +67,20 @@ namespace TestBaza.Repositories
         public async Task RemoveTestAsync(Test test)
         {
             if (!_context.Tests.Any(t => t.Equals(test))) return;
+            if (test.HasImage)
+            {
+                var path = test.ImagePhysicalPath;
+                if (File.Exists(path)) File.Delete(path);
+            }
+
+            foreach (var q in test.Questions)
+            {
+                if (!q.HasImage) continue;
+
+                var path = q.ImagePhysicalPath;
+                if (File.Exists(path)) File.Delete(path);
+            }
+            
             _context.Tests.Remove(test);
             await _context.SaveChangesAsync();
         }

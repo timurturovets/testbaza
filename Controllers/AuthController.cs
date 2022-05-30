@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
-
+using TestBaza.Extensions;
 using TestBaza.Factories;
 using TestBaza.Models.DTOs;
 
@@ -51,8 +51,12 @@ namespace TestBaza.Controllers
                 if (createResult.Succeeded)
                 {
                     var signInResult = await _signInManager.PasswordSignInAsync(user, dto.Password, true, false);
-                    if (signInResult.Succeeded) 
-                        return RedirectToAction("index","home");
+                    if (signInResult.Succeeded)
+                    {
+                        var l = HttpContext.L<AuthController>();
+                        l.LogCritical("Зарегистрирован");
+                        return RedirectToAction("index", "home");
+                    }
                 }
                 ModelState.AddModelError(string.Empty, "Произоша ошибка при попытке зарегистрироваться. Попробуйте снова");
             }

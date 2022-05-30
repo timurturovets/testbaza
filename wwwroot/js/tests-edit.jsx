@@ -55,7 +55,6 @@
                 areAnswersManuallyChecked,
                 timeInfo,
                 allowedAttempts} = test;
-        console.log(imageRoute);
             const a = document.createElement('a');
             a.href = window.location.href;
             const base = a.protocol + "//" + a.host;
@@ -74,11 +73,13 @@
                     {hasImage
                         ? <div>
                             <img src={`${base + imageRoute}`.replace(`\\`, "/")} style={{width: '20%'}} alt="Картинка теста"/>
-                            <button>Удалить картинку</button>
+                            <br />
+                            <button className="btn btn-outline-danger"
+                                onClick={e=>this.handleImageDelete(e)}>Удалить картинку</button>
                         </div>
                         : <div>
-                            <label className="display-6">Добавить картинку</label>
-                            <input type="file" accept="image/*" name="image"
+                            <label>Добавить картинку</label>
+                            <input className="form-control" type="file" accept="image/*" name="image"
                                 onChange={e => {
                                     e.preventDefault();
                                     this.handleUnsavedChange(e);
@@ -147,7 +148,7 @@
             {hasQuestions
                 ? questions.map(question =>
                     <div key={question.questionId}>
-                        <EditableQuestion
+                        <EditableQuestion info={question}
                             questionId={question.questionId}
                             number={question.number}
                             value={question.value}
@@ -253,6 +254,23 @@
         }
     }
 
+    handleImageDelete = async event => {
+        event.preventDefault();
+        
+        const id = this.props.testId;
+        await fetch(`/api/tests/delete-test-image${id}`,
+            {method: 'POST'}).then(response=>{
+            if(response.status === 200) {
+                this.setState({
+                    test: {
+                        ...this.state.test,
+                        hasImage: false,
+                        imageRoute: null
+                    }
+                });
+            } else alert(`Произошла ошибка при попытке удалить картинку. ${response.status}`);
+        })
+    }
     handleSubmit = async event => {
         event.preventDefault();
         const id = this.props.testId;
@@ -377,19 +395,33 @@
 class EditableQuestion extends React.Component {
     constructor(props) {
         super(props);
-
+        
+        const {value, 
+            hint,
+            hintEnabled,
+            imageRoute,
+            hasImage,
+            answer,
+            correctAnswer, 
+            answerType } = this.props.info, 
+            answers = this.props.info.answers || [];
+        
         this.state = {
-            changed: false,
-            success: false,
-            saved: true,
-            value: !!this.props.value ? this.props.value : "",
-            hint: !!this.props.hint ? this.props.hint : "",
-            hintEnabled: !!this.props.hintEnabled ? this.props.hintEnabled : false,
-            answer: !!this.props.answer ? this.props.answer : "",
-            answers: !!this.props.answers ? this.props.answers : [],
-            correctAnswer: !!this.props.correctAnswer ? this.props.correctAnswer : "",
-            answerType: !!this.props.answerType ? this.props.answerType : 1
-        };
+            changed: false, success: false, saved: true,
+            value,
+            hint, hintEnabled,
+            imageRoute, hasImage,
+            answer, answers, correctAnswer, answerType
+            /*value: i.value,
+            hint: i.hint,
+            hintEnabled: i.hintEnabled,
+            imageRoute: i.imageRoute,
+            hasImage: this.props.hasImage,
+            answer: this.props.answer,
+            answers: this.props.answers || [],
+            correctAnswer: this.props.correctAnswer,
+            answerType: this.props.answerType || 1*/
+        }
     }
 
     render() {
@@ -399,44 +431,50 @@ class EditableQuestion extends React.Component {
             value,
             hint,
             hintEnabled,
+            imageRoute,
+            hasImage,
             answer,
             answers,
             correctAnswer,
             answerType } = this.state;
+        
+        const a = document.createElement('a');
+        a.href = window.location.href;
+        const base = a.protocol + "//" + a.host;
         return <div>
             <hr />
-
             <form name={`edit-question${this.props.questionId}`}>
                 <h2>Вопрос {this.props.number} {saved ? null : "*"}</h2>
 
                 <div className="form-check form-switch">
-                    <input type="radio" className="form-check-input" name="model.AnswerType" value="1"
-                            onClick={e => this.handleAnswerTypeChange(e)} defaultChecked={answerType===1 && true} />
+                    <input type="radio" className="form-check-input" name="dto.AnswerType" value="1"
+                            onClick={e => this.handleAnswerTypeChange(e)} defaultChecked={answerType === 1} />
                     <label className="form-check-label">Ответ вводится пользователем</label>
                 </div>
 
                 <div className="form-check form-switch">
-                    <input type="radio" className="form-check-input" name="model.AnswerType" value="2"
-                            onClick={e => this.handleAnswerTypeChange(e)} defaultChecked={answerType===2 && true} />
+                    <input type="radio" className="form-check-input" name="dto.AnswerType" value="2"
+                            onClick={e => this.handleAnswerTypeChange(e)} defaultChecked={answerType === 2} />
                     <label className="form-check-label">Несколько вариантов ответа</label>
                 </div>
 
                 <div className="form-group">
                     <label>Вопрос:</label>
-                    <input type="text" className="form-control" onChange={this.handleUnsavedState} name="model.Value" defaultValue={value} />
+                    <input type="text" className="form-control" onChange={this.handleUnsavedState} name="dto.Value" defaultValue={value} />
                 </div>
+                
                 {hintEnabled
                     ? <div><div className="form-check form-switch">
-                        <input type="checkbox" className="form-check-input" name="model.HintEnabled" defaultChecked
+                        <input type="checkbox" className="form-check-input" name="dto.HintEnabled" defaultChecked
                             onClick={e=>this.handleHintPresence(e)} />
                         <label className="form-check-label">Подсказка</label>
                         </div>
                     <div className="form-group">
                             <input type="text" className="form-control" onChange={this.handleUnsavedState}
-                                name="model.Hint" defaultValue={hint === null ? "" : hint} />
+                                name="dto.Hint" defaultValue={hint === null ? "" : hint} />
                     </div></div>
                     : <div className="form-check form-switch">
-                        <input type="checkbox" className="form-check-input" name="model.HintEnabled"
+                        <input type="checkbox" className="form-check-input" name="dto.HintEnabled"
                         onClick={e => this.handleHintPresence(e)} />
                         <label className="form-check-label">Подсказка</label>
                     </div>
@@ -450,7 +488,7 @@ class EditableQuestion extends React.Component {
                     ? <div className="form-group">
                         <h6>Верный ответ:</h6>
                         <input type="text" className="form-control" onChange={this.handleUnsavedState}
-                            defaultValue={answer} name="model.Answer" />
+                            defaultValue={answer} name="dto.Answer" />
                     </div>
                     : <div>{answers.length > 0 ? <label className="input-group-prepend">Верный</label> : null}
 
@@ -473,6 +511,22 @@ class EditableQuestion extends React.Component {
                         <button className="btn btn-outline-success" onClick={e => this.handleAddAnswer(e)}>Добавить</button>
                     </div>
                     : null
+                }
+                {hasImage
+                    ? <div>
+                        <img src={base + imageRoute} alt="Картинка вопроса" style={{width: "20%"}} />
+                        <br />
+                        <button className="btn btn-outline-danger" 
+                                onClick={e => this.handleImageDelete(e)}>Удалить картинку</button>
+                    </div>
+                    : <div>
+                        <label>Добавить картинку</label>
+                        <input className="form-control" type="file" accept="image/*" name="dto.Image"
+                               onChange={e => {
+                                   e.preventDefault();
+                                   this.handleUnsavedState();
+                               }} />
+                    </div>
                 }
                 <div className="btn-toolbar">
                     <div className="btn-group mr-2">
@@ -505,6 +559,21 @@ class EditableQuestion extends React.Component {
     handleUnsavedState = () => {
         this.setState({ saved: false });
     }
+    
+    handleImageDelete = async event => {
+        event.preventDefault();
+
+        const id = this.props.questionId;
+        await fetch(`/api/tests/delete-question-image${id}`,
+            {method: 'POST'}).then(async response => {
+                if(response.status === 200){
+                    this.setState({
+                        imageRoute: null,
+                        hasImage: false
+                    });
+                } else alert(`Произошла ошибка при попытке удалить картинку. ${respose.status}`);
+            });
+    }
 
     handleSubmit = async event => {
         this.setState({ saved: true });
@@ -514,16 +583,26 @@ class EditableQuestion extends React.Component {
 
         const form = document.forms[`edit-question${id}`];
 
-        const hintEnabled = form.elements["model.HintEnabled"].checked;
+        const hintEnabled = form.elements["dto.HintEnabled"].checked;
         const formData = new FormData(form);
 
-        formData.append('model.QuestionId', id);
-        formData.set('model.HintEnabled', hintEnabled);
+        formData.append('dto.QuestionId', id);
+        formData.set('dto.HintEnabled', hintEnabled);
 
         await fetch('/api/tests/update-question', {
             method: 'PUT',
             body: formData
-        }).then(response => {
+        }).then(async response => {
+            if(response.status === 200){
+                const result = (await response.json()).result;
+                console.log(result);
+                this.setState({
+                    changed: true, 
+                    success: true,
+                    imageRoute: result.imageRoute,
+                    hasImage: result.hasImage
+                });
+            }
             this.setState({ changed: true, success: response.status === 200 });
         })
     }
@@ -606,19 +685,19 @@ class EditableAnswer extends React.Component {
         const id = this.props.answerId,
             value = this.props.value,
             number = this.props.number;
-        return (<div className="input-group mb-3">
+        return <div className="input-group mb-3">
             <div className="input-group-append form-check form-switch">
-                <input type="radio" name="model.CorrectAnswerNumber" className="form-check-input"
+                <input type="radio" name="dto.CorrectAnswerNumber" className="form-check-input"
                     value={number} onClick={e => this.props.onUnsaved(e)} defaultChecked={this.props.isCorrect && true} />
             </div>
-            <input type="text" name={`model.Answers[${number - 1}].Value`} className="form-control" onChange={e => this.props.onValueChange(e, id)}
+            <input type="text" name={`dto.Answers[${number - 1}].Value`} className="form-control" onChange={e => this.props.onValueChange(e, id)}
                 defaultValue={value} />
             <div className="input-group-append">
                 <button className="btn btn-outline-danger" onClick={e => this.props.onDelete(e, id)}>Удалить</button>
             </div>
 
-            <input type="hidden" name={`model.Answers[${number - 1}].AnswerId`} defaultValue={id} />
-            <input type="hidden" name={`model.Answers[${number - 1}].Number`} defaultValue={number} />
-        </div>)
+            <input type="hidden" name={`dto.Answers[${number - 1}].AnswerId`} defaultValue={id} />
+            <input type="hidden" name={`dto.Answers[${number - 1}].Number`} defaultValue={number} />
+        </div>
     }
 }

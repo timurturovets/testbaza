@@ -79,6 +79,12 @@ namespace TestBaza.Repositories
             var number = question.Number;
             var testId = question.Test!.TestId;
 
+            if (question.HasImage)
+            {
+                var path = question.ImagePhysicalPath;
+                if(File.Exists(path)) File.Delete(path);
+            }
+            
             _context.Questions.Remove(question);
             await _context.SaveChangesAsync();
 

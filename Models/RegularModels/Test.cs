@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using TestBaza.Extensions;
+﻿using TestBaza.Extensions;
 using TestBaza.Models.DTOs;
 using TestBaza.Models.Summaries;
 using TestBaza.Models.JsonModels;
@@ -22,6 +21,7 @@ public class Test
         set { }
     }
 
+    public string? ImagePhysicalPath { get; set; }
     public DateTime TimeCreated { get; set; }
     public bool AreAttemptsLimited { get; set; }
     public int AllowedAttempts { get; set; } = 1;
@@ -120,30 +120,36 @@ public class Test
     {
         if (HasImage)
         {
-            var pathToImage = Path.Combine(
-                environment.WebRootPath,
-                ImageRoute!
-                );
+            if (File.Exists(ImagePhysicalPath)) File.Delete(ImagePhysicalPath);
 
-            if (File.Exists(pathToImage)) File.Delete(pathToImage);
+            if (image is null)
+            {
+                ImageRoute = null;
+                ImagePhysicalPath = null;
+                return;
+            }
 
-            if (image is null) return;
-
-            await using var stream = new FileStream(pathToImage, FileMode.Create);
+            await using var stream = new FileStream(ImagePhysicalPath, FileMode.Create);
             await image.CopyToAsync(stream);
         }
         else
         {
             if (image is null) return;
+            
             var fileRoute = Guid.NewGuid().ToString()[..7] + image.FileName;
+            
             var imageLink = $"/images/tests/{fileRoute}";
+            
             var pathToImage = Path.Combine(
                 environment.WebRootPath,
                 "images",
                 "tests",
                 fileRoute
                 );
+            
             ImageRoute = imageLink;
+            ImagePhysicalPath = pathToImage;
+            
             await using var stream = new FileStream(pathToImage, FileMode.Create);
             await image.CopyToAsync(stream);
         }

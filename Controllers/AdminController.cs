@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
 
+using TestBaza.Extensions;
 using TestBaza.Repositories;
 
 namespace TestBaza.Controllers
