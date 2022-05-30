@@ -15,8 +15,7 @@ public class DatabaseUpdatesMiddleware
     public async Task InvokeAsync(HttpContext context)
     {
         string path = context.Request.Path;
-        T GetService<T>() 
-            => context.RequestServices.GetRequiredService<T>();
+        T GetService<T>() where T : notnull => context.RequestServices.GetRequiredService<T>();
 
         if (path.StartsWith("/api/update-db"))
         {

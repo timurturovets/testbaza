@@ -8,6 +8,7 @@
             isChanged: false,
             success: false,
             isSaved: true,
+            image: null, 
             hasQuestions: false,
             publishingErrors: [],
             isTimeLimited: false
@@ -54,7 +55,10 @@
                 areAnswersManuallyChecked,
                 timeInfo,
                 allowedAttempts} = test;
-            
+        console.log(imageRoute);
+            const a = document.createElement('a');
+            a.href = window.location.href;
+            const base = a.protocol + "//" + a.host;
         return (<div>
             <form name="edit-test" className="form-horizontal">
                 <div className="form-group">
@@ -69,13 +73,16 @@
                     <label className="display-6">Картинка описания</label>
                     {hasImage
                         ? <div>
-                            <img src={imageRoute} alt="Картинка теста"/>
+                            <img src={`${base + imageRoute}`.replace(`\\`, "/")} style={{width: '20%'}} alt="Картинка теста"/>
                             <button>Удалить картинку</button>
                         </div>
                         : <div>
                             <label className="display-6">Добавить картинку</label>
-                            <input type="file" accept="image/*" />
-                            <button className="btn btn-success">Загрузить</button>
+                            <input type="file" accept="image/*" name="image"
+                                onChange={e => {
+                                    e.preventDefault();
+                                    this.handleUnsavedChange(e);
+                                }} />
                         </div>
                     }
                 </div>
@@ -194,7 +201,8 @@
             <label>сек</label>
         </div>)
     }
-
+    
+    
     handleTimeInfoChange = event => {
         const name = event.target.name.toLowerCase(),
             test = this.state.test,
@@ -245,7 +253,8 @@
         }
     }
 
-    handleSubmit = async () => {
+    handleSubmit = async event => {
+        event.preventDefault();
         const id = this.props.testId;
         const form = document.forms["edit-test"];
         if (form.elements["testName"].value === "" || form.elements["description"].value === "") {
@@ -361,9 +370,8 @@
         });
     }
 
-    handleUnsavedChange = () => {
-        this.setState({ isSaved: false });
-    }
+    handleUnsavedChange = () => this.setState({ isSaved: false });
+    
 }
 
 class EditableQuestion extends React.Component {

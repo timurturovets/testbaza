@@ -90,19 +90,18 @@ public class Question
             await using var stream = new FileStream(pathToImage, FileMode.Create);
             await image.CopyToAsync(stream);
         }
-        // ReSharper disable once RedundantJumpStatement
-        else if (image is null) return;
-        
         else
         {
-            var fileRoute = image.FileName + Guid.NewGuid().ToString()[..5];
+            if (image is null) return;
+            var fileRoute = Guid.NewGuid().ToString()[..7] + image.FileName ;
+            var imageLink = $"images/questions/{fileRoute}";
             var pathToImage = Path.Combine(
                 environment.WebRootPath,
                 "images",
-                "questions",
+                "uestions",
                 fileRoute
             );
-            ImageRoute = fileRoute;
+            ImageRoute = imageLink;
             await using var stream = new FileStream(pathToImage, FileMode.Create);
             await image.CopyToAsync(stream);
         }

@@ -1,10 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+// ReSharper disable UnusedAutoPropertyAccessor.Global
 
 namespace TestBaza.Data
 {
 #pragma warning disable 8618
-    public class AppDbContext : IdentityDbContext<User>
+    public sealed class AppDbContext : IdentityDbContext<User>
     {
         protected override void OnModelCreating(ModelBuilder builder)
         {

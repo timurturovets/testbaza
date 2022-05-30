@@ -1,7 +1,10 @@
-﻿using TestBaza.Extensions;
+﻿using System.Diagnostics.CodeAnalysis;
+using TestBaza.Extensions;
 using TestBaza.Models.DTOs;
 using TestBaza.Models.Summaries;
 using TestBaza.Models.JsonModels;
+// ReSharper disable ValueParameterNotUsed
+// ReSharper disable UnusedMember.Global
 
 namespace TestBaza.Models.RegularModels;
 
@@ -10,7 +13,7 @@ public class Test
     public int TestId { get; set; }
 
     public string? TestName { get; set; }
-    public string? Description { get; set; }
+    public string? Description { get; set; } 
     public string? ImageRoute { get; set; }
 
     public bool HasImage
@@ -118,9 +121,7 @@ public class Test
         if (HasImage)
         {
             var pathToImage = Path.Combine(
-                environment.WebRootPath, 
-                "images", 
-                "tests", 
+                environment.WebRootPath,
                 ImageRoute!
                 );
 
@@ -131,18 +132,18 @@ public class Test
             await using var stream = new FileStream(pathToImage, FileMode.Create);
             await image.CopyToAsync(stream);
         }
-        // ReSharper disable once RedundantJumpStatement
-        else if (image is null) return;
         else
         {
-            var fileRoute = image.FileName + Guid.NewGuid().ToString()[..5];
+            if (image is null) return;
+            var fileRoute = Guid.NewGuid().ToString()[..7] + image.FileName;
+            var imageLink = $"/images/tests/{fileRoute}";
             var pathToImage = Path.Combine(
-                environment.WebRootPath, 
-                "images", 
+                environment.WebRootPath,
+                "images",
                 "tests",
                 fileRoute
                 );
-            ImageRoute = fileRoute;
+            ImageRoute = imageLink;
             await using var stream = new FileStream(pathToImage, FileMode.Create);
             await image.CopyToAsync(stream);
         }
