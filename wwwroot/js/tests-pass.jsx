@@ -27,19 +27,17 @@
     }
 
     render() {
-        const content = this.state.isLoading
-            ? (<div>
+        return this.state.isLoading
+            ? <div>
                 <h2>Прохождение теста</h2>
                 <h4>Загрузка теста...</h4>
-            </div >)
+            </div>
             : this.state.exceededAttempts
                 ? <div>
                     <h2 className="display-2">У вас не осталось попыток для прохождения этого теста.</h2>
                     <a className="btn btn-outline-primary" href="/profile/user-tests">Просмотреть своё решение</a>
                 </div>
                 : this.renderTest();
-
-        return content;
     }
 
     populateData = async () => {
@@ -94,18 +92,26 @@
     }
 
     renderTest = () => {
-        const { _, passingInfo, test } = this.state;
+        const { passingInfo, test } = this.state;
         const timeInfo = test.timeInfo;
 
+        const a = document.createElement('a');
+        a.href = window.location.href;
+        const base = a.protocol + "//" + a.host;
+        
         const timeLimitString = getCompleteTimeString(timeInfo.hours * 3600 + timeInfo.minutes * 60 + timeInfo.seconds);
         return (<div>
             <h3 className="text-center display-3">Тест {test.testName}</h3>
-
+            
             {passingInfo.isStarted
                 ? passingInfo.isTimeOut
                     ? <h1 className="text-center">Время вышло!</h1>
                     : this.renderActiveTest()
                 : <div className="text-center">
+                    {test.hasImage
+                        ? <img src={base + test.imageRoute} alt="Картинка теста" style={{width: "70%"}} />
+                        : null
+                    }
                     {timeInfo.isTimeLimited
                         ? <h5>Ограничение по времени: {timeLimitString}</h5>
                         : <h5>Ограничения по времени нет</h5>
@@ -128,7 +134,7 @@
     }
 
     renderActiveTest = () => {
-        const { _, passingInfo, test, currentQuestion, answers } = this.state;
+        const { passingInfo, test, currentQuestion, answers } = this.state;
         const question = test.questions[currentQuestion];
         const answer = answers.find(a => a.questionNumber === question.number);
         return <div>
@@ -404,8 +410,16 @@ class Question extends React.Component {
     render() {
         const { info, isBrowsing } = this.props,
             { isSaved, isHintActive, userAnswer } = this.state;
+        
+        const a = document.createElement('a');
+        a.href = window.location.href;
+        const base = a.protocol + "//" + a.host;
+        
         return (<div>
             <h3>Вопрос {info.number}</h3>
+            {info.hasImage
+                ? <img src={base + info.imageRoute} alt="Картинка вопроса" style={{width: "50%"}} />
+                : null}
             <h4 className="display-3">{info.value}</h4>
             {info.answerType === 1
                 ? <div className="form-group">
@@ -429,7 +443,7 @@ class Question extends React.Component {
             }
             {info.hintEnabled
                 ? <button className={isHintActive ? "btn btn-outline-secondary" : "btn btn-outline-success"}
-                    onClick={e => this.setState({ isHintActive: !isHintActive })}>
+                    onClick={() => this.setState({ isHintActive: !isHintActive })}>
                     {isHintActive
                         ? info.hint
                         : "Показать подсказку"
@@ -474,27 +488,27 @@ function getTimeString (allSeconds = 0, starting = "") {
     const seconds = allSeconds - hours * 3600 - minutes * 60;
     if (starting === 'час') {
 
-        if (hours == 0) return "";
-        if (Math.floor(hours / 10) == 1) return `${hours} часов`;
-        if (hours % 10 == 1) return `${hours} час`
+        if (hours === 0) return "";
+        if (Math.floor(hours / 10) === 1) return `${hours} часов`;
+        if (hours % 10 === 1) return `${hours} час`
         if (hours % 10 > 1 && hours % 10 < 5) return `${hours} часа`;
         return `${hours} часов`;
 
     } else if (starting === 'минут') {
 
-        if (minutes == 0) return "";
-        if (Math.floor(minutes / 10) == 1) return `${minutes} минут`;
-        if (minutes % 10 == 1) return `${minutes} минута`
+        if (minutes === 0) return "";
+        if (Math.floor(minutes / 10) === 1) return `${minutes} минут`;
+        if (minutes % 10 === 1) return `${minutes} минута`
         if (minutes % 10 > 1 && minutes % 10 < 5) return `${minutes} минуты`;
         return `${minutes} минут`;
 
     } else if (starting === 'секунд') {
 
-        if (seconds == 0) return "";
-        if (Math.floor(seconds / 10) == 1) return `${seconds} секунд`;
-        if (seconds % 10 == 1) return `${seconds} секунда`
+        if (seconds === 0) return "";
+        if (Math.floor(seconds / 10) === 1) return `${seconds} секунд`;
+        if (seconds % 10 === 1) return `${seconds} секунда`
         if (seconds % 10 > 1 && seconds % 10 < 5) return `${seconds} секунды`;
         return `${seconds} секунд`;
 
     } else throw new Error("Некорректные значения строки. Разрешены только 'час', 'минут', 'секунд'");
-};
+}

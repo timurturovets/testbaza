@@ -402,8 +402,8 @@ class EditableQuestion extends React.Component {
             imageRoute,
             hasImage,
             answer,
-            correctAnswer, 
-            answerType } = this.props.info, 
+            correctAnswer} = this.props.info, 
+            answerType = this.props.info.answerType || 1,
             answers = this.props.info.answers || [];
         
         this.state = {
@@ -412,15 +412,6 @@ class EditableQuestion extends React.Component {
             hint, hintEnabled,
             imageRoute, hasImage,
             answer, answers, correctAnswer, answerType
-            /*value: i.value,
-            hint: i.hint,
-            hintEnabled: i.hintEnabled,
-            imageRoute: i.imageRoute,
-            hasImage: this.props.hasImage,
-            answer: this.props.answer,
-            answers: this.props.answers || [],
-            correctAnswer: this.props.correctAnswer,
-            answerType: this.props.answerType || 1*/
         }
     }
 
@@ -441,11 +432,29 @@ class EditableQuestion extends React.Component {
         const a = document.createElement('a');
         a.href = window.location.href;
         const base = a.protocol + "//" + a.host;
+        
         return <div>
             <hr />
             <form name={`edit-question${this.props.questionId}`}>
                 <h2>Вопрос {this.props.number} {saved ? null : "*"}</h2>
-
+                
+                {hasImage
+                    ? <div>
+                        <img src={base + imageRoute} alt="Картинка вопроса" style={{width: "20%"}} />
+                        <br />
+                        <button className="btn btn-outline-danger"
+                                onClick={e => this.handleImageDelete(e)}>Удалить картинку</button>
+                    </div>
+                    : <div>
+                        <label>Добавить картинку</label>
+                        <input className="form-control" type="file" accept="image/*" name="dto.Image"
+                               onChange={e => {
+                                   e.preventDefault();
+                                   this.handleUnsavedState();
+                               }} />
+                    </div>
+                }
+                
                 <div className="form-check form-switch">
                     <input type="radio" className="form-check-input" name="dto.AnswerType" value="1"
                             onClick={e => this.handleAnswerTypeChange(e)} defaultChecked={answerType === 1} />
@@ -512,22 +521,6 @@ class EditableQuestion extends React.Component {
                     </div>
                     : null
                 }
-                {hasImage
-                    ? <div>
-                        <img src={base + imageRoute} alt="Картинка вопроса" style={{width: "20%"}} />
-                        <br />
-                        <button className="btn btn-outline-danger" 
-                                onClick={e => this.handleImageDelete(e)}>Удалить картинку</button>
-                    </div>
-                    : <div>
-                        <label>Добавить картинку</label>
-                        <input className="form-control" type="file" accept="image/*" name="dto.Image"
-                               onChange={e => {
-                                   e.preventDefault();
-                                   this.handleUnsavedState();
-                               }} />
-                    </div>
-                }
                 <div className="btn-toolbar">
                     <div className="btn-group mr-2">
                         <button className="btn btn-outline-success" onClick={e => this.handleSubmit(e)} disabled={saved}>Сохранить изменения</button>
@@ -547,7 +540,6 @@ class EditableQuestion extends React.Component {
 
     handleAnswerTypeChange = event => {
         const elem = event.target;
-        this.props.onSavedChange(false);
         this.setState({ answerType: parseInt(elem.value), saved: false });
     }
 

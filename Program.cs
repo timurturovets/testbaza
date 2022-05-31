@@ -9,7 +9,11 @@ using Microsoft.EntityFrameworkCore;
 using TestBaza.Data;
 using TestBaza.Factories;
 using TestBaza.Extensions;
-using TestBaza.Repositories;
+using TestBaza.Repositories.Rates;
+using TestBaza.Repositories.Tests;
+using TestBaza.Repositories.Questions;
+using TestBaza.Repositories.CheckInfos;
+using TestBaza.Repositories.PassingInfos;
 
 var builder = WebApplication.CreateBuilder(args);
 

@@ -4,6 +4,7 @@ using TestBaza.Models.Summaries;
 using TestBaza.Models.JsonModels;
 // ReSharper disable ValueParameterNotUsed
 // ReSharper disable UnusedMember.Global
+// ReSharper disable UnusedAutoPropertyAccessor.Global
 
 namespace TestBaza.Models.RegularModels;
 
@@ -118,24 +119,18 @@ public class Test
 
     public async void UpdateImage(IFormFile? image, IWebHostEnvironment environment)
     {
+        if (image is null) return;
+        
         if (HasImage)
         {
             if (File.Exists(ImagePhysicalPath)) File.Delete(ImagePhysicalPath);
-
-            if (image is null)
-            {
-                ImageRoute = null;
-                ImagePhysicalPath = null;
-                return;
-            }
-
-            await using var stream = new FileStream(ImagePhysicalPath, FileMode.Create);
+            
+            await using var stream = new FileStream(ImagePhysicalPath!, FileMode.Create);
             await image.CopyToAsync(stream);
         }
+        
         else
         {
-            if (image is null) return;
-            
             var fileRoute = Guid.NewGuid().ToString()[..7] + image.FileName;
             
             var imageLink = $"/images/tests/{fileRoute}";
@@ -153,5 +148,15 @@ public class Test
             await using var stream = new FileStream(pathToImage, FileMode.Create);
             await image.CopyToAsync(stream);
         }
+    }
+
+    public void DeleteImage()
+    {
+        if (!File.Exists(ImagePhysicalPath)) return;
+        
+        File.Delete(ImagePhysicalPath);
+
+        ImageRoute = null;
+        ImagePhysicalPath = null;
     }
 }

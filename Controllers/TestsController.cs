@@ -5,9 +5,10 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
 
 using TestBaza.Factories;
-using TestBaza.Extensions;
 using TestBaza.Models.DTOs;
-using TestBaza.Repositories;
+using TestBaza.Repositories.Tests;
+using TestBaza.Repositories.Rates;
+using TestBaza.Repositories.Questions;
 
 namespace TestBaza.Controllers;
 
@@ -512,8 +513,7 @@ public class TestsController : Controller
         var user = await _userManager.GetUserAsync(User);
         if (!test.Creator!.Equals(user)) return Forbid();
 
-        var env = HttpContext.GetService<IWebHostEnvironment>();
-        test.UpdateImage(null, env);
+        test.DeleteImage();
         
         await _testsRepo.UpdateTestAsync(test);
 
@@ -529,8 +529,7 @@ public class TestsController : Controller
         var user = await _userManager.GetUserAsync(User);
         if (!question.Test!.Creator!.Equals(user)) return Forbid();
 
-        var env = HttpContext.GetService<IWebHostEnvironment>();
-        question.UpdateImage(null, env);
+        question.DeleteImage();
 
         await _qsRepo.UpdateQuestionAsync(question);
         return Ok();

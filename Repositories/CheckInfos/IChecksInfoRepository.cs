@@ -1,7 +1,6 @@
-﻿namespace TestBaza.Repositories
+﻿namespace TestBaza.Repositories.CheckInfos;
+
+public interface IChecksInfoRepository
 {
-    public interface IChecksInfoRepository
-    {
-        IEnumerable<CheckInfo> GetUserCheckInfos(User user);
-    }
+    IEnumerable<CheckInfo> GetUserCheckInfos(User user);
 }

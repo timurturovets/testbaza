@@ -4,7 +4,8 @@ using Microsoft.AspNetCore.Authorization;
 
 using TestBaza.Factories;
 using TestBaza.Models.DTOs;
-using TestBaza.Repositories;
+using TestBaza.Repositories.Tests;
+using TestBaza.Repositories.PassingInfos;
 
 namespace TestBaza.Controllers
 {

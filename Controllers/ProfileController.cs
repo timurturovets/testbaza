@@ -2,11 +2,11 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
 
-using TestBaza.Models.RegularModels;
 using TestBaza.Extensions;
 using TestBaza.Models.DTOs;
-using TestBaza.Repositories;
-using TestBaza.Models.Summaries;
+using TestBaza.Repositories.Tests;
+using TestBaza.Repositories.CheckInfos;
+using TestBaza.Repositories.PassingInfos;
 
 namespace TestBaza.Controllers;
 

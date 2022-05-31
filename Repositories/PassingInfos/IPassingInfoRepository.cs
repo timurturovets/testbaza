@@ -1,4 +1,4 @@
-﻿namespace TestBaza.Repositories
+﻿namespace TestBaza.Repositories.PassingInfos
 {
     public interface IPassingInfoRepository
     {

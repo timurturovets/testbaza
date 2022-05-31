@@ -80,24 +80,17 @@ public class Question
 
     public async void UpdateImage(IFormFile? image, IWebHostEnvironment environment)
     {
+        if (image is null) return;
+        
         if (HasImage)
         {
             if(File.Exists(ImagePhysicalPath)) File.Delete(ImagePhysicalPath);
 
-            if (image is null)
-            {
-                ImageRoute = null;
-                ImagePhysicalPath = null;
-                return;
-            }
-            
             await using var stream = new FileStream(ImagePhysicalPath!, FileMode.Create);
             await image.CopyToAsync(stream);
         }
         else
         {
-            if (image is null) return;
-            
             var fileRoute = Guid.NewGuid().ToString()[..7] + image.FileName;
             
             var imageLink = $"/images/questions/{fileRoute}";
@@ -115,5 +108,15 @@ public class Question
             await using var stream = new FileStream(pathToImage, FileMode.Create);
             await image.CopyToAsync(stream);
         }
+    }
+
+    public void DeleteImage()
+    {
+        if (!File.Exists(ImagePhysicalPath)) return;
+        
+        File.Delete(ImagePhysicalPath);
+
+        ImagePhysicalPath = null;
+        ImageRoute = null;
     }
 }

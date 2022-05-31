@@ -178,20 +178,20 @@ class DetailedPassedTest extends React.Component {
         const showChecks = isChecked
             ? true
             : !areAnswersManuallyChecked;
-
+        console.log(`show checks: ${showChecks}, !mnlChecked: ${!areAnswersManuallyChecked}`);
         const combined = [];
         let i = 0;
         for (const question of questions) {
             i++;
             const userAnswer = userAnswers.find(a => a.questionNumber === question.number);
 
-            if (!!userAnswer) {
+            if (userAnswer) {
 
                 combined.push({
                     id: i,
                     question: question,
                     answer: {
-                        value: !!userAnswer.value && userAnswer.value !== 'null'
+                        value: userAnswer.value && userAnswer.value !== 'null'
                             ? userAnswer.value
                             : "",
                         questionNumber: question.number,
@@ -212,6 +212,10 @@ class DetailedPassedTest extends React.Component {
             }
         }
 
+        const a = document.createElement('a');
+        a.href = window.location.href;
+        const base = a.protocol + "//" + a.host;
+        
         return <div>
             <button className="btn btn-outline-primary" onClick={this.props.onBrowsingEnd}>К тестам</button>
             <h2 className="display-2 text-center">Тест {testName}</h2>
@@ -225,27 +229,17 @@ class DetailedPassedTest extends React.Component {
                 return <div key={c.id}>
                     <hr />
                     <h4>Вопрос {c.question.number}</h4>
+                    {c.question.hasImage
+                        ? <img src={base + c.question.imageRoute} alt="Картинка вопроса"
+                               style={{width: "20%"}} />
+                        : null
+                    }
                     <h5 className="display-5">{c.question.value}</h5>
                     <p>Ваш ответ:</p>
+                    {console.log(c)}
                     {c.question.answerType === 1
-                        ? <div>
-                            <input type="text" className="form-control" placeholder="Вы не ответили на этот вопрос."
-                                readOnly value={c.answer.value} />
-                            {showChecks
-                                ? !c.answer.value
-                                    ? null
-                                    : c.answer.isCorrect
-                                        ? <b className="text-success">Это верный ответ.</b>
-                                        : <p className="text-danger">
-                                            Это неверный ответ.
-                                            {areAnswersManuallyChecked
-                                                ? null
-                                                : <b className="text-dark">Верный ответ: {c.question.answer}</b>
-                                            }
-                                            </p>
-                                : null
-                            }
-                        </div>
+                        ? <input type="text" readOnly className="form-control" value={c.answer.value}
+                                   placeholder="Вы не ответили на этот вопрос." />
                         : <div className="form-group form-check">
                             {c.question.answers.map(ans =>
                                 <div key={ans.answerId}>
@@ -263,8 +257,23 @@ class DetailedPassedTest extends React.Component {
                                 : null}
                         </div>
                     }
+                    {showChecks
+                        ? !c.answer.value
+                            ? null
+                            : c.answer.isCorrect
+                                ? <b className="text-success">Это верный ответ.</b>
+                                : <p className="text-danger">
+                                    Это неверный ответ.
+                                    {areAnswersManuallyChecked
+                                        ? null
+                                        : <b className="text-dark">Верный ответ: {c.question.answer}</b>
+                                    }
+                                </p>
+                        : null
+                    }
                 </div>
             })}
+            
             {showChecks
                 ? <p>Правильных ответов: <b>{correctAnswersCount + "/" + questions.length}</b></p>
                 : <p>Работа ещё не проверена.</p>

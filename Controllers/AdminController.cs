@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
 
 using TestBaza.Extensions;
-using TestBaza.Repositories;
+using TestBaza.Repositories.Tests;
 
 namespace TestBaza.Controllers
 {
@@ -52,8 +52,7 @@ namespace TestBaza.Controllers
         private async Task<bool> CheckIfAdmin()
         {
             var adminName = HttpContext
-                .RequestServices
-                .GetRequiredService<IConfiguration>()
+                .GetService<IConfiguration>()
                 .GetValue<string>("ADMIN_USERNAME");
 
             var currentUser = await _userManager.GetUserAsync(User);

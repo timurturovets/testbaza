@@ -1,9 +1,8 @@
-﻿namespace TestBaza.Repositories
+﻿namespace TestBaza.Repositories.Rates;
+
+public interface IRatesRepository
 {
-    public interface IRatesRepository
-    {
-        Task AddRateAsync(Rate rate);
-        Task UpdateRateAsync(Rate rate);
-        Task DeleteRateAsync(Rate rate);
-    }
+    Task AddRateAsync(Rate rate);
+    Task UpdateRateAsync(Rate rate);
+    Task DeleteRateAsync(Rate rate);
 }
