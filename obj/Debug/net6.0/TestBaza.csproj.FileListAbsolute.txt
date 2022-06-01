@@ -60,4 +60,5 @@ C:\Users\timur\source\repos\TestBaza\TestBaza\obj\Debug\net6.0\TestBaza.dll
 C:\Users\timur\source\repos\TestBaza\TestBaza\obj\Debug\net6.0\ref\TestBaza.dll
 C:\Users\timur\source\repos\TestBaza\TestBaza\obj\Debug\net6.0\TestBaza.pdb
 C:\Users\timur\source\repos\TestBaza\TestBaza\obj\Debug\net6.0\TestBaza.genruntimeconfig.cache
+C:\Users\timur\source\repos\TestBaza\TestBaza\bin\Debug\net6.0\appsettings.json
 C:\Users\timur\source\repos\TestBaza\TestBaza\obj\Debug\net6.0\refint\TestBaza.dll
